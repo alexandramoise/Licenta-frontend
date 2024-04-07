@@ -4,11 +4,23 @@
     <div :class="{ 'nav-links': true, 'nav-active': navVisible }">
       <CustomButton class="navbar-item-logo" @click="navigateTo('home')"> <img class="logo" src="../assets/images/logo.png"> CardioHealth Companion</CustomButton>
       <CustomButton class="navbar-item" @click="navigateTo('appointments')"> <i class="far fa-calendar-check"> </i> Programări</CustomButton>
-      <CustomButton class="navbar-item" @click="navigateTo('add')"> <i class="fas fa-plus"> </i> Adaugă</CustomButton>
+
+      <div class="profile-dropdown">
+        <CustomButton class="navbar-item" @click.stop="dropdownVisible = !dropdownVisible"> <i class="fas fa-plus"> </i> Adaugă <i class='fas fa-caret-down'> </i></CustomButton>
+        <div v-if="dropdownVisible && userType === 'doctor'" class="dropdown-content">
+            <CustomButton class="dropdown-item" @click="navigateTo('add-pacient')"> pacient <i class="fas fa-user"></i></CustomButton>
+            <CustomButton class="dropdown-item" @click="navigateTo('add-recommandation')"> recomandare <i class="fas fa-lightbulb"></i> </CustomButton>
+          </div>
+          <div v-if="dropdownVisible && userType === 'pacient'" class="dropdown-content">
+            <CustomButton class="dropdown-item" @click="navigateTo('add-treatment')"> tratament <i class="fas fa-capsules"></i> </CustomButton>
+            <CustomButton class="dropdown-item" @click="navigateTo('add-journal')"> jurnal <i class="fas fa-book"></i></CustomButton>
+          </div>
+      </div>
+
       <CustomButton class="navbar-item" @click="navigateTo('recomandations')"> <i class="fas fa-lightbulb"> </i> Recomandări</CustomButton>
       <div class="profile-dropdown">
-        <CustomButton class="navbar-item" @click.stop="dropdownVisible = !dropdownVisible"> <i class="fas fa-user"> </i> Cont <i class='fas fa-caret-down'> </i></CustomButton>
-        <div v-if="dropdownVisible" class="dropdown-content">
+        <CustomButton class="navbar-item" @click.stop="dropdownAccountVisible = !dropdownAccountVisible"> <i class="fas fa-user"> </i> Cont <i class='fas fa-caret-down'> </i></CustomButton>
+        <div v-if="dropdownAccountVisible" class="dropdown-content">
           <CustomButton class="dropdown-item" @click="navigateTo('data')"> Datele mele <i class="fas fa-address-book"></i></CustomButton>
           <CustomButton class="dropdown-item" @click="navigateTo('change-password')">Schimbă parola <i class="fas fa-lock"></i> </CustomButton>
           <CustomButton class="dropdown-item" @click="navigateTo('logout')">Deconectare <i class="fas fa-arrow-right"></i> </CustomButton>
@@ -25,15 +37,19 @@ import { useRouter } from 'vue-router';
 export default {
   setup() {
     const dropdownVisible = ref(false);
+    const dropdownAccountVisible = ref(false);
     const navVisible = ref(false);
     const isDesktop = ref(true);
     const router = useRouter();
+
+    const userType = sessionStorage.getItem("gotIn");
 
     const handleResize = () => {
       isDesktop.value = window.innerWidth > 600;
       if (isDesktop.value) {
         navVisible.value = false;
         dropdownVisible.value = false;
+        dropdownAccountVisible.value = false;
       }
     };
 
@@ -57,10 +73,12 @@ export default {
 
     return { 
       dropdownVisible, 
+      dropdownAccountVisible,
       navVisible, 
       isDesktop, 
       toggleNav, 
-      navigateTo
+      navigateTo, 
+      userType
     };
   }
 };
@@ -113,11 +131,11 @@ export default {
   left: 0;
   background-color: white;
   box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
-  z-index: 100; /* Ensure it's on top of other content */
+  z-index: 100; 
+  margin-top: 10px;
 }
 
 .dropdown-item {
-  color: rgb(172, 0, 0);
   padding: 0.5rem 1rem;
   text-decoration: none;
   display: block;

@@ -1,47 +1,69 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, onBeforeUnmount, ref } from 'vue';
 import CustomNavbar from "../components/CustomNavbar.vue";
 import PatientCard from "../components/PatientCard.vue";
 import FilteringPatientsSidebar from "../components/FilteringPatientsSidebar.vue";
-import { getDoctorsPatients, getPatientById } from "../services/patient_service.js";        
+import { getDoctorsPatients, getPagedPatients, getPatientById } from "../services/patient_service.js";        
 
 const patients = ref([]);
 
-async function fetchPatients() {
-    patients.value = await getDoctorsPatients('alexandramoise636@gmail.com');
+async function loadPatients() {
+    const data = await getPagedPatients(
+        "alexandramoise636@gmail.com",
+        3,
+        0,
+        "dateOfBirth"
+    );
+
+    if (data && data.content) { 
+        patients.value = data.content.map((patient) => ({
+            ...patient
+        }));
+
+        console.log(patients.value); 
+    } else {
+        console.error("No content returned from the API");
+    }
 }
 
 onMounted(() => {
-    fetchPatients();
-})
+    loadPatients();
+});
+
 
 const selectedPatient = ref("");
 async function showPatientDetails(patientId) {
     selectedPatient.value = await getPatientById(patientId);
-    // details page for the selected patient
 }
+
 
 </script>
 
 <template>
     <div class="page">
-        <CustomNavbar> </CustomNavbar>
+        <CustomNavbar />
 
-        <div class="filtering-sidebar">
-            <FilteringPatientsSidebar> </FilteringPatientsSidebar>
-        </div>
-        <div class="patients-list">
-            <PatientCard
-                v-for="patient in patients"
-                :key="patient.id" 
-                :name="patient.fullName" 
-                :email="patient.email"
-                :age="patient.age"
-                :tendency="patient.tendency"
-                :doctorEmail="patient.doctorEmail"
-                :gender="patient.gender"
-                @click="showPatientDetails(patient.id)"
-            />
+        <div class="content">
+            <div class="filtering-sidebar">
+                <FilteringPatientsSidebar />
+            </div>
+            <div class="patients-list">
+                <PatientCard
+                    :class="card"
+                    v-for="patient in patients"
+                    :key="patient.id" 
+                    :name="patient.fullName" 
+                    :email="patient.email"
+                    :age="patient.age"
+                    :tendency="patient.tendency"
+                    :doctorEmail="patient.doctorEmail"
+                    :gender="patient.gender"
+                    @click="showPatientDetails(patient.id)"
+                />
+            </div>
+            <div class="statistics-panel">
+                <p> AICI VOR FI STATISTICILE </p>
+            </div>
         </div>
     </div>
 </template>
@@ -54,9 +76,13 @@ async function showPatientDetails(patientId) {
     overflow-y: auto;
 }
 
+.content {
+    display: grid;
+    grid-template-columns: 20% 35% 45%;
+}
+
 .filtering-sidebar {
     background-color: rgb(212, 216, 221);
-    width: 20vw;
     height: 100vh;
     float: left;
     overflow-y: auto;
@@ -66,9 +92,16 @@ async function showPatientDetails(patientId) {
     display: flex;
     flex-direction: column;
 }
+
+.statistics-panel {
+    background-color: rgb(181, 255, 255);
+    height: 100vh;
+    padding: 15px;
+}
+
 @media(max-width: 600px) {
-    .filtering-sidebar {
-        width: 30vw;
+    .content {
+        grid-template-columns: 30% 35% 35%;
     }
 }
 </style>

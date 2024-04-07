@@ -1,10 +1,18 @@
 <script setup>
 import { createDoctorAccount } from '../services/doctor_service.js'
-import { ref } from 'vue';
+import { ref, onBeforeUnmount } from 'vue';
 import router from "../router";
 import CustomInput from "../components/CustomInput.vue";
 
 const emailText = ref('');
+
+window.addEventListener("keydown", handleKeyPress);
+
+function handleKeyPress(event) {
+    if (event.key === "Enter") {
+        createAccount();
+    }
+}
 
 const showCreateAccountForDoctor = ref(false);
 if(sessionStorage.getItem("gotIn") === "doctor") {
@@ -40,6 +48,11 @@ function validateEmail(emailAddress) {
     showErrorMessage.value = true;
     return false;
 }
+
+onBeforeUnmount(() => {
+    window.removeEventListener("keydown", handleKeyPress);
+});
+
 </script>
 
 <template>

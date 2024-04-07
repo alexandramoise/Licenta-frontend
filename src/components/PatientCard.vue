@@ -15,19 +15,11 @@ const props = defineProps({
 const tendencyColor = computed(() => {
     switch(props.tendency) {
         case 'Hypotension':
-            return '3399ff';
-        case 'Optimal':
-            return '#2eb82e';
+            return '#3399ff';
         case 'Normal':
             return '#2eb82e';
-        case 'Prehypertension':
-            return '#ff6600';
-        case 'Hypertension_stage1':
+        case 'Hypertension':
             return 'red';
-        case 'Hypertension_stage2':
-            return '#cc0000';
-        case 'Hypertension_stage3':
-            return '#990000';
     }
 });
 
@@ -35,18 +27,10 @@ const tendencyTranslation = computed(() => {
     switch(props.tendency) {
         case 'Hypotension':
             return 'Hipotensiune';
-        case 'Optimal':
-            return 'Optimă';
         case 'Normal':
             return 'Normală';
-        case 'Prehypertension':
-            return 'Prehipertensiune';
-        case 'Hypertension_stage1':
-            return 'Hipertensiune stadiul 1';
-        case 'Hypertension_stage2':
-            return 'Hipertensiune stadiul 2';
-        case 'Hypertension_stage3':
-            return 'Hipertensiune stadiul 3';
+        case 'Hypertension':
+            return 'Hipertensiune';
     }
 })
 
@@ -57,7 +41,7 @@ const cardBackgroundColor = computed(() => {
         case 'Masculine': 
             return '#ccf2ff';
         default: 
-            return 'gray';
+            return '#f2f2f2';
     }
 });
 
@@ -85,19 +69,23 @@ const cardBackgroundColor = computed(() => {
   font-size: 20px;
   margin-left: 2vw;
   font-weight: bold;
+  margin-left: auto;
+  margin-right: auto;
 }
 
+.card:hover{
+    border: 2px solid rgb(197, 197, 197);
+}
 
 .title {
-    color: #b80f20;
-    font-weight: bold;
+  color: #b80f20;
+  font-weight: bold;
 }
 
 
 @media(max-width: 750px) {
     .card {
         font-size: 15px;
-        width: 30vw;
     }
 }
 </style>

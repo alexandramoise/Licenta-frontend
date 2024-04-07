@@ -7,7 +7,6 @@ onMounted(() => {
   sessionStorage.setItem('loggedIn', 'false');
 });
 
-console.log("din local storage: ", localStorage.getItem("gotIn"));
 </script>
 
 <template>

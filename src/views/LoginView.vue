@@ -1,6 +1,6 @@
 <script setup>
 import { createDoctorAccount } from '../services/doctor_service.js'
-import { ref } from 'vue';
+import { ref, onBeforeUnmount} from 'vue';
 import router from "../router";
 import CustomInput from "../components/CustomInput.vue";
 import CustomNavbar from "../components/CustomNavbar.vue";
@@ -8,10 +8,21 @@ import CustomNavbar from "../components/CustomNavbar.vue";
 const emailText = ref('');
 const passwordText = ref('');
 
+window.addEventListener("keydown", handleKeyPress);
+
+function handleKeyPress(event) {
+    if (event.key === "Enter") {
+        login();
+    }
+}
+
 const showCreateAccountForDoctor = ref(false);
 if(sessionStorage.getItem("gotIn") === "doctor") {
     showCreateAccountForDoctor.value = true;
 }
+
+const userType = sessionStorage.getItem("gotIn");
+console.log("IN LOG IN VERIFIC USER TYPE", userType);
 
 async function login() {
     if (emailText.value === '' || emailText.value === null 
@@ -23,7 +34,11 @@ async function login() {
             console.log('Password: ', passwordText.value);
             if(emailText.value === 'ana@gmail.com' && passwordText.value === 'parola1') {
                 alert('Bine ai venit!');
-                router.push('main-doctor');
+                sessionStorage.setItem("email", emailText.value);
+                if(userType === "doctor")
+                    router.push('main-doctor');
+                else
+                    router.push('main-patient');
             } else {
                 alert('Incorect');
             }
@@ -42,6 +57,10 @@ const showPassword = ref(false);
 function showPasswordToggle() {
     showPassword.value = !showPassword.value;
 }
+
+onBeforeUnmount(() => {
+    window.removeEventListener("keydown", handleKeyPress);
+});
 
 </script>
 
@@ -64,7 +83,7 @@ function showPasswordToggle() {
                     <i :class="!showPassword ? 'fas fa-eye' : 'fas fa-eye-slash'"></i>
                 </button>
             </div>
-            <button @click="login" class="login-button">Conectare</button>
+            <button @click="login" class="login-button" @keyup.enter="enterPress">Conectare</button>
             <div v-if="showCreateAccountForDoctor">
                 <span> Nu aveți un cont de medic? </span> 
                 <button @click="redirectToRegister" class="register-button"> Creați unul </button>

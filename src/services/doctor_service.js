@@ -23,7 +23,7 @@ async function createDoctorAccount(email) {
         throw new Error(result.message);
     } else {
         console.log("In service s-a primit: ", result.email);
-        localStorage.setItem("email", result.email);
+        sessionStorage.setItem("email", result.email);
     }
 
     return result;

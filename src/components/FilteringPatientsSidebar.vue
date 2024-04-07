@@ -67,7 +67,7 @@ const getFormData = () => {
         <input type="number" id="last-visit" name="last-visit" placeholder="zile in urma" class="texting-input" v-model="timeInput">
       </div>
   
-      <CustomButton class="filter-button" @click="getFormData">FILTRARE</CustomButton>
+      <CustomButton class="filter-button" @click="getFormData" @key.enter="getFormData">FILTRARE</CustomButton>
     </div>
 </template>
   
