@@ -20,7 +20,7 @@ async function getPatientsPagedAppointments(patientEmail, pageSize, pageNumber) 
 
 async function getDoctorsPagedAppointments(doctorEmail, pageSize, pageNumber) {
     try {
-        const response = await fetch(API_URL + "/paged-doctor?email= " + doctorEmail + 
+        const response = await fetch(API_URL + "/paged-doctor?email=" + doctorEmail + 
         "&pageSize=" + pageSize + 
         "&pageNumber=" + pageNumber 
         + "&sortCategory=time");
@@ -71,4 +71,4 @@ async function getPatientsAppointmentsOnACertainDay(patientEmail, date, pageSize
 export { getDoctorsPagedAppointments,
      getPatientsPagedAppointments, 
      getPatientsAppointmentsOnACertainDay, 
-     getDoctorsAppointmentsOnACertainDay, }
+     getDoctorsAppointmentsOnACertainDay }

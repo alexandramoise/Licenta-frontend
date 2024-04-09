@@ -105,7 +105,7 @@ function showCanEdit(isEditable) {
 }
 
 .statistics-panel {
-    background-color: rgb(181, 255, 255);
+    background-color: rgb(240, 240, 240);
     padding: 15px;
 }
 

@@ -7,6 +7,8 @@ const props = defineProps({
     "date" : "",
     "doctorId": "",
     "patientId": "",
+    "doctorEmail": "",
+    "patientEmail": "",
     "nobodyCanceled": "",
     "visitType" : ""
 });
@@ -33,7 +35,7 @@ const newDate = computed(() => {
 
 <template>
     <div class="card">
-        <p> <span class="title"> Pacient </span> {{ props.patientId }} </p>
+        <p> <span class="title"> Pacient </span> {{ props.patientEmail }} </p>
         <p> <span class="title"> Data </span> {{ newDate }} </p>
         <p> <span class="title"> Tip </span> {{ props.visitType }} </p>
     </div>
@@ -44,7 +46,7 @@ const newDate = computed(() => {
 
 .card {
     background-color: rgb(250, 250, 250);
-    width: 17vw;
+    width: 40%;
     border-radius: 10px;
     padding: 15px;
     font-size: 17px;
@@ -63,7 +65,7 @@ const newDate = computed(() => {
 
 @media(max-width: 750px) {
     .card {
-        width: 35vw;
+        width: 75%;
     }
 }
 </style>

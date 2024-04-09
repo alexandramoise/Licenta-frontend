@@ -4,26 +4,28 @@ import CustomNavbar from "../components/CustomNavbar.vue";
 import CustomButton from "../components/CustomButton.vue";
 import AppointmentCard from "../components/AppointmentCard.vue";
 import CustomCalendar from '../components/CustomCalendar.vue';
+import Pagination from '../components/Pagination.vue';
 
 import { getDoctorsPagedAppointments, 
         getPatientsPagedAppointments, 
         getPatientsAppointmentsOnACertainDay, 
-        getDoctorsAppointmentsOnACertainDay } from "../services/appointments_service.js";
+        getDoctorsAppointmentsOnACertainDay, 
+     } from "../services/appointments_service.js";
 import router from '@/router';
 
 //const userEmail = sessionStorage.getItem("email");
-const userEmail = "alexandramoise@gmail.com"
-
+const userEmail = "alexandramoise636@gmail.com"
 const userType = sessionStorage.getItem("gotIn");
 
 const appointments = ref([]);
 const appointmentsNotFound = ref(false);
 
-const pageSize = ref(3);
-const pageNumber = ref(0);
+const pageSize = 3;
+const totalPages = ref(0);
+const currentPage = ref(1);
 
 onMounted(() => {
-  fetchAppointments();
+  fetchPaginatedAppointments();
 });
 
 const selectedDate = ref(null);
@@ -32,20 +34,30 @@ watch(selectedDate, (newValue, oldValue) => {
   if (newValue) {
     fetchAppointmentsByDate(newValue);
   } else {
-    fetchAppointments();
+    fetchPaginatedAppointments();
   }
 });
+
+
+watch(currentPage, (newPage, oldPage) => {
+  if (selectedDate.value) {
+    fetchAppointmentsByDate(selectedDate.value);
+  } else {
+    fetchPaginatedAppointments();
+  }
+});
+
 
 function getDateFromCalendar(date) {
     selectedDate.value = date;
 }
 
-async function fetchAppointments() {
+async function fetchPaginatedAppointments() {
     let data = '';
     if(userType === "doctor") {
-        data = await getDoctorsPagedAppointments(userEmail, pageSize.value, pageNumber.value);
+        data = await getDoctorsPagedAppointments(userEmail, pageSize, currentPage.value - 1);
     } else {
-        data = await getPatientsPagedAppointments(userEmail, pageSize.value, pageNumber.value);
+        data = await getPatientsPagedAppointments(userEmail, pageSize, currentPage.value - 1);
     }
 
     if (data && data.content) { 
@@ -55,7 +67,9 @@ async function fetchAppointments() {
             }));
 
             appointmentsNotFound.value = false;
+            totalPages.value = Math.ceil(data.totalElements / pageSize);
         } else {
+            totalPages.value = 0;
             appointmentsNotFound.value = true;
         }
     } else {
@@ -66,9 +80,9 @@ async function fetchAppointments() {
 async function fetchAppointmentsByDate(date) {
     let data = '';
     if(userType === "doctor") {
-        data = await getDoctorsAppointmentsOnACertainDay(userEmail, date, pageSize.value, pageNumber.value);
+        data = await getDoctorsAppointmentsOnACertainDay(userEmail, date, pageSize, currentPage.value - 1);
     } else {
-        data = await getPatientsAppointmentsOnACertainDay(userEmail, date, pageSize.value, pageNumber.value);
+        data = await getPatientsAppointmentsOnACertainDay(userEmail, date, pageSize, currentPage.value - 1);
     }
 
     if (data && data.content) { 
@@ -78,6 +92,8 @@ async function fetchAppointmentsByDate(date) {
             }));
 
             appointmentsNotFound.value = false;
+            totalPages.value = Math.ceil(data.totalElements / pageSize);
+
         } else {
             appointmentsNotFound.value = true;
         }
@@ -85,6 +101,9 @@ async function fetchAppointmentsByDate(date) {
     } 
 }
 
+function changePage(newPage) {
+    currentPage.value = newPage;
+}
 </script>
 
 
@@ -104,13 +123,21 @@ async function fetchAppointmentsByDate(date) {
                         :key="appointment.id"
                         :class="card"
                         :patientId="appointment.patientId"
+                        :patientEmail="appointment.patientEmail"
                         :doctorId="appointment.doctorId"
                         :visitType="appointment.visitType"
                         :date="appointment.date"
                     />
+
+                    <Pagination 
+                        :totalPages="totalPages"
+                        :currentPage="currentPage"
+                        @changePage="changePage"
+                        class="pagination-component"
+                    />
                 </div>
                 
-                <div v-else>
+                <div v-else class="not-found">
                     <p> Nu există programari in ziua selectata. </p>
                 </div>       
             </div>
@@ -140,8 +167,30 @@ async function fetchAppointmentsByDate(date) {
 
 
 .statistics-panel {
-    background-color: rgb(181, 255, 255);
+    background-color: rgb(240, 240, 240);
     padding: 15px;
+    position: relative;
+}
+
+.pagination-component {
+    position: absolute;
+    bottom: 0; /* Poziționează la baza containerului `.patients-list` */
+    left: 50%; /* Începe la jumătatea `.patients-list` */
+    transform: translateX(-50%); /* Centrează-l în mod corect pe orizontală */
+    width: auto;
+    margin-bottom: 10%;
+}
+
+.not-found {
+    display: flex;
+    justify-content: center;
+    align-items: center; 
+    height: 100%;
+    text-align: center;
+    color: darkred;
+    font-size: 17px;
+    font-weight: bold;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 

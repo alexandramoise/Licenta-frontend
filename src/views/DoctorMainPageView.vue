@@ -1,35 +1,52 @@
 <script setup>
-import { onMounted, onBeforeUnmount, ref } from 'vue';
+import { onMounted, onBeforeUnmount, ref, watch } from 'vue';
 import CustomNavbar from "../components/CustomNavbar.vue";
 import PatientCard from "../components/PatientCard.vue";
 import FilteringPatientsSidebar from "../components/FilteringPatientsSidebar.vue";
+import Pagination from "../components/Pagination.vue";
 import { getDoctorsPatients, getPagedPatients, getPatientById } from "../services/patient_service.js";        
 
-const patients = ref([]);
+const userEmail = "alexandramoise636@gmail.com";
 
-async function loadPatients() {
-    const data = await getPagedPatients(
-        "alexandramoise636@gmail.com",
-        3,
-        0,
-        "dateOfBirth"
-    );
+const patients = ref([]);
+const patientsNotFound = ref(false);
+
+const pageSize = 3;
+const totalPages = ref(0);
+const currentPage = ref(1);
+
+onMounted(() => {
+    fetchPatients();
+});
+
+watch(currentPage, (newPage, oldPage) => {
+  fetchPatients();
+});
+
+async function fetchPatients() {
+    const data = await getPagedPatients(userEmail, pageSize, currentPage.value - 1, "dateOfBirth");
 
     if (data && data.content) { 
-        patients.value = data.content.map((patient) => ({
-            ...patient
-        }));
+        if(data.content.length !== 0) {
+            patients.value = data.content.map((patient) => ({
+                ...patient
+            }));
 
-        console.log(patients.value); 
+            patientsNotFound.value = false;
+            totalPages.value = Math.ceil(data.totalElements / pageSize);
+
+        } else {
+            totalPages.value = 0;
+            patientsNotFound.value = true;
+        }
     } else {
         console.error("No content returned from the API");
     }
 }
 
-onMounted(() => {
-    loadPatients();
-});
-
+function changePage(newPage) {
+    currentPage.value = newPage;
+}
 
 const selectedPatient = ref("");
 async function showPatientDetails(patientId) {
@@ -48,18 +65,30 @@ async function showPatientDetails(patientId) {
                 <FilteringPatientsSidebar />
             </div>
             <div class="patients-list">
-                <PatientCard
-                    :class="card"
-                    v-for="patient in patients"
-                    :key="patient.id" 
-                    :name="patient.fullName" 
-                    :email="patient.email"
-                    :age="patient.age"
-                    :tendency="patient.tendency"
-                    :doctorEmail="patient.doctorEmail"
-                    :gender="patient.gender"
-                    @click="showPatientDetails(patient.id)"
-                />
+                <div v-if="!patientsNotFound">
+                    <PatientCard
+                        :class="card"
+                        v-for="patient in patients"
+                        :key="patient.id" 
+                        :name="patient.fullName" 
+                        :email="patient.email"
+                        :age="patient.age"
+                        :tendency="patient.tendency"
+                        :doctorEmail="patient.doctorEmail"
+                        :gender="patient.gender"
+                        @click="showPatientDetails(patient.id)"
+                    />
+
+                    <Pagination 
+                        :totalPages="totalPages"
+                        :currentPage="currentPage"
+                        @changePage="changePage"
+                        class="pagination-component"
+                    />
+                </div>
+                <div v-else class="not-found">
+                    <p> Nu s-au gasit pacienti.  </p>
+                </div>
             </div>
             <div class="statistics-panel">
                 <p> AICI VOR FI STATISTICILE </p>
@@ -91,10 +120,32 @@ async function showPatientDetails(patientId) {
 .patients-list {
     display: flex;
     flex-direction: column;
+    position: relative; /* Adăugăm poziționare relativă aici */
+    max-height: 90vh;
+}
+
+.pagination-component {
+    position: absolute;
+    bottom: 0; /* Poziționează la baza containerului `.patients-list` */
+    left: 50%; /* Începe la jumătatea `.patients-list` */
+    transform: translateX(-50%); /* Centrează-l în mod corect pe orizontală */
+    width: auto; /* Setează lățimea să fie auto sau cât de mare trebuie să fie */
+}
+
+.not-found {
+    display: flex;
+    justify-content: center;
+    align-items: center; 
+    height: 100%;
+    text-align: center;
+    color: darkred;
+    font-size: 17px;
+    font-weight: bold;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 .statistics-panel {
-    background-color: rgb(181, 255, 255);
+    background-color: rgb(240, 240, 240);
     height: 100vh;
     padding: 15px;
 }

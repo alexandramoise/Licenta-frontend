@@ -28,7 +28,7 @@ async function getPagedPatients(doctorEmail, pageSize, pageNumber, sortCategory)
         }
 
         const data = await response.json(); 
-        console.log("DATA PAGINATED: ", data.content); 
+        console.log("DATA PAGINATED: ", data); 
         return data; 
     } catch(error) {
         console.error("Could not fetch the patients", error);
