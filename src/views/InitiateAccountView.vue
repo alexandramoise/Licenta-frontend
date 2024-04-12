@@ -21,31 +21,46 @@ if(sessionStorage.getItem("gotIn") === "doctor") {
 
 async function createAccount() {
     if (emailText.value === '' || emailText.value === null) {
-        alert("Vă rog să completați câmpul");
+        modalShow.value = true;
+        modalTitle.value = "Alerta";
+        modalMessage.value = "Va rog sa completati campul";
     } else {
         try {
             //const result = await createDoctorAccount(emailText.value);
             if(!validateEmail(emailText.value)) {
                 console.log("mail invalid");
-                alert("INVALID");
+                modalShow.value = true;
+                modalTitle.value = "Eroare";
+                modalMessage.value = "Adresa de mail nu este valida";
             } else {
                 console.log("S-A INTRODUS: ", emailText.value);
                 alert(emailText.value)
-                router.push('login');
+                modalShow.value = true;
+                modalTitle.value = "Succes";
+                modalMessage.value = "Veti fi redirectionat la pagina de login";
             }
         } catch (error) {
-            alert(error.message);
+            modalShow.value = true;
+            modalTitle.value = "Eroare";
+            modalMessage.value = error.message;
             console.error(error);
         }
     }
 }
 
-const showErrorMessage = ref(false);
+function closeDialog() {
+    modalShow.value = false;
+    if(modalTitle.value === "Succes") {
+        setTimeout(() => {
+            router.push("login");
+    }, 300);
+    }
+}
+
 function validateEmail(emailAddress) {
     if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(emailAddress)) {
         return true;
     }
-    showErrorMessage.value = true;
     return false;
 }
 
@@ -64,9 +79,16 @@ onBeforeUnmount(() => {
                 :placeholder="'adresa de mail'"
                 :type="'email'"
            />
-            <span v-if="showErrorMessage" class="error-message"> Introduceți o adresă de email validă </span>
             <button @click="createAccount" class="register-button">Creare</button>
         </div>
+
+        <CustomModal
+            :open="modalShow"
+            :forConfirmation="false"
+            :title="modalTitle"
+            :message="modalMessage"
+            @close="closeDialog"
+        />
     </div>
 </template>
 

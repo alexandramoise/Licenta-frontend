@@ -27,24 +27,43 @@ console.log("IN LOG IN VERIFIC USER TYPE", userType);
 async function login() {
     if (emailText.value === '' || emailText.value === null 
         || passwordText.value === '' || passwordText.value == null) {
-        alert("Vă rog să completați câmpurile");
+            modalShow.value = true;
+            modalTitle.value = "Alerta";
+            modalMessage.value = "Va rog sa completati campurile";
     } else {
         try {
             console.log('Email: ', emailText.value);
             console.log('Password: ', passwordText.value);
             if(emailText.value === 'ana@gmail.com' && passwordText.value === 'parola1') {
-                alert('Bine ai venit!');
+                modalShow.value = true;
+                modalTitle.value = "Succes";
+                modalMessage.value = "Conectare cu succes!";
                 sessionStorage.setItem("email", emailText.value);
-                if(userType === "doctor")
-                    router.push('main-doctor');
-                else
-                    router.push('main-patient');
             } else {
-                alert('Incorect');
+                modalShow.value = true;
+                modalTitle.value = "Eroare";
+                modalMessage.value = "Email si/sau parola incorecte";
             }
         } catch (error) {
-            alert(error.message);
+            modalShow.value = true;
+            modalTitle.value = "Eroare";
+            modalMessage.value = error.message;
             console.error(error);
+        }
+    }
+}
+
+function closeDialog() {
+    modalShow.value = false;
+    if(modalTitle.value === "Succes") {
+        if(userType === "doctor") {
+            setTimeout(() => {
+                router.push("main-doctor");
+            }, 300);
+        } else {
+            setTimeout(() => {
+                router.push("main-patient");
+            }, 300);
         }
     }
 }
@@ -89,6 +108,13 @@ onBeforeUnmount(() => {
                 <button @click="redirectToRegister" class="register-button"> Creați unul </button>
             </div>
         </div>
+        <CustomModal
+            :open="modalShow"
+            :forConfirmation="false"
+            :title="modalTitle"
+            :message="modalMessage"
+            @close="closeDialog"
+        />
     </div>
 </template>
 

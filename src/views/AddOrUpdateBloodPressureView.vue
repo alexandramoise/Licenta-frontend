@@ -2,12 +2,13 @@
 import CustomNavbar from "@/components/CustomNavbar.vue";
 import CustomInput from "@/components/CustomInput.vue";
 import CustomButton from "@/components/CustomButton.vue";
-import { addBloodPressure, getBloodPressures } from "@/services/bloodpressure_service.js";
+import CustomModal from "../components/CustomModal.vue";
+import { addBloodPressure, getBloodPressures } from "../services/bloodpressure_service.js";
 import { ref } from 'vue';
 import router from "@/router";
 
 //const userEmail = sessionStorage.getItem("email");
-const userEmail = "alexandramoise@gmail.com"
+const userEmail = "alexandramoise5@gmail.com"
 const update = ref(false);
 
 const systolicInput = ref('');
@@ -15,39 +16,72 @@ const diastolicInput = ref('');
 const pulseInput = ref('');
 const dateInput = ref('');
 
+const modalShow = ref(false);
+const modalTitle = ref('');
+const modalMessage = ref('');
+
+function handleInput(event) {
+  const validCharacters = '0123456789';
+  if (!validCharacters.includes(event.key) && !['Backspace', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(event.key)) {
+    event.preventDefault();
+  }
+}
+
 async function add() {
     console.log(systolicInput.value, diastolicInput.value, pulseInput.value, dateInput.value);
 
     if (!systolicInput.value || !diastolicInput.value || !pulseInput.value || !dateInput.value) {
-        alert("Nu poți lăsa câmpuri necompletate.");
+        //alert("Nu poți lăsa câmpuri necompletate.");
+        modalShow.value = true;
+        modalTitle.value = "Alerta";
+        modalMessage.value = "Va rog sa completati campurile";
     } else {
+        const dateFromInput = new Date(dateInput.value);
+        const adjustedDate = dateFromInput.toISOString();
+
         try {
             const bloodPressureDto = {
                 systolic: systolicInput.value,
                 diastolic: diastolicInput.value,
                 pulse: pulseInput.value,
-                date: dateInput.value,
+                date: adjustedDate,
             };
 
             console.log("bloodPressureDTO: ", bloodPressureDto);
             const data = await addBloodPressure(bloodPressureDto, userEmail);
-            alert("S-a salvat");
-            redirectToDashboard();
+            modalShow.value = true;
+            modalTitle.value = "Succes";
+            modalMessage.value = "S-a salvat!";
             return data;
         } catch(error) {
+            modalTitle.value = "Eroare";
+            modalShow.value = true;
             if(error.message === "No patient account for this email address") {
-                alert("Nu exista un cont asociat adresei de mail ", userEmail);
+                //alert("Nu exista un cont asociat adresei de mail ", userEmail);
+                modalMessage.value = "Nu exista un cont asociat adresei de mail " + userEmail;
             } else if(error.message === "Invalid values for diastolic and/or systolic") {
-                alert("Valorile introduse sunt invalide, nu apartin unui interval");
+                //alert("Valorile introduse sunt invalide, nu apartin unui interval");
+                modalMessage.value = "Valorile introduse sunt invalide, nu apartin unui interval";
+            } else if(error.message === "Date can not be in the future") {
+                //alert("Nu puteti alege o data in viitor");
+                modalMessage.value = "Nu puteti alege o data in viitor";
             }
         }
+    }
+}
+
+function closeDialog() {
+    modalShow.value = false;
+    if(modalTitle.value === "Succes") {
+        setTimeout(() => {
+        redirectToDashboard();
+    }, 300);
     }
 }
 
 function redirectToDashboard() {
     router.push("main-patient");
 }
-
 
 </script>
 
@@ -68,7 +102,9 @@ function redirectToDashboard() {
                             name="systolic"
                             min="0"
                             max="200"
+                            step="1"
                             class="custom-input"
+                            @keydown="handleInput"
                         />
                     </div>
     
@@ -81,7 +117,9 @@ function redirectToDashboard() {
                             name="diastolic"
                             min="0"
                             max="180"
+                            step="1"
                             class="custom-input"
+                            @keydown="handleInput"
                         />
                     </div>
 
@@ -94,7 +132,9 @@ function redirectToDashboard() {
                             name="pulse"
                             min="0"
                             max="150"
+                            step="1"
                             class="custom-input"
+                            @keydown="handleInput"
                         />
                     </div>
                 </div>
@@ -110,6 +150,14 @@ function redirectToDashboard() {
         <CustomButton class="add-button" @click="add">Salveaza</CustomButton>
       </div>
     </div>
+
+        <CustomModal
+            :open="modalShow"
+            :forConfirmation="false"
+            :title="modalTitle"
+            :message="modalMessage"
+            @close="closeDialog"
+        />
   </div>
 </template>
 

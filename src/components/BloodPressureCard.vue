@@ -46,8 +46,7 @@ const newDate = computed(() => {
 <template>
     <div class="card">
         <div v-if="isEditable"> <i class="fas fa-plus"> </i> MODIFICA </div>
-        <p> <span class="title"> Sistolic </span> {{ props.systolic }} </p>
-        <p> <span class="title"> Diastolic </span> {{ props.diastolic }} </p>
+        <p> <span class="title"> Valoare </span> {{ props.systolic }} / {{ props.diastolic }} </p>
         <p> <span class="title"> Puls </span> {{ props.pulse }} </p>
         <p> <span class="title"> Data </span> {{ newDate }} </p>
         <p> <span class="title"> Tip </span> <span :style="{ color: tendencyColor }"> {{ tendencyTranslation }} </span> </p> 
@@ -59,7 +58,7 @@ const newDate = computed(() => {
 
 .card {
     background-color: rgb(250, 250, 250);
-    width: 17vw;
+    width: 12vw;
     border-radius: 10px;
     padding: 15px;
     font-size: 17px;

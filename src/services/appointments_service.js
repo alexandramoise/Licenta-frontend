@@ -68,7 +68,30 @@ async function getPatientsAppointmentsOnACertainDay(patientEmail, date, pageSize
     }
 }
 
+async function createNewAppointment(appointmentDto) {
+    const response = await fetch(API_URL, {
+        method: "POST", 
+        body: JSON.stringify({
+            doctorEmail: appointmentDto.doctorEmail,
+            patientEmail: appointmentDto.patientEmail,
+            date: appointmentDto.date,
+            visitType: appointmentDto.visitType,
+        }),
+        headers: {
+            "Content-type": "application/json; charset=UTF-8",
+        },
+    });
+
+    const data = await response.json();
+   
+    if (!response.ok) {
+        throw new Error(data.message || 'Eroare la crearea programarii');
+    }
+    return data;
+}
+
 export { getDoctorsPagedAppointments,
      getPatientsPagedAppointments, 
      getPatientsAppointmentsOnACertainDay, 
-     getDoctorsAppointmentsOnACertainDay }
+     getDoctorsAppointmentsOnACertainDay,
+     createNewAppointment }

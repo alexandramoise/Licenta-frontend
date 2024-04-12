@@ -39,6 +39,16 @@ const router = createRouter({
       component: () => import('../views/AppointmentsView.vue')
     },
     {
+      path: '/create-appointment',
+      name: 'create-appointment',
+      component: () => import('../views/CreateAppointmentView.vue')
+    },
+    {
+      path: '/request-appointment',
+      name: 'request-appointment',
+      component: () => import('../views/CreateAppointmentView.vue')
+    },
+    {
       path: '/logout',
       name: 'logout',
       component: () => import('../views/DoctorMainPageView.vue')

@@ -4,13 +4,12 @@ import CustomNavbar from "../components/CustomNavbar.vue";
 import CustomInput from "../components/CustomInput.vue";
 import CustomButton from "../components/CustomButton.vue";
 import BloodPressureCard from "../components/BloodPressureCard.vue";
-import CustomCalendar from '../components/CustomCalendar.vue';
 
 import { getBloodPressures} from "../services/bloodpressure_service.js";
 import router from '@/router';
 
 //const userEmail = sessionStorage.getItem("email");
-const userEmail = "alexandramoise@gmail.com"
+const userEmail = "alexandramoise5@gmail.com"
 
 function redirectToAdd() {
     router.push("add-bloodpressure");
@@ -38,7 +37,7 @@ function showCanEdit(isEditable) {
         <CustomNavbar />
         <div class="content">
             <div class="history-section">
-                <p> ISTORIC </p>
+                <p> ISTORIC pentru {{ userEmail }}</p>
                 <CustomButton
                     @click="redirectToAdd"
                     class="add-button"

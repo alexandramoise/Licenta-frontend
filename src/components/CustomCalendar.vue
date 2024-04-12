@@ -112,7 +112,7 @@ function selectDate(day) {
 
   const emptyDaysBefore = computed(() => {
     const firstDayOfMonth = new Date(currentMonth.value.getFullYear(), currentMonth.value.getMonth(), 1).getDay();
-    const emptyDays = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1; // Adjust based on your week start day
+    const emptyDays = firstDayOfMonth === 0 ? 0 : firstDayOfMonth - 1; // Adjust based on your week start day
     return Array.from({ length: emptyDays }, (_, index) => index);
   });
 
@@ -123,7 +123,7 @@ function selectDate(day) {
     return Array.from({ length: emptyDays }, (_, index) => index);
   });
   
-  const weekDays = ['Du', 'Lu', 'Ma', 'Mi', 'J', 'Vi', 'Sa'];
+  const weekDays = ['Lu', 'Ma', 'Mi', 'J', 'Vi', 'Sa','Du'];
   
   function changeMonth(step) {
     currentMonth.value.setMonth(currentMonth.value.getMonth() + step);
