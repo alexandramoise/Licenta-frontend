@@ -3,12 +3,13 @@ import CustomNavbar from "@/components/CustomNavbar.vue";
 import CustomInput from "@/components/CustomInput.vue";
 import CustomButton from "@/components/CustomButton.vue";
 import CustomModal from "../components/CustomModal.vue";
-import { addBloodPressure, getBloodPressures } from "../services/bloodpressure_service.js";
-import { ref } from 'vue';
+import { addBloodPressure, updateBloodPressure, getBloodPressureById } from "../services/bloodpressure_service.js";
+import { onMounted, ref} from 'vue';
+import { useRoute  } from "vue-router";
 import router from "@/router";
 
 //const userEmail = sessionStorage.getItem("email");
-const userEmail = "alexandramoise5@gmail.com"
+const userEmail = "alexandramoise2@gmail.com"
 const update = ref(false);
 
 const systolicInput = ref('');
@@ -27,7 +28,22 @@ function handleInput(event) {
   }
 }
 
-async function add() {
+const route = useRoute();
+onMounted(async () => {
+    if (route.query.updateId) {
+        update.value = true;
+        let id = route.query.updateId;
+        const data = await getBloodPressureById(id, userEmail);
+        systolicInput.value = data.systolic;
+        diastolicInput.value = data.diastolic;
+        pulseInput.value = data.pulse;
+        const newDate = new Date(data.date);
+        newDate.setHours(newDate.getHours() + 3);
+        dateInput.value = newDate.toISOString().slice(0,16);
+    }
+});
+
+async function addOrUpdate() {
     console.log(systolicInput.value, diastolicInput.value, pulseInput.value, dateInput.value);
 
     if (!systolicInput.value || !diastolicInput.value || !pulseInput.value || !dateInput.value) {
@@ -48,11 +64,19 @@ async function add() {
             };
 
             console.log("bloodPressureDTO: ", bloodPressureDto);
-            const data = await addBloodPressure(bloodPressureDto, userEmail);
+
+            let data;
+            if(route.query.updateId) {
+                data = await updateBloodPressure(bloodPressureDto, route.query.updateId);
+            } else {
+                data = await addBloodPressure(bloodPressureDto, userEmail);
+            }
+            
             modalShow.value = true;
             modalTitle.value = "Succes";
             modalMessage.value = "S-a salvat!";
             return data;
+
         } catch(error) {
             modalTitle.value = "Eroare";
             modalShow.value = true;
@@ -147,7 +171,7 @@ function redirectToDashboard() {
                         class="custom-input"
                     />
                 </div>
-        <CustomButton class="add-button" @click="add">Salveaza</CustomButton>
+        <CustomButton class="add-button" @click="addOrUpdate">Salveaza</CustomButton>
       </div>
     </div>
 

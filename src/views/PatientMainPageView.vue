@@ -5,11 +5,11 @@ import CustomInput from "../components/CustomInput.vue";
 import CustomButton from "../components/CustomButton.vue";
 import BloodPressureCard from "../components/BloodPressureCard.vue";
 
-import { getBloodPressures} from "../services/bloodpressure_service.js";
+import { getBloodPressures } from "../services/bloodpressure_service.js";
 import router from '@/router';
 
 //const userEmail = sessionStorage.getItem("email");
-const userEmail = "alexandramoise5@gmail.com"
+const userEmail = "alexandramoise2@gmail.com"
 
 function redirectToAdd() {
     router.push("add-bloodpressure");
@@ -24,9 +24,14 @@ onMounted(() => {
     fetchBloodPressures();
 });
 
-function showCanEdit(isEditable) {
+async function editBp(id, isEditable) {
     if(isEditable) {
-        alert("Editezi");
+        router.push({
+        name: "add-bloodpressure",
+        query: {
+            updateId: id,
+        },
+        });
     }
 }
 </script>
@@ -55,7 +60,7 @@ function showCanEdit(isEditable) {
                         :bloodPressureType="bp.bloodPressureType"
                         :isEditable="bp.isEditable"
                         :patientEmail="bp.patientEmail"
-                        @click.stop="showCanEdit(bp.isEditable)"
+                        @click.stop="editBp(bp.id, bp.isEditable)"
                 />
                 </div>
             </div>
