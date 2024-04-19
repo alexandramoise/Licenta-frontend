@@ -15,7 +15,7 @@ import router from '@/router';
 
 //const userEmail = sessionStorage.getItem("email");
 const doctorEmail = "alexandramoise636@gmail.com";
-const patientEmail = "alexandramoise@gmail.com";
+const patientEmail = "alexandramoise2@gmail.com";
 const userType = sessionStorage.getItem("gotIn");
 
 const appointments = ref([]);
@@ -166,7 +166,7 @@ function redirectToForm() {
     height: 100vh;
     width: 100vw;
     background-color: rgb(255, 255, 255);
-    overflow-y: auto;
+    overflow-y: hidden;
 }
 
 .content {

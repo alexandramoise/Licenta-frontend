@@ -8,7 +8,7 @@
       <div class="profile-dropdown">
         <CustomButton class="navbar-item" @click.stop="dropdownVisible = !dropdownVisible"> <i class="fas fa-plus"> </i> Adaugă <i class='fas fa-caret-down'> </i></CustomButton>
         <div v-if="dropdownVisible && userType === 'doctor'" class="dropdown-content">
-            <CustomButton class="dropdown-item" @click="navigateTo('add-pacient')"> pacient <i class="fas fa-user"></i></CustomButton>
+            <CustomButton class="dropdown-item" @click="navigateTo('add-patient')"> pacient <i class="fas fa-user"></i></CustomButton>
             <CustomButton class="dropdown-item" @click="navigateTo('add-recommandation')"> recomandare <i class="fas fa-lightbulb"></i> </CustomButton>
           </div>
           <div v-if="dropdownVisible && userType === 'pacient'" class="dropdown-content">
@@ -17,7 +17,7 @@
           </div>
       </div>
 
-      <CustomButton class="navbar-item" @click="navigateTo('recomandations')"> <i class="fas fa-lightbulb"> </i> Recomandări</CustomButton>
+      <CustomButton class="navbar-item" @click="navigateTo('recommandations')"> <i class="fas fa-lightbulb"> </i> Recomandări</CustomButton>
       <div class="profile-dropdown">
         <CustomButton class="navbar-item" @click.stop="dropdownAccountVisible = !dropdownAccountVisible"> <i class="fas fa-user"> </i> Cont <i class='fas fa-caret-down'> </i></CustomButton>
         <div v-if="dropdownAccountVisible" class="dropdown-content">
@@ -32,7 +32,8 @@
 
 <script>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
-import { useRouter } from 'vue-router';
+import { routerViewLocationKey, useRouter } from 'vue-router';
+import router from '@/router';
 
 export default {
   setup() {
@@ -40,7 +41,7 @@ export default {
     const dropdownAccountVisible = ref(false);
     const navVisible = ref(false);
     const isDesktop = ref(true);
-    const router = useRouter();
+    //const router = useRouter();
 
     const userType = sessionStorage.getItem("gotIn");
 
@@ -67,8 +68,30 @@ export default {
     };
 
     const navigateTo = (path) => {
-      console.log("Merge la: ", path);
-      alert(path);
+      if(path === "home") {
+          if(userType === "doctor") {
+              router.push("main-doctor");
+          } else {
+              router.push("main-patient");
+          }
+      } 
+      else if(path === "appointments") {
+          router.push("appointments");
+      } 
+      else if(path === "add-patient") {
+        router.push({
+            name: "new",
+            query: {
+                accountType: "pacient",
+            },
+        });
+      }
+      else if(path === "data") {
+        router.push("my-profile");
+      } 
+      else if(path === "recommandations") {
+        router.push("recommandations");
+      }
     };
 
     return { 

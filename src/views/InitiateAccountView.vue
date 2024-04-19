@@ -1,8 +1,12 @@
 <script setup>
 import { createDoctorAccount } from '../services/doctor_service.js'
-import { ref, onBeforeUnmount } from 'vue';
+import { ref, onBeforeUnmount, onMounted } from 'vue';
 import router from "../router";
+import { useRoute } from 'vue-router';
+
 import CustomInput from "../components/CustomInput.vue";
+import CustomModal from '../components/CustomModal.vue';
+import CustomNavbar from '@/components/CustomNavbar.vue';
 
 const emailText = ref('');
 
@@ -19,6 +23,9 @@ if(sessionStorage.getItem("gotIn") === "doctor") {
     showCreateAccountForDoctor.value = true;
 }
 
+const modalShow = ref(false);
+const modalTitle = ref('');
+const modalMessage = ref('');   
 async function createAccount() {
     if (emailText.value === '' || emailText.value === null) {
         modalShow.value = true;
@@ -26,7 +33,7 @@ async function createAccount() {
         modalMessage.value = "Va rog sa completati campul";
     } else {
         try {
-            //const result = await createDoctorAccount(emailText.value);
+            //const result = await createDoctorAccount(emailText.value)
             if(!validateEmail(emailText.value)) {
                 console.log("mail invalid");
                 modalShow.value = true;
@@ -35,9 +42,13 @@ async function createAccount() {
             } else {
                 console.log("S-A INTRODUS: ", emailText.value);
                 alert(emailText.value)
+                if(role.value === "doctor") {
+                    modalMessage.value = "Verificati inbox-ul la adresa de email introdusa";
+                } else {
+                    modalMessage.value = "S-a trimis mail catre pacient";
+                }
                 modalShow.value = true;
                 modalTitle.value = "Succes";
-                modalMessage.value = "Veti fi redirectionat la pagina de login";
             }
         } catch (error) {
             modalShow.value = true;
@@ -48,12 +59,27 @@ async function createAccount() {
     }
 }
 
+const role = ref('');
+onMounted(() => {
+    const route = useRoute();
+    if (route.query.accountType) {
+        role.value = route.query.accountType;
+    }
+});
+
 function closeDialog() {
     modalShow.value = false;
     if(modalTitle.value === "Succes") {
-        setTimeout(() => {
-            router.push("login");
-    }, 300);
+        if(role.value === "doctor") {
+            setTimeout(() => {
+                router.push("login");
+            }, 300);
+        } else {
+            console.log("Merg la dashboard: ", role)
+            setTimeout(() => {
+                router.push("main-doctor");
+            }, 300);
+        }
     }
 }
 
@@ -71,9 +97,12 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div class="page">
+    <div v-if="role === 'pacient'">
+        <CustomNavbar />
+    </div>
+    <div class="page" :style="{ height: role === 'pacient' ? '94vh' : '100vh'}">
         <div class="register-container">
-            <h2>Creare cont</h2>
+            <h2>Creare cont {{ role }}</h2>
             <CustomInput 
                 v-model="emailText"
                 :placeholder="'adresa de mail'"
@@ -97,7 +126,6 @@ onBeforeUnmount(() => {
     display: flex; 
     align-items: center;
     justify-content: center; 
-    height: 100vh;
     width: 100vw;
     background-color: rgb(163, 2, 2);
 }

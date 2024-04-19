@@ -78,7 +78,7 @@ async function editBp(id, isEditable) {
     height: 100vh;
     width: 100vw;
     background-color: rgb(255, 255, 255);
-    overflow-y: auto;
+    overflow-y: hidden;
 }
 
 .content {

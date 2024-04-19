@@ -4,7 +4,8 @@ import CustomNavbar from "../components/CustomNavbar.vue";
 import PatientCard from "../components/PatientCard.vue";
 import FilteringPatientsSidebar from "../components/FilteringPatientsSidebar.vue";
 import Pagination from "../components/Pagination.vue";
-import { getDoctorsPatients, getPagedPatients, getPatientById } from "../services/patient_service.js";        
+import { getPagedPatients } from "../services/patient_service.js";        
+import router from '@/router';
 
 const userEmail = "alexandramoise636@gmail.com";
 
@@ -48,9 +49,13 @@ function changePage(newPage) {
     currentPage.value = newPage;
 }
 
-const selectedPatient = ref("");
-async function showPatientDetails(patientId) {
-    selectedPatient.value = await getPatientById(patientId);
+function redirectToPatientDetails(id) {
+    router.push({
+        name: "patient-detailed",
+        query: {
+            patientId: id,
+        },
+    });
 }
 
 
@@ -76,7 +81,7 @@ async function showPatientDetails(patientId) {
                         :tendency="patient.tendency"
                         :doctorEmail="patient.doctorEmail"
                         :gender="patient.gender"
-                        @click="showPatientDetails(patient.id)"
+                        @click="redirectToPatientDetails(patient.id)"
                     />
 
                     <Pagination 
@@ -102,7 +107,7 @@ async function showPatientDetails(patientId) {
     height: 100vh;
     width: 100vw;
     background-color: rgb(255, 255, 255);
-    overflow-y: auto;
+    overflow-y: hidden;
 }
 
 .content {

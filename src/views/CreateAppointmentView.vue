@@ -154,7 +154,7 @@ function closeDialog() {
     height: 100vh;
     width: 100vw;
     background-color: #b80f20;
-    overflow-y: auto;
+    overflow-y: hidden;
 }
 
 .form-container {

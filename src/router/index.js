@@ -24,6 +24,11 @@ const router = createRouter({
       component: () => import('../views/DoctorMainPageView.vue')
     },
     {
+      path: '/patient-detailed',
+      name: 'patient-detailed',
+      component: () => import('../views/DetailedPatientView.vue')
+    },
+    {
       path: '/main-patient',
       name: 'main-patient',
       component: () => import('../views/PatientMainPageView.vue')
@@ -38,6 +43,7 @@ const router = createRouter({
       name: 'appointments',
       component: () => import('../views/AppointmentsView.vue')
     },
+    
     {
       path: '/create-appointment',
       name: 'create-appointment',
@@ -47,6 +53,16 @@ const router = createRouter({
       path: '/request-appointment',
       name: 'request-appointment',
       component: () => import('../views/CreateAppointmentView.vue')
+    },
+    {
+      path: '/recommandations',
+      name: 'recommandations',
+      component: () => import('../views/RecommandationsView.vue')
+    },
+    {
+      path: '/add-recommandation',
+      name: 'add-recommandation',
+      component: () => import('../views/AddRecommandationView.vue')
     },
     {
       path: '/logout',

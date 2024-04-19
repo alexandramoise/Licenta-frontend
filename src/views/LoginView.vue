@@ -69,7 +69,12 @@ function closeDialog() {
 }
 
 function redirectToRegister() {
-    router.push('new');
+    router.push({
+        name: "new",
+        query: {
+            accountType: "doctor",
+        },
+    });
 }
 
 const showPassword = ref(false);
@@ -81,6 +86,10 @@ onBeforeUnmount(() => {
     window.removeEventListener("keydown", handleKeyPress);
 });
 
+window.history.pushState(null, null, window.location.href);
+window.onpopstate = function () {
+window.history.go(1);
+};
 </script>
 
 <template>

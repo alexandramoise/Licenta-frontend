@@ -81,7 +81,7 @@ function setUser(userType) {
 
 .app-title {
   color: rgb(163, 2, 2);
-  font-size: 25px;
+  font-size: 20px;
   text-shadow: -2px -2px 0 white, 2px -2px 0 white, -2px 2px 0 white, 2px 2px 0 white;
 }
 
