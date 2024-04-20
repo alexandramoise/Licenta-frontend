@@ -1,15 +1,19 @@
 <script setup>
 import { onMounted, ref, watch } from 'vue';
+import router from '@/router';
 import { getPatientByEmail } from '@/services/patient_service';
-import { getAllRecommandations, getRecommandationsByType, getRecommandationsByHashtag, getRecommandationsByHashtagAndType } from '@/services/recommandation_service.js' 
+import { getAllRecommandations, getRecommandationsByType, 
+         getRecommandationsByHashtag, getRecommandationsByHashtagAndType, 
+         getAllRecommandationsForPatient, getRecommandationsForPatientByHashtag} from '@/services/recommandation_service.js' 
 
 import CustomNavbar from '@/components/CustomNavbar.vue';
 import Pagination from '@/components/Pagination.vue';
+import CustomButton from '@/components/CustomButton.vue';
 
 const userType = sessionStorage.getItem("gotIn");
 const isDoctor = ref(userType == "doctor");
 
-const tags = ref(['Sport', 'Alimentatie', 'Stres']);
+const tags = ref(['Sport', 'Alimentatie', 'Stres', 'Obiceiuri']);
 const types = ref(['Hipertensiune','Normal','Hipotensiune']); // Replace with actual types
 const selectedTag = ref('');
 const selectedType = ref('');
@@ -20,13 +24,19 @@ const totalPages = ref(0);
 const currentPage = ref(1);
 
 // const userEmail = sessionStorage.getItem("email");
-let userEmail = "alexandramoise1@gmail.com";
+let userEmail;
+let doctorEmail;
 let patientType;
+
 if(!isDoctor.value) {
+    userEmail = 'alexandramoise2@gmail.com';
     let data = await getPatientByEmail(userEmail);
     patientType = data.tendency;
+    doctorEmail = data.doctorEmailAddress;
     console.log("Tip pacient: ", patientType);
 } else {
+    userEmail = 'alexandramoise636@gmail.com';
+    doctorEmail = userEmail;
     console.log("Afisez toate recomandarile");
 }
 
@@ -40,48 +50,45 @@ const typeTranslations = {
   'Hipertensiune': 'Hypertension'
 };
 
-// ... (rest of your script setup remains unchanged)
 
 async function fetchRecommendations() {
-  let data;
+  let data
+  // fetch-urile pentru doctor: dupa eticheta, tip, eticheta si tip sau toate
   if (isDoctor.value) {
-    // Logic for doctor: can filter by tag, type, or both
     if (selectedTag.value && selectedType.value) {
-      data = await getRecommandationsByHashtagAndType(selectedType.value, selectedTag.value, pageSize, currentPage.value - 1);
+      let typeInEnglish = typeTranslations[selectedType.value] || selectedType.value;
+      data = await getRecommandationsByHashtagAndType(doctorEmail, typeInEnglish, selectedTag.value, pageSize, currentPage.value - 1);
     } else if (selectedTag.value) {
-      data = await getRecommandationsByHashtag(selectedTag.value, pageSize, currentPage.value - 1);
+      data = await getRecommandationsByHashtag(doctorEmail, selectedTag.value, pageSize, currentPage.value - 1);
     } else if (selectedType.value) {
-      data = await getRecommandationsByType(selectedType.value, pageSize, currentPage.value - 1);
+      let typeInEnglish = typeTranslations[selectedType.value] || selectedType.value;
+      data = await getRecommandationsByType(doctorEmail, typeInEnglish, pageSize, currentPage.value - 1);
     } else {
-      data = await getAllRecommandations(pageSize, currentPage.value - 1);
+      data = await getAllRecommandations(doctorEmail, pageSize, currentPage.value - 1);
     }
-  } else {
-    // Logic for patient: only show recommendations for their type
+  } 
+  // fetch-urile pentru pacient, dupa eticheta sau toate
+  else {
     if (selectedTag.value) {
-      // Filter recommendations by the selected tag and patient's type
-      data = await getRecommandationsByHashtagAndType(patientType, selectedTag.value, pageSize, currentPage.value - 1);
+      data = await getRecommandationsForPatientByHashtag(doctorEmail, patientType, selectedTag.value, pageSize, currentPage.value - 1)
     } else {
-      // Show all recommendations for the patient's type
-      data = await getRecommandationsByType(patientType, pageSize, currentPage.value - 1);
+      data = await getAllRecommandationsForPatient(doctorEmail, patientType, pageSize, currentPage.value - 1);
     }
   }
 
   if (data && data.content) {
-    recommendations.value = data.content.map((r) => ({
-      ...r
-    }));
-    totalPages.value = Math.ceil(data.totalElements / pageSize);
+      recommendations.value = data.content.map((r) => ({
+          ...r
+      }));
+
+      totalPages.value = Math.ceil(data.totalElements / pageSize);
   } else {
-    recommendations.value = [];
-    totalPages.value = 0;
+      recommendations.value = [];
+      totalPages.value = 0;
   }
 }
 
-// ... (rest of your script remains unchanged)
-
-
 onMounted(() => {
-    console.log(selectedTag.value);
     fetchRecommendations();
 });
 
@@ -98,6 +105,10 @@ function clearFilters() {
   fetchRecommendations();
 }
 
+function redirectToAdd() {
+  router.push("add-recommandation");
+}
+
 </script>
 
 <template>
@@ -106,8 +117,8 @@ function clearFilters() {
 
     <div class="content">
       <div class="header">
-        <h1 class="title">Recomandari</h1>
-        <button v-if="isDoctor" class="add-button">Adauga recomandare</button>
+        <h2 class="title">Recomandari</h2>
+        <CustomButton v-if="isDoctor" class="add-button" @click="redirectToAdd">Adauga recomandare</CustomButton>
       </div>
 
       <div class="filter-bar">
@@ -127,11 +138,12 @@ function clearFilters() {
 
         <select v-if="isDoctor" v-model="selectedType" class="type-selector" @change="fetchRecommendations()">
           <option value="">General</option>
-          <option v-for="t in types" :key="t" :value="t">{{ t }}</option>
+          <option class="type-option" v-for="t in types" :key="t" :value="t">{{ t }}</option>
         </select>
         <button v-if="selectedTag || selectedType" @click="clearFilters()" class="clear-filter-button">Sterge Filtre</button>
       </div>
 
+      <div v-if="recommendations.length !== 0">
       <div class="recommendations">
         <div v-for="recommendation in recommendations" :key="recommendation.id" class="card">
           <h3>{{ recommendation.hashtag }}</h3>
@@ -146,6 +158,10 @@ function clearFilters() {
         @changePage="changePage"
         class="pagination-component"
       />
+    </div>
+    <div v-else>
+      <p class="not-found"> Nu s-au gasit recomandari. </p>
+    </div>
     </div>
   </div>
   </template>
@@ -165,11 +181,23 @@ function clearFilters() {
 }
   
 .header {
-    margin: 50px auto;
+    margin: 60px auto;
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 50px;
+    gap: 30px;
+}
+
+.not-found {
+    display: flex;
+    justify-content: center;
+    align-items: center; 
+    margin-top: 100px;
+    text-align: center;
+    color: darkred;
+    font-size: 17px;
+    font-weight: bold;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 .title {
@@ -265,5 +293,31 @@ function clearFilters() {
       width: 50%;
       max-width: 300px;
     }
+
+    .filter-bar {
+      flex-direction: column;
+    }
+
+    .radio-group {
+      display: grid;
+      grid-template-columns: 50% 50%;
+    }
+
+    .type-selector {
+      height: 30px;
+    }
+    
+    .add-button {
+      width: 120px;
+      height: 40px;
+      border-radius: 8px;
+      background: #b80f20;
+      color: #fff;
+      font-size: 14px;
+      border: none;
+      cursor: pointer;
+      display: block;
+  }
+
 }
 </style>

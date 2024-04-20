@@ -218,7 +218,7 @@ function closeDialog() {
 
             
             <div class="button-container">
-                <CustomButton type="submit" @click="saveChangesPatient">Salvare</CustomButton>
+                <CustomButton @click="saveChangesPatient">Salvare</CustomButton>
             </div>
         </div>
 
@@ -244,7 +244,7 @@ function closeDialog() {
                     </div>
                 
                     <div class="button-container">
-                        <CustomButton type="submit" @click="saveChangesDoctor">Salvare</CustomButton>
+                        <CustomButton @click="saveChangesDoctor">Salvare</CustomButton>
                     </div>
          </div>
     </div>
@@ -261,9 +261,10 @@ function closeDialog() {
 
 <style scoped>
 .page {
-    background-color: #b80f20;
     height: 100vh;
     width: 100vw;
+    background-color: #b80f20;
+    overflow-y: hidden;
 }
 .card {
     max-width: 600px;
@@ -363,5 +364,55 @@ input[type='checkbox']:checked {
   accent-color: #b80f20; 
 }
 
+/* Stilurile de bază, valabile pentru desktop */
+/* ... (stilurile tale actuale) ... */
+
+/* Stiluri pentru ecrane mici (telefoane) */
+@media (max-width: 768px) {
+  .page {
+    overflow-y: auto; /* permite derularea pe ecrane mici */
+  }
+
+  .card, .doctor-card {
+    margin: 20px; /* mai puțin spațiu în jurul cardurilor */
+    width: auto; /* se extinde să se potrivească cu spațiul disponibil */
+  }
+
+  .input-row {
+    grid-template-columns: 1fr; /* stivuiește input-urile vertical */
+  }
+
+  .conditions-grid, .habits-row {
+    grid-template-columns: 1fr 1fr; /* 2 coloane pentru afecțiuni și obiceiuri */
+  }
+
+  .radio-container, .checkbox-item {
+    flex-direction: column; /* stivuiește radio buttons și checkboxes vertical */
+    align-items: start; /* aliniază la start pentru a nu se întinde pe tot ecranul */
+  }
+
+  button {
+    width: calc(100% - 40px); /* ajustează lățimea butonului la padding */
+  }
+
+  .checkbox-item, .radio-container {
+    flex-direction: row; /* schimbați înapoi la row pentru a avea eticheta alături */
+    align-items: center; /* centrați elementele pe verticală */
+  }
+
+  .checkbox-item input, .radio-container input {
+    margin-right: 10px; /* spațiu între caseta de selectat și etichetă, dacă este necesar */
+  }
+
+  .checkbox-item label, .radio-container label {
+    margin: 0; /* Eliminați marginile dacă sunt setate */
+    white-space: nowrap; /* asigurați-vă că textul nu trece la linia următoare */
+  }
+  
+  /* Ajustați lățimea containerelor de input pentru a se potrivi cu noua structură */
+  .input-container, .conditions-grid, .habits-row {
+    width: 100%; /* utilizarea completă a lățimii disponibile */
+  }
+}
 
 </style>

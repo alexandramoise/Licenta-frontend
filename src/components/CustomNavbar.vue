@@ -91,6 +91,8 @@ export default {
       } 
       else if(path === "recommandations") {
         router.push("recommandations");
+      } else if(path === "add-recommandation") {
+        router.push("add-recommandation");
       }
     };
 
@@ -169,7 +171,6 @@ export default {
   font-size: 16px;
 }
 
-/* Small screens (less than 600px) */
 @media only screen and (max-width: 600px) {
   .nav-links, .dropdown-content {
     flex-direction: column;
@@ -198,7 +199,7 @@ export default {
   }
 
   .profile-btn {
-    margin-bottom: 0.5rem; /* Spacing for the dropdown */
+    margin-bottom: 0.5rem; 
   }
 }
 </style>

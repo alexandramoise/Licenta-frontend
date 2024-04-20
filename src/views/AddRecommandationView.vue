@@ -1,108 +1,224 @@
 <script setup>
+import CustomButton from '@/components/CustomButton.vue';
 import CustomNavbar from '@/components/CustomNavbar.vue';
+import CustomModal from '@/components/CustomModal.vue';
 import { ref } from 'vue';
+import router from "@/router";
 
-const tags = ref(['Sport', 'Alimentatie', 'Stres']);
+import { addRecommandation } from '@/services/recommandation_service.js';
+
+const tags = ['Sport', 'Alimentatie', 'Stres', 'Obiceiuri'];
 const selectedTag = ref('');
 const textAreaContent = ref('');
-const characterLimit = 4000;
-const types = ref(['Hipertensiune', 'Normal', 'Hipotensiune', 'General']);
+const characterLimit = 1000;
+const types = ['Hipertensiune', 'Normal', 'Hipotensiune', 'General'];
 const selectedType = ref('');
-const formSubmission = ref({
-  tag: '',
-  content: '',
-  type: ''
-});
 
+const typeTranslations = {
+  'Hipotensiune': 'Hypotension',
+  'Normal': 'Normal',
+  'Hipertensiune': 'Hypertension',
+  'General': 'All'
+};
+
+/*
 const handleTextAreaInput = (e) => {
   if (e.target.value.length <= characterLimit) {
     textAreaContent.value = e.target.value;
   }
 };
 
-const submitForm = () => {
-  formSubmission.value = {
-    tag: selectedTag.value,
-    content: textAreaContent.value,
-    type: selectedType.value,
-  };
-  // Here you would handle the form submission, like calling an API
-  console.log(formSubmission.value);
-};
+*/
+
+const modalShow = ref(false);
+const modalTitle = ref('');
+const modalMessage = ref('');
+
+// din local storage
+let doctorEmail = 'alexandramoise636@gmail.com'
+
+async function createRecommandation() {
+   console.log("Campuri: TAG", selectedTag.value, "TEXT ", textAreaContent.value, "TIP ", selectedType.value);
+   if(!selectedTag.value || !textAreaContent.value || !selectedType.value) {
+        modalShow.value = true;
+        modalTitle.value = "Alerta";
+        modalMessage.value = "Va rog sa completati campurile";
+   } else {
+       try {
+        let typeInEnglish = typeTranslations[selectedType.value] || selectedType.value;
+        console.log("Tip in engleza: ", typeInEnglish);
+            const recommandationDto = {
+                text: textAreaContent.value,
+                recommandationType: typeInEnglish,
+                hashtag: selectedTag.value,
+            };
+
+            let data = await addRecommandation(recommandationDto, doctorEmail);
+            modalShow.value = true;
+            modalTitle.value = "Succes";
+            modalMessage.value = "S-a salvat!";
+            return data;
+       } catch(error) {
+            modalShow.value = true;
+            modalTitle.value = "Eroare";
+            modalMessage.value = error.message;
+       }
+   }
+}
+
+function closeDialog() {
+    modalShow.value = false;
+    if(modalTitle.value === "Succes") {
+        setTimeout(() => {
+        redirectToPage();
+    }, 300);
+    }
+}
+
+function redirectToPage() {
+    router.push("recommandations");
+}
 </script>
 
 <template>
+  <div class="container">
     <CustomNavbar />
-  <div class="add-recommendation-form">
-    <h3> Adauga o recomandare </h3>
-    <div class="radio-group">
-            <template v-for="tag in tags" :key="`radio-${tag}`">
-            <input
-                :id="tag"
-                type="radio"
-                :value="tag"
-                name="tag"
-                v-model="selectedTag"
-            />
-            <label :for="tag">{{ `#${tag}` }}</label>
-            </template>
-        </div>
-    
-    <textarea
-      v-model="textAreaContent"
-      @input="handleTextAreaInput"
-      placeholder="Write the recommendation here..."
-      rows="4"
-    ></textarea>
-    <p>{{ textAreaContent.length }} / {{ characterLimit }}</p>
-
-    <div class="radio-group">
-      <template v-for="t in types">
-        <input
-          :id="t"
-          type="radio"
-          :value="t"
-          name="type"
-          v-model="selectedType"
-        />
-        <label :for="type">{{ t }}</label>
-      </template>
+    <div class="form-container">
+      <h1 style="color: #b80f20; text-align: center">Adaugă o recomandare</h1>
+      <div class="input-group">
+        <template v-for="tag in tags" :key="tag">
+          <input :id="tag" type="radio" :value="tag" name="tag" v-model="selectedTag" />
+          <label :for="tag" class="tag-label"> #{{ tag }}</label>
+        </template>
+      </div>
+      <textarea :maxlength="500" v-model="textAreaContent" @input="handleTextAreaInput" placeholder="Scrieti recomandarea aici..." />
+      <div class="character-count">{{ textAreaContent.length }} / 500</div>
+      <div class="input-group">
+        <template v-for="t in types" :key="t">
+          <input :id="t" type="radio" :value="t" name="type" v-model="selectedType" />
+          <label :for="t" class="type-label">{{ t }}</label>
+        </template>
+      </div>
+      <CustomButton @click="createRecommandation" class="submit-button">Trimite</CustomButton>
     </div>
-    
-    <button @click="submitForm">Submit</button>
+      <CustomModal
+            :open="modalShow"
+            :forConfirmation="false"
+            :title="modalTitle"
+            :message="modalMessage"
+            @close="closeDialog"
+        />
   </div>
 </template>
 
 <style scoped>
-.add-recommendation-form {
-    max-width: 500px;
-    background-color: #b80f20;
+.container {
+  height: 100vh;
+  width: 100vw;
+  background-color: #b80f20;
+  overflow-y: hidden;
 }
 
-.radio-group {
-    display: flex;
-    justify-content: space-between;
+.form-container {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  max-width: 400px;
+  margin: 50px auto;
 }
 
-.radio-group input[type="radio"] {
+.input-group {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.input-group input[type="radio"] {
     display: none; 
 }
 
-.radio-group label {
-    flex: 1;
-    text-align: center;
-    padding: 10px;
-    margin: 2px;
-    background: #ffffff;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    cursor: pointer;
-    display: block;
+.tag-label,
+.type-label {
+  flex-grow: 1;
+  text-align: center;
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  margin: 0.25rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
 }
 
-.radio-group input[type="radio"]:checked + label {
-    background: #b80f20;
-    color: #fff;
-    border-color: #b80f20;
+.tag-label:hover,
+.type-label:hover {
+  background-color: #f0f0f0;
 }
+
+input[type="radio"]:checked + .tag-label,
+input[type="radio"]:checked + .type-label {
+  background-color: #e3bfc2;
+  border-color: #87373f;
+}
+
+textarea {
+  width: 95%;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  resize: vertical;
+  min-height: 100px;
+}
+
+.character-count {
+  text-align: right;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.submit-button {
+  width: 95%;
+  padding: 10px 20px;
+  border-radius: 8px;
+  background: #b80f20;
+  color: #fff;
+  font-size: 17px;
+  border: none;
+  cursor: pointer;
+  display: block;
+  margin: 20px auto;
+  transition: background-color 0.3s;
+}
+
+.submit-button:hover {
+  background-color: #a30e1c;
+}
+
+@media only screen and (max-width: 600px) {
+  .form-container {
+    max-width: 80%;
+    margin: 20px auto;
+    padding: 1rem;
+  }
+
+  .input-group {
+    display: grid;
+    grid-template-columns: 50% 50%;
+  }
+
+  .tag-label,
+  .type-label {
+    flex-grow: 0;
+    margin: 5px 0;
+  }
+
+  textarea {
+    width: calc(100% - 10px); /* scădere padding */
+  }
+
+  .submit-button {
+    width: calc(100% - 10px); /* scădere padding */
+  }
+}
+
 </style>
