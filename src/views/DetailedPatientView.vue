@@ -1,6 +1,6 @@
 <script setup>
-import { onMounted, ref } from 'vue';
-import { getPatientById } from '../services/patient_service';
+import { onMounted, ref, watch } from 'vue';
+import { getPatientById, getMedicalConditions } from '../services/patient_service';
 import { getPatientsPagedAppointments } from '@/services/appointments_service';
 import { useRoute  } from "vue-router";
 import router from "@/router";
@@ -10,6 +10,14 @@ import CustomButton from '@/components/CustomButton.vue';
 import Pagination from '@/components/Pagination.vue';
 
 const route = useRoute();
+
+// checking whether or not the user is authenticated based on the token's existence
+const token = localStorage.getItem("token");
+console.log(token);
+const isAuthenticated = ref(token !== null);
+watch(() => localStorage.getItem("token"), (newToken) => {
+  isAuthenticated.value = newToken !== null;
+});
 
 const patientName = ref('');
 const patientAppointments = ref([]);
@@ -21,17 +29,20 @@ onMounted(async () => {
         const data = await getPatientById(id);
         patientName.value = data.fullName;
 
+        /*
         patientAppointments.value = data.appointments.map((appointment) => ({
                 ...appointment
             }));
+            */
 
-        patientMedicalHistory.value = data.medicalConditions.map((m) => ({
-                ...m
-            }));
+        let medcond = await getMedicalConditions(id);
+        patientMedicalHistory.value = medcond.map(m => m);
 
+            /*
         patientTreatments.value = data.treatments.map((t) => ({
             ...t
         }));
+        */
 
         console.log("programari: ", patientAppointments.value[0], ", boli: ", patientMedicalHistory.value, " si tratamente ", patientTreatments.value);
         console.log("In pagina de detalii: ", data);
@@ -81,7 +92,7 @@ function convertDateOnly(originalDate) {
 </script>
 
 <template>
-<div class="page">
+<div class="page" v-if="isAuthenticated">
     <CustomNavbar />
     
     <div class="content">
@@ -105,7 +116,7 @@ function convertDateOnly(originalDate) {
                     </div>
 
                     <h3> Afectiuni: </h3>
-                    <div v-if="patientMedicalHistory.length !== 0">
+                    <div v-if="patientMedicalHistory.length > 0">
                         {{  patientMedicalHistory[0].name}}
                     </div>
                     <div v-else>
@@ -117,6 +128,7 @@ function convertDateOnly(originalDate) {
                         <p> <span style="font-size: 17px; color: darkred; font-weight: 700;"> Afectiune: </span> {{ patientTreatments[0].medicalConditionName }} </p>
                         <p> <span style="font-size: 17px; color: darkred; font-weight: 700;"> Nume medicament: </span> {{ patientTreatments[0].medicineName }} </p>
                         <p> <span style="font-size: 17px; color: darkred; font-weight: 700;"> Doza zilnica: </span> {{ patientTreatments[0].doses }} </p>
+                        <p> <span style="font-size: 17px; color: darkred; font-weight: 700;"> Comentariu: </span> {{ patientTreatments[0].comment }} </p>
                         <p> <span style="font-size: 17px; color: darkred; font-weight: 700;"> Data inceput: </span> {{ convertDateOnly(patientTreatments[0].startingDate) }}</p>
                         <p> <span style="font-size: 17px; color: darkred; font-weight: 700;"> Data final: </span> {{ patientTreatments[0].endingDate != null ? convertDateOnly(patientTreatments[0].endingDate) : 'nu e incheiat' }}</p>
                     </div>
@@ -187,6 +199,9 @@ function convertDateOnly(originalDate) {
                 <p> AICI VOR FI STATISTICILE </p>
             </div>
         </div>
+</div>
+<div v-else>
+    <p> NEAUTENTIFICAAAT </p>
 </div>
 </template>
 

@@ -1,11 +1,20 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import CustomNavbar from '../components/CustomNavbar.vue';
 import CustomInput from '../components/CustomInput.vue';
 import CustomButton from '../components/CustomButton.vue';
 import CustomModal from '../components/CustomModal.vue';
 import { getDoctorByEmail, updateDoctorByEmail } from '../services/doctor_service.js';
-import { getPatientByEmail, updatePatientByEmail } from '../services/patient_service.js';
+import { getPatientByEmail, updatePatientByEmail, getMedicalConditions } from '../services/patient_service.js';
+
+// checking whether or not the user is authenticated based on the token's existence
+const token = localStorage.getItem("token");
+console.log(token);
+const isAuthenticated = ref(token !== null);
+watch(() => localStorage.getItem("token"), (newToken) => {
+  isAuthenticated.value = newToken !== null;
+});
+
 
 const firstName = ref('');
 const lastName = ref('');
@@ -35,15 +44,16 @@ const habits = [
     { label: 'Sedentarism', value: 'Sedentarism' },
     { label: 'Obezitate', value: 'Obezitate' },
     { label: 'Fumat', value: 'Fumat' },
-    { label: 'Consum alcool', value: 'Consum de alcool' },
+    { label: 'Consum alcool', value: 'Consum alcool' },
 ]
 
-const userType = sessionStorage.getItem("gotIn");
-// o sa il iau din session storage
-let email;
+const userType = localStorage.getItem('role');
+let email = localStorage.getItem('user');
 let data;
+
+const patientMedicalConditions = ref([]);
+
 if(userType === "doctor") {
-    email = "alexandramoise636@gmail.com";
     data = await getDoctorByEmail(email);
 
     if(data.fullName !== null) {
@@ -53,8 +63,7 @@ if(userType === "doctor") {
         lastName.value = name[1];
     }
 
-} else {
-    email = "alexandramoise2@gmail.com";
+} else if(userType === "patient") {
     data = await getPatientByEmail(email);
 
     if(data.fullName !== null) {
@@ -73,23 +82,42 @@ if(userType === "doctor") {
         dateOfBirth.value = data.dateofBirth.slice(0,10);
     }
 
-    if(data.medicalConditions.length !== 0) {
-        console.log(data.medicalConditions);
-        medicalConditions.value = data.medicalConditions
-                                .map(mc => mc.name)
-                                .filter(name => 
-                                    medicalConditionOptions.some(option => option.value === name) ||
-                                    habits.some(habit => habit.value === name)
-                                );
-    }
+    let medcond = await getMedicalConditions(data.id);
+    patientMedicalConditions.value = medcond.map(m => m.name);
+
+    if (medcond.length !== 0) {
+        medicalConditions.value = medcond
+            .filter(mc => 
+                (medicalConditionOptions.some(option => option.value === mc.name) ||
+                habits.some(habit => habit.value === mc.name)) && 
+                (mc.endingDate == null || mc.endingDate === "")
+            )
+            .map(mc => mc.name);
 }
 
-function prepareMedicalConditionsForUpdate(selectedConditions) {
-  const allConditions = [...medicalConditionOptions, ...habits]; // Combinați ambele liste de opțiuni
-  return selectedConditions.map(conditionLabel => {
-    const conditionOption = allConditions.find(option => option.label === conditionLabel);
-    return conditionOption ? { name: conditionOption.value } : null;
-  }).filter(Boolean); // Eliminați orice elemente care sunt nule sau nu sunt găsite
+    
+}
+
+function prepareMedicalConditionsForUpdate(selectedConditions, initialMedicalConditions) {
+  const allConditions = [...medicalConditionOptions, ...habits]; // combin afectiuni + obiceiuri pentru toate
+
+  const currentDate = new Date().toISOString();
+
+  const conditionsToUpdate = allConditions.map(option => {
+    const isSelectedNow = selectedConditions.includes(option.label);
+    const wasSelectedBefore = initialMedicalConditions.includes(option.label);
+
+    if (isSelectedNow && !wasSelectedBefore) {
+      console.log("selectat ", option.label)
+      return { name: option.value, startingDate: currentDate };
+    } else if (!isSelectedNow && wasSelectedBefore) {
+      console.log("deselectat ", option.label)
+      return { name: option.value, endingDate: currentDate };
+    }
+    return null; 
+  }).filter(Boolean); // sterg elementele null sau neschimbate
+  
+  return conditionsToUpdate;
 }
 
 
@@ -125,7 +153,7 @@ async function saveChangesPatient() {
             lastName: lastName.value,
             gender: gender.value,
             dateOfBirth: dateOfBirth.value,
-            medicalConditions: prepareMedicalConditionsForUpdate(medicalConditions.value),
+            medicalConditions: prepareMedicalConditionsForUpdate(medicalConditions.value, patientMedicalConditions.value),
         };
 
         console.log("PatientUpdateDto: ", patientUpdateDto);
@@ -148,9 +176,9 @@ function closeDialog() {
 </script>
 
 <template>
-<div class="page">
+<div class="page" v-if="isAuthenticated">
     <CustomNavbar />
-    <div v-if="userType === 'pacient'">
+    <div v-if="userType === 'patient'">
         <div class="card">
         <h2>Date personale</h2>
             <div class="input-row">
@@ -256,6 +284,9 @@ function closeDialog() {
             :message="modalMessage"
             @close="closeDialog"
         />
+</div>
+<div v-else>
+    <p> NEAUTENTIFICAAAT </p>
 </div>
 </template>
 

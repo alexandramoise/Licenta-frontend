@@ -1,9 +1,12 @@
 <script setup>
-import { createDoctorAccount } from '../services/doctor_service.js'
+import { login } from '../services/auth_service.js'
 import { ref, onBeforeUnmount} from 'vue';
 import router from "../router";
 import CustomInput from "../components/CustomInput.vue";
-import CustomNavbar from "../components/CustomNavbar.vue";
+import CustomModal from "../components/CustomModal.vue";
+
+import { requestNewPasswordPatient } from '@/services/patient_service.js';
+import { requestNewPasswordDoctor } from '@/services/doctor_service.js';
 
 const emailText = ref('');
 const passwordText = ref('');
@@ -17,45 +20,80 @@ function handleKeyPress(event) {
 }
 
 const showCreateAccountForDoctor = ref(false);
-if(sessionStorage.getItem("gotIn") === "doctor") {
+if(localStorage.getItem("role") === "doctor") {
     showCreateAccountForDoctor.value = true;
 }
 
-const userType = sessionStorage.getItem("gotIn");
-console.log("IN LOG IN VERIFIC USER TYPE", userType);
+const userType = localStorage.getItem('role');
+//console.log("IN LOG IN VERIFIC USER TYPE", userType);
 
-async function login() {
+const modalShow = ref(false);
+const changePasswordModal = ref(false);
+const modalTitle = ref('');
+const modalMessage = ref('');
+
+
+async function loginFunction() {
     if (emailText.value === '' || emailText.value === null 
         || passwordText.value === '' || passwordText.value == null) {
             modalShow.value = true;
             modalTitle.value = "Alerta";
             modalMessage.value = "Va rog sa completati campurile";
     } else {
-        try {
-            console.log('Email: ', emailText.value);
-            console.log('Password: ', passwordText.value);
-            if(emailText.value === 'ana@gmail.com' && passwordText.value === 'parola1') {
-                modalShow.value = true;
-                modalTitle.value = "Succes";
-                modalMessage.value = "Conectare cu succes!";
-                sessionStorage.setItem("email", emailText.value);
-            } else {
-                modalShow.value = true;
-                modalTitle.value = "Eroare";
-                modalMessage.value = "Email si/sau parola incorecte";
-            }
-        } catch (error) {
+        const loginRequestDto = {
+            email: emailText.value,
+            password: passwordText.value,
+        };
+
+        let response = await login(loginRequestDto);
+        if (response.error) {
             modalShow.value = true;
             modalTitle.value = "Eroare";
-            modalMessage.value = error.message;
-            console.error(error);
+            modalMessage.value = response.message;
+        } else {
+            localStorage.setItem('user', emailText.value);
+            modalShow.value = true;
+            modalTitle.value = "Succes";
+            modalMessage.value = "Veti fi redirectionat la pagina principala";
+        }
+    }
+}
+
+
+async function requestChangePassword() {
+    if(emailText.value === null || emailText.value === '') {
+        modalShow.value = true;
+        modalTitle.value = "Alerta";
+        modalMessage.value = "Introduceti email-ul pentru a putea cere o parola noua";
+    } else {
+        try {
+            let response;
+            if(userType === 'patient') {
+                response  = await requestNewPasswordPatient(emailText.value);
+            } else if(userType === 'doctor') {
+                response  = await requestNewPasswordDoctor(emailText.value);
+            }
+
+            modalShow.value = true;
+            changePasswordModal.value = true;
+
+            if(response === 404) {
+                modalTitle.value = "Eroare";
+                modalMessage.value = "Niciun cont asociat acestei adrese";
+            } else if(response === 200) {
+                modalTitle.value = "Succes";
+                modalMessage.value = "Cerere primita, verificati inbox-ul adresei de mail";
+            }
+                
+        } catch (error) {
+            console.error("Eroare:", error);
         }
     }
 }
 
 function closeDialog() {
     modalShow.value = false;
-    if(modalTitle.value === "Succes") {
+    if(modalTitle.value === "Succes" && !changePasswordModal.value) {
         if(userType === "doctor") {
             setTimeout(() => {
                 router.push("main-doctor");
@@ -65,6 +103,15 @@ function closeDialog() {
                 router.push("main-patient");
             }, 300);
         }
+    } else if(changePasswordModal.value && modalTitle.value === "Succes") {
+        setTimeout(() => {
+            router.push({
+                name: "change-password",
+                query: {
+                    for: userType.substring(0,1).toLowerCase(),
+                },
+            });
+        }, 300);
     }
 }
 
@@ -94,7 +141,7 @@ window.history.go(1);
 
 <template>
     <div class="page">
-        <div class="login-container">
+        <div class="login-container" :style="{ height: userType === 'patient' ? '250px' : '290px'}">
             <h2>Accesare cont</h2>
             <CustomInput 
                 v-model="emailText"
@@ -111,7 +158,8 @@ window.history.go(1);
                     <i :class="!showPassword ? 'fas fa-eye' : 'fas fa-eye-slash'"></i>
                 </button>
             </div>
-            <button @click="login" class="login-button" @keyup.enter="enterPress">Conectare</button>
+            <button @click="requestChangePassword" class="forgot-password"> Am uitat parola </button>
+            <button @click="loginFunction" class="login-button" @keyup.enter="enterPress">Conectare</button>
             <div v-if="showCreateAccountForDoctor">
                 <span> Nu aveți un cont de medic? </span> 
                 <button @click="redirectToRegister" class="register-button"> Creați unul </button>
@@ -143,7 +191,6 @@ window.history.go(1);
     align-items: center; 
     background-color: white;
     width: 300px;
-    height: 250px;
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
@@ -196,8 +243,17 @@ window.history.go(1);
 }
 
 .login-button {
-    background-color: rgb(163, 2, 2);
-    color: white;
+    width: 100%;
+    padding: 10px 20px;
+    background: #b80f20;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    display: block;
+}
+
+.login-button:hover {
+    background-color: #930c1a; 
 }
 
 .register-button {
@@ -205,5 +261,19 @@ window.history.go(1);
     color: rgb(163, 2, 2);
     font-weight: bold;
     border: none;
+}
+
+.forgot-password {
+    background-color: transparent;
+    border: none;
+    text-align: start;
+    text-decoration: underline;
+    color: rgb(163, 2, 2);
+    font-size: 14px;
+}
+
+.forgot-password:hover{
+    color: rgb(114, 3, 3);
+    text-decoration: none;
 }
 </style>

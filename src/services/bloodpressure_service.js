@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:8080/bloodPressures";
+const API_URL = "http://localhost:8080/api/bloodPressures";
 
 async function addBloodPressure(bloodPressureDto, patientEmail) {
     const response = await fetch(API_URL + "?email=" + patientEmail, {
@@ -11,6 +11,7 @@ async function addBloodPressure(bloodPressureDto, patientEmail) {
         }),
         headers: {
             "Content-type": "application/json; charset=UTF-8",
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
     });
 
@@ -25,7 +26,13 @@ async function addBloodPressure(bloodPressureDto, patientEmail) {
 
 async function getBloodPressures(patientEmail) {
     try {
-        const response = await fetch(API_URL + "?email=" + patientEmail);
+        const response = await fetch(API_URL + "?email=" + patientEmail, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+            });
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -39,7 +46,13 @@ async function getBloodPressures(patientEmail) {
 
 async function getBloodPressureById(id, patientEmail) {
     try {
-        const response = await fetch(API_URL + "/" + id + "?email=" + patientEmail);
+        const response = await fetch(API_URL + "/" + id + "?email=" + patientEmail, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+            });
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -62,6 +75,7 @@ async function updateBloodPressure(bloodPressureDto, id) {
         }),
         headers: {
             "Content-type": "application/json; charset=UTF-8",
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
     });
 

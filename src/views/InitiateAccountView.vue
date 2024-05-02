@@ -19,7 +19,7 @@ function handleKeyPress(event) {
 }
 
 const showCreateAccountForDoctor = ref(false);
-if(sessionStorage.getItem("gotIn") === "doctor") {
+if(localStorage.getItem('role') === "doctor") {
     showCreateAccountForDoctor.value = true;
 }
 
@@ -155,10 +155,19 @@ onBeforeUnmount(() => {
 }
 
 .register-button {
-    background-color: rgb(163, 2, 2);
-    color: white;
+    width: 100%;
     border-radius: 8px;
     font-size: 14px;
+    padding: 10px 20px;
+    background: #b80f20;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    display: block;
+}
+
+.register-button:hover {
+    background-color: #930c1a; 
 }
 
 .error-message {

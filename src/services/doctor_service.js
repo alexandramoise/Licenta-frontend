@@ -1,10 +1,10 @@
-const API_URL = "http://localhost:8080/doctors";
+const API_URL = "http://localhost:8080/api/doctors";
 
 async function createDoctorAccount(email) {
     let connectionError = false;
     let response;
 
-    console.log("Incepe crearea: ", email);
+    //console.log("Incepe crearea: ", email);
     try {
 
         response = await fetch(`${API_URL}/new-doctor-account?email=${email}`, {
@@ -21,9 +21,6 @@ async function createDoctorAccount(email) {
     const result = await response.json();
     if (!response.ok) {
         throw new Error(result.message);
-    } else {
-        console.log("In service s-a primit: ", result.email);
-        sessionStorage.setItem("email", result.email);
     }
 
     return result;
@@ -31,7 +28,13 @@ async function createDoctorAccount(email) {
 
 async function getDoctorByEmail(doctorEmail) {
     try {
-        const response = await fetch(API_URL + "?email=" + doctorEmail);
+        const response = await fetch(API_URL + "?email=" + doctorEmail, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+            });
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -52,6 +55,7 @@ async function updateDoctorByEmail(doctorUpdateDto, patientEmail) {
         }),
         headers: {
             "Content-type": "application/json; charset=UTF-8",
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
     });
 
@@ -64,8 +68,41 @@ async function updateDoctorByEmail(doctorUpdateDto, patientEmail) {
     return data;
 }
 
+// in response entity i have a message, it's easier to return the status
+async function requestNewPasswordDoctor(email) {
+    try {
+        const response = await fetch(`${API_URL}/request-password-reset?email=${email}`, {
+            method: "POST",
+        });
+
+        return response.status;
+
+    } catch (error) {
+        console.error("Request denied ", error);
+    }
+}
+
+
+async function changePasswordDoctor(changePasswordDto) {
+    const response = await fetch(API_URL + "/change-password", {
+        method: "PUT", 
+        body: JSON.stringify({
+            email: changePasswordDto.email,
+            oldPassword: changePasswordDto.oldPassword,
+            newPassword: changePasswordDto.newPassword
+        }),
+        headers: {
+            "Content-type": "application/json; charset=UTF-8",
+        },
+    });
+
+    return response.status;
+}
+
 export {
     createDoctorAccount, 
     getDoctorByEmail,
-    updateDoctorByEmail
+    updateDoctorByEmail,
+    changePasswordDoctor,
+    requestNewPasswordDoctor
 };

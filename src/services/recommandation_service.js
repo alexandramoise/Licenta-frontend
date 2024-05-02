@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:8080/recommandations";
+const API_URL = "http://localhost:8080/api/recommandations";
 
 async function addRecommandation(recommandationDto, doctorEmail) {
     const response = await fetch(API_URL + "?email=" + doctorEmail, {
@@ -10,6 +10,7 @@ async function addRecommandation(recommandationDto, doctorEmail) {
         }),
         headers: {
             "Content-type": "application/json; charset=UTF-8",
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
     });
 
@@ -24,7 +25,13 @@ async function addRecommandation(recommandationDto, doctorEmail) {
 
 async function getAllRecommandations(doctorEmail, pageSize, pageNumber) {
     try {
-        const response = await fetch(API_URL + "/all?email=" + doctorEmail + "&pageSize=" + pageSize + "&pageNumber=" + pageNumber);
+        const response = await fetch(API_URL + "/all?email=" + doctorEmail + "&pageSize=" + pageSize + "&pageNumber=" + pageNumber, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+            });
 
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
@@ -41,7 +48,13 @@ async function getAllRecommandations(doctorEmail, pageSize, pageNumber) {
 async function getRecommandationsByType(doctorEmail, type, pageSize, pageNumber) {
     try {
         const response = await fetch(API_URL + "/byType?email=" + doctorEmail +  "&pageSize=" + pageSize + "&pageNumber=" + pageNumber 
-                                            + "&type=" + type);
+                                             + "&type=" + type, {
+                                    method: 'GET',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                                    },
+                                    });
 
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
@@ -58,7 +71,13 @@ async function getRecommandationsByType(doctorEmail, type, pageSize, pageNumber)
 async function getRecommandationsByHashtag(doctorEmail, hashtag, pageSize, pageNumber) {
     try {
         const response = await fetch(API_URL + "/byHashtag?email=" + doctorEmail + "&pageSize=" + pageSize + "&pageNumber=" + pageNumber 
-                                            + "&hashtag=" + hashtag);
+                                            + "&hashtag=" + hashtag, {
+                                    method: 'GET',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                                    },
+                                    });
 
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
@@ -75,7 +94,13 @@ async function getRecommandationsByHashtag(doctorEmail, hashtag, pageSize, pageN
 async function getRecommandationsByHashtagAndType(doctorEmail, type, hashtag, pageSize, pageNumber) {
     try {
         const response = await fetch(API_URL + "/byHashtagAndType?email=" + doctorEmail +  "&pageSize=" + pageSize + "&pageNumber=" + pageNumber + 
-                                                "&hashtag=" + hashtag + "&type=" + type);
+                                                "&hashtag=" + hashtag + "&type=" + type, {
+                                    method: 'GET',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                                    },
+                                    });
 
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
@@ -92,7 +117,13 @@ async function getRecommandationsByHashtagAndType(doctorEmail, type, hashtag, pa
 async function getAllRecommandationsForPatient(doctorEmail, type, pageSize, pageNumber) {
     try {
         const response = await fetch(API_URL + "/forPatient/all?email=" + doctorEmail +  "&pageSize=" + pageSize + "&pageNumber=" + pageNumber 
-                                            + "&type=" + type);
+                                            + "&type=" + type, {
+                                    method: 'GET',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                                    },
+                                    });
 
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
@@ -109,7 +140,13 @@ async function getAllRecommandationsForPatient(doctorEmail, type, pageSize, page
 async function getRecommandationsForPatientByHashtag(doctorEmail, type, hashtag, pageSize, pageNumber) {
     try {
         const response = await fetch(API_URL + "/forPatient/byTag?email=" + doctorEmail +  "&pageSize=" + pageSize + "&pageNumber=" + pageNumber + 
-                                                "&hashtag=" + hashtag + "&type=" + type);
+                                                "&hashtag=" + hashtag + "&type=" + type, {
+                                    method: 'GET',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                                    },
+                                    });
 
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);

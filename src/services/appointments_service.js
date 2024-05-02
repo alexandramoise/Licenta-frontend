@@ -1,11 +1,17 @@
-const API_URL = "http://localhost:8080/appointments";
+const API_URL = "http://localhost:8080/api/appointments";
 
 async function getPatientsPagedAppointments(patientEmail, pageSize, pageNumber) {
     try {
         const response = await fetch(API_URL + "/paged-patient?email=" + patientEmail + 
         "&pageSize=" + pageSize + 
         "&pageNumber=" + pageNumber 
-        + "&sortCategory=time");
+        + "&sortCategory=time", {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+            });
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -23,7 +29,13 @@ async function getDoctorsPagedAppointments(doctorEmail, pageSize, pageNumber) {
         const response = await fetch(API_URL + "/paged-doctor?email=" + doctorEmail + 
         "&pageSize=" + pageSize + 
         "&pageNumber=" + pageNumber 
-        + "&sortCategory=time");
+        + "&sortCategory=time", {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+            });
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -39,7 +51,13 @@ async function getDoctorsPagedAppointments(doctorEmail, pageSize, pageNumber) {
 async function getDoctorsAppointmentsOnACertainDay(doctorEmail, date, pageSize, pageNumber) {
     try {
         const response = await fetch(API_URL + "/doctor/chosen-day?email=" + doctorEmail 
-        + "&date=" + date + "&pageSize=" + pageSize + "&pageNumber=" + pageNumber + "&sortCategory=time");
+        + "&date=" + date + "&pageSize=" + pageSize + "&pageNumber=" + pageNumber + "&sortCategory=time", {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+            });
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -55,7 +73,13 @@ async function getDoctorsAppointmentsOnACertainDay(doctorEmail, date, pageSize, 
 async function getPatientsAppointmentsOnACertainDay(patientEmail, date, pageSize, pageNumber) {
     try {
         const response = await fetch(API_URL + "/patient/chosen-day?email=" + patientEmail 
-        + "&date=" + date + "&pageSize=" + pageSize + "&pageNumber=" + pageNumber + "&sortCategory=time");
+        + "&date=" + date + "&pageSize=" + pageSize + "&pageNumber=" + pageNumber + "&sortCategory=time", {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+            });
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -79,6 +103,7 @@ async function createNewAppointment(appointmentDto) {
         }),
         headers: {
             "Content-type": "application/json; charset=UTF-8",
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
     });
 

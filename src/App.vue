@@ -1,11 +1,6 @@
 <script setup>
 import { RouterLink, RouterView } from "vue-router";
-import { ref, onMounted, computed } from "vue";
-
-
-onMounted(() => {
-  sessionStorage.setItem('loggedIn', 'false');
-});
+import { ref, onMounted, onBeforeUnmount } from "vue";
 
 </script>
 

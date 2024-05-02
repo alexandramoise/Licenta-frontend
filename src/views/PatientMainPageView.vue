@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, onBeforeUnmount, ref } from 'vue';
+import { onMounted, watch, ref } from 'vue';
 import CustomNavbar from "../components/CustomNavbar.vue";
 import CustomInput from "../components/CustomInput.vue";
 import CustomButton from "../components/CustomButton.vue";
@@ -8,8 +8,15 @@ import BloodPressureCard from "../components/BloodPressureCard.vue";
 import { getBloodPressures } from "../services/bloodpressure_service.js";
 import router from '@/router';
 
-//const userEmail = sessionStorage.getItem("email");
-const userEmail = "alexandramoise2@gmail.com"
+// checking whether or not the user is authenticated based on the token's existence
+const token = localStorage.getItem("token");
+console.log(token);
+const isAuthenticated = ref(token !== null);
+watch(() => localStorage.getItem("token"), (newToken) => {
+  isAuthenticated.value = newToken !== null;
+});
+
+const userEmail = localStorage.getItem('user');
 
 function redirectToAdd() {
     router.push("add-bloodpressure");
@@ -38,7 +45,7 @@ async function editBp(id, isEditable) {
 
 
 <template>
-    <div class="page">
+    <div class="page" v-if="isAuthenticated">
         <CustomNavbar />
         <div class="content">
             <div class="history-section">
@@ -69,6 +76,9 @@ async function editBp(id, isEditable) {
                 <p> AICI O SA AM STATISTICI </p>           
             </div>
         </div>
+    </div>
+    <div v-else> 
+        <p> NEAUTENTIFICAAAT </p>
     </div>
 </template>
 

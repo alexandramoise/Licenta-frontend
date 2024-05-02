@@ -10,7 +10,16 @@ import CustomNavbar from '@/components/CustomNavbar.vue';
 import Pagination from '@/components/Pagination.vue';
 import CustomButton from '@/components/CustomButton.vue';
 
-const userType = sessionStorage.getItem("gotIn");
+// checking whether or not the user is authenticated based on the token's existence
+const token = localStorage.getItem("token");
+console.log(token);
+const isAuthenticated = ref(token !== null);
+watch(() => localStorage.getItem("token"), (newToken) => {
+  isAuthenticated.value = newToken !== null;
+});
+
+
+const userType = localStorage.getItem('role');
 const isDoctor = ref(userType == "doctor");
 
 const tags = ref(['Sport', 'Alimentatie', 'Stres', 'Obiceiuri']);
@@ -112,7 +121,7 @@ function redirectToAdd() {
 </script>
 
 <template>
-    <div class="page-container">
+    <div class="page-container" v-if="isAuthenticated">
     <CustomNavbar />
 
     <div class="content">
@@ -164,7 +173,10 @@ function redirectToAdd() {
     </div>
     </div>
   </div>
-  </template>
+  <div v-else> 
+    <p> NEAUTENTIFICAAAT </p>
+  </div>
+</template>
 
 <style scoped>
 .page-container {

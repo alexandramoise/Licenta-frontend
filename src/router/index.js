@@ -19,6 +19,16 @@ const router = createRouter({
       component: () => import('../views/LoginView.vue')
     }, 
     {
+      path: '/logout',
+      name: 'logout',
+      component: () => import('../views/DoctorMainPageView.vue')
+    },
+    {
+      path: '/change-password',
+      name: 'change-password',
+      component: () => import('../views/ChangePasswordView.vue')
+    },
+    {
       path: '/main-doctor',
       name: 'main-doctor',
       component: () => import('../views/DoctorMainPageView.vue')
@@ -63,16 +73,6 @@ const router = createRouter({
       path: '/add-recommandation',
       name: 'add-recommandation',
       component: () => import('../views/AddRecommandationView.vue')
-    },
-    {
-      path: '/logout',
-      name: 'logout',
-      component: () => import('../views/DoctorMainPageView.vue')
-    },
-    {
-      path: '/change-password',
-      name: 'change-password',
-      component: () => import('../views/DoctorMainPageView.vue')
     },
     {
       path: '/my-profile',

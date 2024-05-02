@@ -2,7 +2,7 @@
 import router from "../router";
 
 function setUser(userType) {
-  sessionStorage.setItem("gotIn", userType)
+  localStorage.setItem("role", userType)
   router.push({ name: "login" });
 }
 
@@ -36,7 +36,7 @@ function setUser(userType) {
             <button class="role-button doctor" @click="setUser('doctor')">
               <i class="fas fa-stethoscope"></i> Doctor
             </button>
-            <button class="role-button patient" @click="setUser('pacient')">
+            <button class="role-button patient" @click="setUser('patient')">
               <i class="fas fa-user"></i> Pacient
             </button>
       </div>

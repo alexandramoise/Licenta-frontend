@@ -11,7 +11,7 @@
             <CustomButton class="dropdown-item" @click="navigateTo('add-patient')"> pacient <i class="fas fa-user"></i></CustomButton>
             <CustomButton class="dropdown-item" @click="navigateTo('add-recommandation')"> recomandare <i class="fas fa-lightbulb"></i> </CustomButton>
           </div>
-          <div v-if="dropdownVisible && userType === 'pacient'" class="dropdown-content">
+          <div v-if="dropdownVisible && userType === 'patient'" class="dropdown-content">
             <CustomButton class="dropdown-item" @click="navigateTo('add-treatment')"> tratament <i class="fas fa-capsules"></i> </CustomButton>
             <CustomButton class="dropdown-item" @click="navigateTo('add-journal')"> jurnal <i class="fas fa-book"></i></CustomButton>
           </div>
@@ -19,7 +19,7 @@
 
       <CustomButton class="navbar-item" @click="navigateTo('recommandations')"> <i class="fas fa-lightbulb"> </i> Recomandări</CustomButton>
       <div class="profile-dropdown">
-        <CustomButton class="navbar-item" @click.stop="dropdownAccountVisible = !dropdownAccountVisible"> <i class="fas fa-user"> </i> Cont <i class='fas fa-caret-down'> </i></CustomButton>
+        <CustomButton class="navbar-item" @click.stop="dropdownAccountVisible = !dropdownAccountVisible"> <i class="fas fa-user"> </i> {{ userEmail }} <i class='fas fa-caret-down'> </i></CustomButton>
         <div v-if="dropdownAccountVisible" class="dropdown-content">
           <CustomButton class="dropdown-item" @click="navigateTo('data')"> Datele mele <i class="fas fa-address-book"></i></CustomButton>
           <CustomButton class="dropdown-item" @click="navigateTo('change-password')">Schimbă parola <i class="fas fa-lock"></i> </CustomButton>
@@ -33,6 +33,8 @@
 <script>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { routerViewLocationKey, useRouter } from 'vue-router';
+import { requestNewPasswordPatient } from '@/services/patient_service.js';
+import { requestNewPasswordDoctor } from '@/services/doctor_service.js';
 import router from '@/router';
 
 export default {
@@ -43,7 +45,8 @@ export default {
     const isDesktop = ref(true);
     //const router = useRouter();
 
-    const userType = sessionStorage.getItem("gotIn");
+    const userType = localStorage.getItem('role');
+    const userEmail = localStorage.getItem('user');
 
     const handleResize = () => {
       isDesktop.value = window.innerWidth > 600;
@@ -67,7 +70,7 @@ export default {
       navVisible.value = !navVisible.value;
     };
 
-    const navigateTo = (path) => {
+    const navigateTo = async (path) => {
       if(path === "home") {
           if(userType === "doctor") {
               router.push("main-doctor");
@@ -93,6 +96,20 @@ export default {
         router.push("recommandations");
       } else if(path === "add-recommandation") {
         router.push("add-recommandation");
+      } else if(path === "logout") {
+        localStorage.clear() // ending session by clearing local storage - token, userEmail 
+        router.push("/") // back to homepage
+      } else if(path === "change-password") {
+
+        // to include both doctor and patient functions and to check the role
+         if(userType === 'patient') {
+            await requestNewPasswordPatient(userEmail);
+         } else if(userType === 'doctor') {
+            await requestNewPasswordDoctor(userEmail);
+         }
+         setTimeout(() => {
+            router.push("change-password");
+        }, 300);
       }
     };
 
@@ -103,7 +120,8 @@ export default {
       isDesktop, 
       toggleNav, 
       navigateTo, 
-      userType
+      userType, 
+      userEmail,
     };
   }
 };

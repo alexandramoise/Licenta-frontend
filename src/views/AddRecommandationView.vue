@@ -2,10 +2,19 @@
 import CustomButton from '@/components/CustomButton.vue';
 import CustomNavbar from '@/components/CustomNavbar.vue';
 import CustomModal from '@/components/CustomModal.vue';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import router from "@/router";
 
 import { addRecommandation } from '@/services/recommandation_service.js';
+
+// checking whether or not the user is authenticated based on the token's existence
+const token = localStorage.getItem("token");
+console.log(token);
+const isAuthenticated = ref(token !== null);
+watch(() => localStorage.getItem("token"), (newToken) => {
+  isAuthenticated.value = newToken !== null;
+});
+
 
 const tags = ['Sport', 'Alimentatie', 'Stres', 'Obiceiuri'];
 const selectedTag = ref('');
@@ -21,21 +30,12 @@ const typeTranslations = {
   'General': 'All'
 };
 
-/*
-const handleTextAreaInput = (e) => {
-  if (e.target.value.length <= characterLimit) {
-    textAreaContent.value = e.target.value;
-  }
-};
-
-*/
 
 const modalShow = ref(false);
 const modalTitle = ref('');
 const modalMessage = ref('');
 
-// din local storage
-let doctorEmail = 'alexandramoise636@gmail.com'
+const doctorEmail = localStorage.getItem('user');
 
 async function createRecommandation() {
    console.log("Campuri: TAG", selectedTag.value, "TEXT ", textAreaContent.value, "TIP ", selectedType.value);
@@ -81,7 +81,7 @@ function redirectToPage() {
 </script>
 
 <template>
-  <div class="container">
+  <div class="container" v-if="isAuthenticated">
     <CustomNavbar />
     <div class="form-container">
       <h1 style="color: #b80f20; text-align: center">Adaugă o recomandare</h1>
@@ -108,6 +108,9 @@ function redirectToPage() {
             :message="modalMessage"
             @close="closeDialog"
         />
+  </div>
+  <div v-else> 
+    <p> NEAUTENTIFICAAAT </p>
   </div>
 </template>
 

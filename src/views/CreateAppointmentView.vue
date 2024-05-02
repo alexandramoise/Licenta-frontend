@@ -1,7 +1,7 @@
 <script setup>
 import { useRoute } from 'vue-router';
 import router from "@/router";
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import CustomInput from "../components/CustomInput.vue";
 import CustomNavbar from "../components/CustomNavbar.vue";
 import CustomButton from "../components/CustomButton.vue";
@@ -11,6 +11,15 @@ import { createNewAppointment } from "../services/appointments_service.js";
 
 import Datepicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
+
+// checking whether or not the user is authenticated based on the token's existence
+const token = localStorage.getItem("token");
+console.log(token);
+const isAuthenticated = ref(token !== null);
+watch(() => localStorage.getItem("token"), (newToken) => {
+  isAuthenticated.value = newToken !== null;
+});
+
 
 const isDoctor = ref(false);
 
@@ -28,11 +37,11 @@ let doctorEmail;
 const selectedPatientEmail = ref('');
 
 if(isDoctor.value) {
-    doctorEmail = 'alexandramoise636@gmail.com'; // VA FI ADRESA DIN STORAGE
+    doctorEmail = localStorage.getItem('user') // VA FI ADRESA DIN STORAGE
     //selectedPatientEmail.value = 'alexandramoise@gmail.com'; // VA FI ADRESA SELECTATA DE EL
 } else {
     doctorEmail = 'alexandramoise636@gmail.com'; // VA FI ADRESA MEDICULUI PACIENTULUI 
-    selectedPatientEmail.value = 'alexandramoise@gmail.com'; // VA FI ADRESA DIN STORAGE
+    selectedPatientEmail.value = localStorage.getItem('user') // VA FI ADRESA DIN STORAGE
 }
 
 const patients = ref([]);
@@ -103,7 +112,7 @@ function closeDialog() {
 </script>
 
 <template>
-    <div class="page">
+    <div class="page" v-if="isAuthenticated">
         <CustomNavbar />
 
         <div class="form-container">
@@ -146,6 +155,9 @@ function closeDialog() {
             :message="modalMessage"
             @close="closeDialog"
         />
+  </div>
+  <div v-else>
+    <p> NEAUTENTIFICAAAT </p>
   </div>
 </template>
 

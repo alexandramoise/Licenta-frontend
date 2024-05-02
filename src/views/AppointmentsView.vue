@@ -13,10 +13,16 @@ import { getDoctorsPagedAppointments,
      } from "../services/appointments_service.js";
 import router from '@/router';
 
-//const userEmail = sessionStorage.getItem("email");
-const doctorEmail = "alexandramoise636@gmail.com";
-const patientEmail = "alexandramoise2@gmail.com";
-const userType = sessionStorage.getItem("gotIn");
+// checking whether or not the user is authenticated based on the token's existence
+const token = localStorage.getItem("token");
+console.log(token);
+const isAuthenticated = ref(token !== null);
+watch(() => localStorage.getItem("token"), (newToken) => {
+  isAuthenticated.value = newToken !== null;
+});
+
+const userEmail = localStorage.getItem('user');
+const userType = localStorage.getItem('role');
 
 const appointments = ref([]);
 const appointmentsNotFound = ref(false);
@@ -57,9 +63,9 @@ function getDateFromCalendar(date) {
 async function fetchPaginatedAppointments() {
     let data = '';
     if(userType === "doctor") {
-        data = await getDoctorsPagedAppointments(doctorEmail, pageSize, currentPage.value - 1);
+        data = await getDoctorsPagedAppointments(userEmail, pageSize, currentPage.value - 1);
     } else {
-        data = await getPatientsPagedAppointments(patientEmail, pageSize, currentPage.value - 1);
+        data = await getPatientsPagedAppointments(userEmail, pageSize, currentPage.value - 1);
     }
 
     if (data && data.content) { 
@@ -84,9 +90,9 @@ async function fetchPaginatedAppointments() {
 async function fetchAppointmentsByDate(date) {
     let data = '';
     if(userType === "doctor") {
-        data = await getDoctorsAppointmentsOnACertainDay(doctorEmail, date, pageSize, currentPage.value - 1);
+        data = await getDoctorsAppointmentsOnACertainDay(userEmail, date, pageSize, currentPage.value - 1);
     } else {
-        data = await getPatientsAppointmentsOnACertainDay(patientEmail, date, pageSize, currentPage.value - 1);
+        data = await getPatientsAppointmentsOnACertainDay(userEmail, date, pageSize, currentPage.value - 1);
     }
 
     if (data && data.content) { 
@@ -120,7 +126,7 @@ function redirectToForm() {
 
 
 <template>
-    <div class="page">
+    <div class="page" v-if="isAuthenticated">
         <CustomNavbar />
         <div class="content">
             <div class="history-section">
@@ -157,6 +163,9 @@ function redirectToForm() {
                 </div>       
             </div>
         </div>
+    </div>
+    <div v-else> 
+        <p> NEAUTENTIFICAAAT </p>
     </div>
 </template>
 

@@ -6,8 +6,15 @@ import FilteringPatientsSidebar from "../components/FilteringPatientsSidebar.vue
 import Pagination from "../components/Pagination.vue";
 import { getPagedPatients } from "../services/patient_service.js";        
 import router from '@/router';
+ 
+// checking whether or not the user is authenticated based on the token's existence
+const token = localStorage.getItem("token");
+const isAuthenticated = ref(token !== null);
+watch(() => localStorage.getItem("token"), (newToken) => {
+  isAuthenticated.value = newToken !== null;
+});
 
-const userEmail = "alexandramoise636@gmail.com";
+const userEmail = localStorage.getItem("user");
 
 const patients = ref([]);
 const patientsNotFound = ref(false);
@@ -35,7 +42,7 @@ async function fetchPatients() {
 
             patientsNotFound.value = false;
             totalPages.value = Math.ceil(data.totalElements / pageSize);
-
+        
         } else {
             totalPages.value = 0;
             patientsNotFound.value = true;
@@ -62,7 +69,7 @@ function redirectToPatientDetails(id) {
 </script>
 
 <template>
-    <div class="page">
+    <div class="page" v-if="isAuthenticated">
         <CustomNavbar />
 
         <div class="content">
@@ -100,6 +107,9 @@ function redirectToPatientDetails(id) {
             </div>
         </div>
     </div>
+    <div v-else> 
+        <p> NEAUTENTIFICAAAT </p>
+    </div>
 </template>
 
 <style scoped>
@@ -123,6 +133,7 @@ function redirectToPatientDetails(id) {
 }
 
 .patients-list {
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
     position: relative; /* Adăugăm poziționare relativă aici */

@@ -102,6 +102,6 @@ input {
 }
 
 .input::placeholder {
-  color: rgb(103, 102, 102);
+  color: rgb(96, 96, 96);
 }
 </style>

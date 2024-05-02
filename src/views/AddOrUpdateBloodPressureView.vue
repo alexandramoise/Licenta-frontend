@@ -4,12 +4,18 @@ import CustomInput from "@/components/CustomInput.vue";
 import CustomButton from "@/components/CustomButton.vue";
 import CustomModal from "../components/CustomModal.vue";
 import { addBloodPressure, updateBloodPressure, getBloodPressureById } from "../services/bloodpressure_service.js";
-import { onMounted, ref} from 'vue';
+import { onMounted, ref, watch} from 'vue';
 import { useRoute  } from "vue-router";
 import router from "@/router";
 
-//const userEmail = sessionStorage.getItem("email");
-const userEmail = "alexandramoise2@gmail.com"
+// checking whether or not the user is authenticated based on the token's existence
+const token = localStorage.getItem("token");
+const isAuthenticated = ref(token !== null);
+watch(() => localStorage.getItem("token"), (newToken) => {
+  isAuthenticated.value = newToken !== null;
+});
+
+const userEmail = localStorage.getItem('user');
 const update = ref(false);
 
 const systolicInput = ref('');
@@ -21,6 +27,7 @@ const modalShow = ref(false);
 const modalTitle = ref('');
 const modalMessage = ref('');
 
+// function to allow only digits introduced in the inputs
 function handleInput(event) {
   const validCharacters = '0123456789';
   if (!validCharacters.includes(event.key) && !['Backspace', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(event.key)) {
@@ -110,7 +117,7 @@ function redirectToDashboard() {
 </script>
 
 <template>
-  <div class="page">
+  <div class="page" v-if="isAuthenticated">
     <CustomNavbar />
 
     <div class="form-container">
@@ -182,6 +189,10 @@ function redirectToDashboard() {
             :message="modalMessage"
             @close="closeDialog"
         />
+  </div>
+  <div v-else>
+
+    <p> NEAUTENTIFICAAAT </p>
   </div>
 </template>
 
