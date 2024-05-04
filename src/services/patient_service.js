@@ -51,6 +51,62 @@ async function getPagedPatients(doctorEmail, pageSize, pageNumber, sortCategory)
     }
 }
 
+async function getFilteredPatients(email, name, maxAge, gender, type, lastVisit) {
+    if(localStorage.getItem("token")) {
+        try {
+            const response = await fetch(API_URL + "/filtered?email=" + encodeURIComponent(email) 
+            + "&name=" + name + "&maxAge=" + maxAge + "&gender=" + gender + "&type=" + type + "&lastVisit=" + lastVisit, {
+                method: 'GET',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer  ${localStorage.getItem('token')}`,
+                },
+              });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log("DATA: ", data);
+            return data;
+        } catch (error) {
+            console.error("Could not fetch the patients", error);
+        }
+    } else {
+        return { error: true, message: "NOT LOGGED IN" };
+    }
+}
+
+async function getPagedFilteredPatients(email, name, maxAge, gender, type, lastVisit, pageSize, pageNumber, sortCategory) {
+    if(localStorage.getItem("token")) {
+        console.log(localStorage.getItem("token"));
+        try {
+            const response = await fetch(API_URL + "/filtered/paged?email=" + encodeURIComponent(email) 
+            + "&name=" + name + "&maxAge=" + maxAge + "&gender=" + gender + "&type=" + type + "&lastVisit=" + lastVisit+ "&pageSize=" 
+            + pageSize + "&pageNumber=" + pageNumber + "&sortCategory=" + sortCategory, {
+                method: 'GET',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer  ${localStorage.getItem('token')}`,
+                },
+              });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log("DATA: ", data);
+            return data;
+        } catch (error) {
+            console.error("Could not fetch the patients", error);
+        }
+    } else {
+        return { error: true, message: "NOT LOGGED IN" };
+    }
+}
+
 
 async function getPatientById(patientId) {
     try {
@@ -179,5 +235,7 @@ export {
     updatePatientByEmail,
     getMedicalConditions, 
     requestNewPasswordPatient,
-    changePasswordPatient
+    changePasswordPatient, 
+    getFilteredPatients, 
+    getPagedFilteredPatients
 }; 

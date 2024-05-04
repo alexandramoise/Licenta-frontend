@@ -1,30 +1,48 @@
 <script setup>
+import { ref, defineEmits, computed } from 'vue';
 import CustomButton from './CustomButton.vue';
-import {ref} from 'vue';
+
+const emit = defineEmits(['updateCriteria', 'resetFilters']);
 
 const nameInput = ref('');
 const genderInput = ref('');
 const ageInput = ref(0);
 const tendencyInput = ref('');
-const timeInput = ref('');
+const daysInput = ref(0);
 
-// Function to handle form data retrieval
-const getFormData = () => {
-  const formData = {
-    name: nameInput.value,
-    sex: genderInput.value,
-    age: ageInput.value,
-    category: tendencyInput.value,
-    lastVisit: timeInput.value
-  };
+function getFormData() {
+    const formData = {
+        name: nameInput.value,
+        gender: genderInput.value,
+        maxAge: ageInput.value,
+        type: tendencyInput.value,
+        lastVisit: daysInput.value,
+    };
 
-  console.log(formData);
-};
+    emit('updateCriteria', formData);
+}
+
+function resetFilters() {
+    nameInput.value = '';
+    genderInput.value = '';
+    ageInput.value = 0;
+    tendencyInput.value = '';
+    daysInput.value = 0;
+    emit('resetFilters');
+}
+
+const showResetButton = computed(() => {
+    return nameInput.value !== '' || genderInput.value !== '' || ageInput.value !== 0 || tendencyInput.value !== '' || daysInput.value !== 0;
+});
+
 </script>
 
 <template>
     <div class="sidepanel-container">
-      <h2 class="sidepanel-title">Filtrare pacienți</h2>
+        <div class="header-container">
+            <h2 class="sidepanel-title">Filtrare pacienți</h2>
+            <CustomButton class="reset-button" @click="resetFilters" v-if="showResetButton">Resetare</CustomButton>
+        </div>
   
       <div class="filter-option last-visit-container">
         <label class="filter-label" for="name">Nume</label>
@@ -44,7 +62,6 @@ const getFormData = () => {
       <div class="filter-option">
       <label class="filter-label" for="age">Vârstă maximă</label>
       <div class="range-container">
-        <!-- actualizare minim si maxim cu valorile din pacientii doctorului -->
         <input type="range" id="age" name="age" v-model="ageInput" min="0" max="120" class="range-slider">
         <span class="range-value">{{ ageInput }}</span>
       </div>
@@ -64,7 +81,7 @@ const getFormData = () => {
   
       <div class="filter-option last-visit-container">
         <label class="filter-label" for="last-visit">Ultima vizită</label>
-        <input type="number" id="last-visit" name="last-visit" placeholder="zile in urma" class="texting-input" v-model="timeInput">
+        <input type="number" id="last-visit" name="last-visit" placeholder="zile in urma" class="texting-input" v-model="daysInput">
       </div>
   
       <CustomButton class="filter-button" @click="getFormData" @key.enter="getFormData">FILTRARE</CustomButton>
@@ -72,19 +89,39 @@ const getFormData = () => {
 </template>
   
 <style scoped>
-  .sidepanel-container {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 10px;
-      padding: 10px;
-  }
-  
-  .sidepanel-title {
-      text-align: center;
-      margin-bottom: 20px;
-      font-family: Georgia, serif;
-      font-size: 25px;
-  }
+.sidepanel-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 10px;
+}
+
+.header-container {
+    display: flex;
+    justify-content: center; 
+    align-items: center;
+    width: 100%; 
+}
+
+.sidepanel-title {
+    text-align: center; 
+    flex-grow: 1; 
+    font-family: Georgia, serif;
+    font-size: 22px;
+}
+
+.reset-button {
+    width: 80px;
+    height: 40px;
+    border-radius: 8px;
+    background: white;
+    color: #b80f20;
+    font-size: 15px;
+    border: 1px solid #b80f20;
+    cursor: pointer;
+    display: block;
+    margin-left: auto;
+}
   
   .filter-label {
       color: #b80f20;

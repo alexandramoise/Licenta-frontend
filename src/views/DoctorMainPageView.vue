@@ -1,10 +1,11 @@
 <script setup>
 import { onMounted, onBeforeUnmount, ref, watch } from 'vue';
 import CustomNavbar from "../components/CustomNavbar.vue";
+import CustomLoader from '../components/CustomLoader.vue';
 import PatientCard from "../components/PatientCard.vue";
 import FilteringPatientsSidebar from "../components/FilteringPatientsSidebar.vue";
 import Pagination from "../components/Pagination.vue";
-import { getPagedPatients } from "../services/patient_service.js";        
+import { getPagedPatients, getPagedFilteredPatients } from "../services/patient_service.js";        
 import router from '@/router';
  
 // checking whether or not the user is authenticated based on the token's existence
@@ -18,6 +19,31 @@ const userEmail = localStorage.getItem("user");
 
 const patients = ref([]);
 const patientsNotFound = ref(false);
+const isLoading = ref(false);
+
+const criteria = ref({
+    "name": "",
+    "maxAge": "0",
+    "gender": "",
+    "type": "",
+    "lastVisit": "0"
+});
+
+function handleUpdateCriteria(newCriteria) {
+    Object.entries(newCriteria).forEach(([key, value]) => {
+        if (criteria.value[key] !== value) {
+            criteria.value[key] = value;
+        }
+    });
+}
+
+function resetCriteria() {
+    criteria.value.name = "",
+    criteria.value.maxAge = 0;
+    criteria.value.gender = "";
+    criteria.value.type = "";
+    criteria.value.lastVisit = 0;
+}
 
 const pageSize = 3;
 const totalPages = ref(0);
@@ -31,8 +57,24 @@ watch(currentPage, (newPage, oldPage) => {
   fetchPatients();
 });
 
+watch(criteria, () => {
+  fetchPatients();
+}, { deep: true });
+
 async function fetchPatients() {
-    const data = await getPagedPatients(userEmail, pageSize, currentPage.value - 1, "dateOfBirth");
+    isLoading.value = true;
+    
+    const data = await getPagedFilteredPatients(
+            userEmail,
+            criteria.value.name, 
+            criteria.value.maxAge,
+            criteria.value.gender,
+            criteria.value.type,
+            criteria.value.lastVisit,
+            pageSize, 
+            currentPage.value - 1,
+            "dateOfBirth"
+        );
 
     if (data && data.content) { 
         if(data.content.length !== 0) {
@@ -50,6 +92,8 @@ async function fetchPatients() {
     } else {
         console.error("No content returned from the API");
     }
+
+    isLoading.value = false;
 }
 
 function changePage(newPage) {
@@ -74,7 +118,10 @@ function redirectToPatientDetails(id) {
 
         <div class="content">
             <div class="filtering-sidebar">
-                <FilteringPatientsSidebar />
+                <FilteringPatientsSidebar
+                    @update-criteria = "handleUpdateCriteria"
+                    @reset-filters = "resetCriteria"
+                />
             </div>
             <div class="patients-list">
                 <div v-if="!patientsNotFound">
@@ -97,6 +144,11 @@ function redirectToPatientDetails(id) {
                         @changePage="changePage"
                         class="pagination-component"
                     />
+
+                    <div v-if="isLoading" class="loading-animation" aria-label="Se incarca, asteptati">
+                          <CustomLoader size="100" />
+                    </div>
+
                 </div>
                 <div v-else class="not-found">
                     <p> Nu s-au gasit pacienti.  </p>
@@ -142,11 +194,25 @@ function redirectToPatientDetails(id) {
 
 .pagination-component {
     position: absolute;
-    bottom: 0; /* Poziționează la baza containerului `.patients-list` */
-    left: 50%; /* Începe la jumătatea `.patients-list` */
-    transform: translateX(-50%); /* Centrează-l în mod corect pe orizontală */
-    width: auto; /* Setează lățimea să fie auto sau cât de mare trebuie să fie */
+    bottom: 0;
+    left: 50%; 
+    transform: translateX(-50%); 
+    width: auto; 
 }
+
+.loading-animation {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(255, 255, 255, 0.5); 
+    z-index: 1000; /* is positioned above other components */
+}
+
 
 .not-found {
     display: flex;

@@ -23,7 +23,7 @@ const userType = localStorage.getItem('role');
 const isDoctor = ref(userType == "doctor");
 
 const tags = ref(['Sport', 'Alimentatie', 'Stres', 'Obiceiuri']);
-const types = ref(['Hipertensiune','Normal','Hipotensiune']); // Replace with actual types
+const types = ref(['Hipertensiune','Normal','Hipotensiune']); 
 const selectedTag = ref('');
 const selectedType = ref('');
 const recommendations = ref([]);
@@ -32,19 +32,16 @@ const pageSize = 3;
 const totalPages = ref(0);
 const currentPage = ref(1);
 
-// const userEmail = sessionStorage.getItem("email");
-let userEmail;
+let userEmail = localStorage.getItem('user');
 let doctorEmail;
 let patientType;
 
 if(!isDoctor.value) {
-    userEmail = 'alexandramoise2@gmail.com';
     let data = await getPatientByEmail(userEmail);
     patientType = data.tendency;
     doctorEmail = data.doctorEmailAddress;
     console.log("Tip pacient: ", patientType);
 } else {
-    userEmail = 'alexandramoise636@gmail.com';
     doctorEmail = userEmail;
     console.log("Afisez toate recomandarile");
 }
@@ -229,7 +226,7 @@ function redirectToAdd() {
 }
 
 .clear-filter-button {
-    width: 80;
+    width: 100px;
     height: 40px;
     border-radius: 8px;
     background: white;

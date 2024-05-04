@@ -81,7 +81,7 @@ async function saveChanges() {
                 if(response === 200) {
                     modalTitle.value = "Succes";
                     modalMessage.value = "Veti fi redirectionat la pagina de login";
-                } else {
+                } else if(response === 401) {
                     modalTitle.value = "Eroare";
                     modalMessage.value = "Credentiale incorecte";
                 }
