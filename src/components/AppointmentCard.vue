@@ -1,6 +1,6 @@
 <script setup>
-import {computed, ref} from 'vue';
-import { getPatientById } from "../services/patient_service.js";
+import {computed, ref, onMounted} from 'vue';
+import { getPatientByEmail } from "../services/patient_service.js";
 
 const props = defineProps({
     "id": "",
@@ -10,7 +10,8 @@ const props = defineProps({
     "doctorEmail": "",
     "patientEmail": "",
     "nobodyCanceled": "",
-    "visitType" : ""
+    "visitType" : "",
+    "comment": ""
 });
 
 const visitTypeColor = computed(() => {
@@ -31,13 +32,25 @@ const newDate = computed(() => {
       return `${date.toLocaleDateString('ro-RO', optionsDate)} ${date.toLocaleTimeString('ro-RO', optionsTime)}`;
 });
 
+const patientName = ref('');
+onMounted(async () => {
+    try {
+        const patient = await getPatientByEmail(props.patientEmail);
+        patientName.value = patient.fullName;
+    } catch (error) {
+        console.error("Failed to fetch patient data:", error);
+        patientName.value = "Failed to load"; // Handle error scenario
+    }
+});
+
 </script>
 
 <template>
     <div class="card">
-        <p> <span class="title"> Pacient </span> {{ props.patientEmail }} </p>
+        <p> <span class="title"> Pacient </span> {{ patientName }} </p>
         <p> <span class="title"> Data </span> {{ newDate }} </p>
         <p> <span class="title"> Tip </span> {{ props.visitType }} </p>
+        <p> <span class="title"> Motiv </span> {{ props.comment }} </p>
     </div>
 
 </template>
@@ -46,16 +59,11 @@ const newDate = computed(() => {
 
 .card {
     background-color: rgb(250, 250, 250);
-    width: 40%;
+    width: 250px;
     border-radius: 10px;
     padding: 15px;
     font-size: 17px;
     font-weight: bold;
-    margin: 20px auto;
-}
-
-.card:hover{
-    border: 2px solid slategray;
 }
 
 .title {
@@ -65,7 +73,7 @@ const newDate = computed(() => {
 
 @media(max-width: 750px) {
     .card {
-        width: 75%;
+        width: 200px;
     }
 }
 </style>

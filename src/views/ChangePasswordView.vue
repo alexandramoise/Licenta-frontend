@@ -53,7 +53,8 @@ if(route.query.for === 'p') {
 async function saveChanges() {
     if(emailText.value === '' || emailText.value === null 
     || passwordText.value === '' || passwordText.value === null
-    || passwordText.value === '' || passwordText.value === null) {
+    || newPasswordText.value === '' || newPasswordText.value === null
+    || confirmNewPasswordText.value === '' || confirmNewPasswordText.value === null) {
         modalShow.value = true;
         modalTitle.value = "Alerta";
         modalMessage.value = "Va rog sa completati campurile";
@@ -81,9 +82,12 @@ async function saveChanges() {
                 if(response === 200) {
                     modalTitle.value = "Succes";
                     modalMessage.value = "Veti fi redirectionat la pagina de login";
-                } else if(response === 401) {
+                } else if(response === 400) {
                     modalTitle.value = "Eroare";
                     modalMessage.value = "Credentiale incorecte";
+                } else if(response === 404) {
+                    modalTitle.value = "Eroare";
+                    modalMessage.value = "Nu exista un cont asociat acestei adrese";
                 }
             } 
         }
@@ -105,9 +109,7 @@ function showNewPasswordToggle() {
 function closeDialog() {
     modalShow.value = false;
     if(modalTitle.value === "Succes") {
-        setTimeout(() => {
-            router.push("login");
-        }, 300);
+        router.push("login");
     }
 }
 

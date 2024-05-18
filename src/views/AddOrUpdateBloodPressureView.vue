@@ -3,7 +3,7 @@ import CustomNavbar from "@/components/CustomNavbar.vue";
 import CustomInput from "@/components/CustomInput.vue";
 import CustomButton from "@/components/CustomButton.vue";
 import CustomModal from "../components/CustomModal.vue";
-import { addBloodPressure, updateBloodPressure, getBloodPressureById } from "../services/bloodpressure_service.js";
+import { addBloodPressure, updateBloodPressure, getBloodPressureById } from "@/services/bloodpressure_service.js";
 import { onMounted, ref, watch} from 'vue';
 import { useRoute  } from "vue-router";
 import router from "@/router";
@@ -88,14 +88,15 @@ async function addOrUpdate() {
             modalTitle.value = "Eroare";
             modalShow.value = true;
             if(error.message === "No patient account for this email address") {
-                //alert("Nu exista un cont asociat adresei de mail ", userEmail);
                 modalMessage.value = "Nu exista un cont asociat adresei de mail " + userEmail;
             } else if(error.message === "Invalid values for diastolic and/or systolic") {
-                //alert("Valorile introduse sunt invalide, nu apartin unui interval");
                 modalMessage.value = "Valorile introduse sunt invalide, nu apartin unui interval";
             } else if(error.message === "Date can not be in the future") {
-                //alert("Nu puteti alege o data in viitor");
                 modalMessage.value = "Nu puteti alege o data in viitor";
+            } else if(error.message === "Uneditable!") {
+                modalMessage.value = "Inregistrarea nu este editabila";
+            } else if(error.message === "BP Not found") {
+                modalMessage.value = "Inregistrarea nu exista";
             }
         }
     }
@@ -191,8 +192,7 @@ function redirectToDashboard() {
         />
   </div>
   <div v-else>
-
-    <p> NEAUTENTIFICAAAT </p>
+    <NotAuthenticatedView />
   </div>
 </template>
 

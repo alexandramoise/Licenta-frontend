@@ -8,15 +8,12 @@ const nameInput = ref('');
 const genderInput = ref('');
 const ageInput = ref(0);
 const tendencyInput = ref('');
-const daysInput = ref(0);
-
 function getFormData() {
     const formData = {
         name: nameInput.value,
         gender: genderInput.value,
         maxAge: ageInput.value,
         type: tendencyInput.value,
-        lastVisit: daysInput.value,
     };
 
     emit('updateCriteria', formData);
@@ -27,12 +24,11 @@ function resetFilters() {
     genderInput.value = '';
     ageInput.value = 0;
     tendencyInput.value = '';
-    daysInput.value = 0;
     emit('resetFilters');
 }
 
 const showResetButton = computed(() => {
-    return nameInput.value !== '' || genderInput.value !== '' || ageInput.value !== 0 || tendencyInput.value !== '' || daysInput.value !== 0;
+    return nameInput.value !== '' || genderInput.value !== '' || ageInput.value !== 0 || tendencyInput.value !== '';
 });
 
 </script>
@@ -70,18 +66,13 @@ const showResetButton = computed(() => {
       <div class="filter-option">
         <label class="filter-label">Categorie</label>
         <div class="radio-group">
-          <input type="radio" id="hypo" value="Hipo" name="category" v-model="tendencyInput">
+          <input type="radio" id="hypo" value="Hypotension" name="category" v-model="tendencyInput">
           <label for="hypo">Hipotensiv</label>
           <input type="radio" id="normal" value="Normal" name="category" v-model="tendencyInput">
           <label for="normal">Normal</label>
-          <input type="radio" id="hyper" value="Hiper" name="category" v-model="tendencyInput">
+          <input type="radio" id="hyper" value="Hypertension" name="category" v-model="tendencyInput">
           <label for="hyper">Hipertensiv</label>
         </div>
-      </div>
-  
-      <div class="filter-option last-visit-container">
-        <label class="filter-label" for="last-visit">Ultima vizită</label>
-        <input type="number" id="last-visit" name="last-visit" placeholder="zile in urma" class="texting-input" v-model="daysInput">
       </div>
   
       <CustomButton class="filter-button" @click="getFormData" @key.enter="getFormData">FILTRARE</CustomButton>
@@ -92,7 +83,7 @@ const showResetButton = computed(() => {
 .sidepanel-container {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 10px;
+    gap: 20px;
     padding: 10px;
 }
 

@@ -10,7 +10,11 @@
   },
   "dependencies": {
     "@vuepic/vue-datepicker": "^8.4.0",
+    "chart.js": "^3.9.1",
+    "v-calendar": "^3.1.2",
     "vue": "^3.4.15",
+    "vue-chart-3": "^3.1.8",
+    "vue-chartjs": "^4.1.2",
     "vue-router": "^4.2.5",
     "vue3-charts": "^1.1.33",
     "vue3-datepicker": "^0.4.0"

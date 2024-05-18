@@ -4,14 +4,18 @@ import CustomNavbar from "../components/CustomNavbar.vue";
 import CustomButton from "../components/CustomButton.vue";
 import AppointmentCard from "../components/AppointmentCard.vue";
 import CustomCalendar from '../components/CustomCalendar.vue';
+import CustomLoader from '@/components/CustomLoader.vue';
 import Pagination from '../components/Pagination.vue';
 
 import { getDoctorsPagedAppointments, 
         getPatientsPagedAppointments, 
         getPatientsAppointmentsOnACertainDay, 
         getDoctorsAppointmentsOnACertainDay, 
+        doctorCancelesAppointment,
+        patientCancelesAppointment
      } from "../services/appointments_service.js";
 import router from '@/router';
+import NotAuthenticatedView from './NotAuthenticatedView.vue';
 
 // checking whether or not the user is authenticated based on the token's existence
 const token = localStorage.getItem("token");
@@ -57,15 +61,22 @@ watch(currentPage, (newPage, oldPage) => {
 
 
 function getDateFromCalendar(date) {
-    selectedDate.value = date;
+  //console.log("Date received from CalendarComponent:", date);
+  selectedDate.value = date;
 }
 
+
+const isLoading = ref(false);
 async function fetchPaginatedAppointments() {
     let data = '';
     if(userType === "doctor") {
+        isLoading.value = true;
         data = await getDoctorsPagedAppointments(userEmail, pageSize, currentPage.value - 1);
+        isLoading.value = false;
     } else {
+        isLoading.value = true;
         data = await getPatientsPagedAppointments(userEmail, pageSize, currentPage.value - 1);
+        isLoading.value = false;
     }
 
     if (data && data.content) { 
@@ -90,9 +101,13 @@ async function fetchPaginatedAppointments() {
 async function fetchAppointmentsByDate(date) {
     let data = '';
     if(userType === "doctor") {
+        isLoading.value = true;
         data = await getDoctorsAppointmentsOnACertainDay(userEmail, date, pageSize, currentPage.value - 1);
+        isLoading.value = false;
     } else {
+        isLoading.value = true;
         data = await getPatientsAppointmentsOnACertainDay(userEmail, date, pageSize, currentPage.value - 1);
+        isLoading.value = false;
     }
 
     if (data && data.content) { 
@@ -122,33 +137,65 @@ function redirectToForm() {
         router.push("request-appointment");
     }
 }
+
+const selectedApId = ref(null);
+function toggleButtons(apId) {
+    console.log("Programarea cu: ", apId);
+    selectedApId.value = selectedApId.value === apId ? null : apId;
+}
+
+async function cancelAppointment(apId) {
+    console.log("voi da cancel la: ", apId);
+    if(userType === "doctor") {
+        await doctorCancelesAppointment(apId);
+    } else if(userType === "patient") {
+        await doctorCancelesAppointment(apId);
+    }   
+
+    console.log(userType, " a dat cancel la ", apId);
+    router.push({
+        name: "request-appointment",
+        query: {
+            updateId: apId,
+        },
+        });
+}
 </script>
 
 
 <template>
     <div class="page" v-if="isAuthenticated">
+        <div v-if="isLoading" class="loading-animation">
+                <CustomLoader size="100" />
+        </div>
+
         <CustomNavbar />
         <div class="content">
             <div class="history-section">
-                <CustomCalendar
-                @selected-date="getDateFromCalendar" />
+                <div class="calendar-container">
+                    <CustomCalendar @selectedDate="getDateFromCalendar" />
+                </div>
             </div>
 
-            <div class="statistics-panel">
+            <div class="appointments-section">
 
-                <CustomButton class="add-button" @click="redirectToForm"> {{ userType === 'doctor' ? 'Creaza' : 'Solicita' }} programare </CustomButton>
-                <div v-if="!appointmentsNotFound">
-                    <AppointmentCard
-                        v-for="appointment in appointments"
-                        :key="appointment.id"
-                        :class="card"
-                        :patientId="appointment.patientId"
-                        :patientEmail="appointment.patientEmail"
-                        :doctorId="appointment.doctorId"
-                        :visitType="appointment.visitType"
-                        :date="appointment.date"
-                        :nobodyCanceled="appointment.nobodyCanceled"
-                    />
+                <CustomButton class="add-button" @click="redirectToForm"> {{ userType === 'doctor' ? 'Creeaza' : 'Solicita' }} programare </CustomButton>
+                <div v-if="!appointmentsNotFound" class="appointments-container">
+                    <div class="card-container" v-for="appointment in appointments" :key="appointment.id">
+                        <AppointmentCard
+                            :patientId="appointment.patientId"
+                            :patientEmail="appointment.patientEmail"
+                            :doctorId="appointment.doctorId"
+                            :visitType="appointment.visitType"
+                            :comment="appointment.comment"
+                            :date="appointment.date"
+                            :nobodyCanceled="appointment.nobodyCanceled"
+                            @click="toggleButtons(appointment.id)"
+                        />
+                        <div v-if="selectedApId === appointment.id">
+                            <CustomButton class="button-element" @click="cancelAppointment(appointment.id)"> <i class="fas fa-calendar-alt"> </i> Data noua </CustomButton>
+                        </div>
+                    </div>
 
                     <Pagination 
                         :totalPages="totalPages"
@@ -159,13 +206,13 @@ function redirectToForm() {
                 </div>
                 
                 <div v-else class="not-found">
-                    <p> Nu există programari in ziua selectata. </p>
+                    <p> Nu s-au gasit programari. </p>
                 </div>       
             </div>
         </div>
     </div>
     <div v-else> 
-        <p> NEAUTENTIFICAAAT </p>
+        <NotAuthenticatedView />
     </div>
 </template>
 
@@ -178,22 +225,82 @@ function redirectToForm() {
     overflow-y: hidden;
 }
 
+.loading-animation {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(255, 255, 255, 0.5); 
+    z-index: 1000; /* is positioned above other components */
+}
+
 .content {
     display: grid;
     height: 100%;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 40% 60%;
 }
 
 .history-section {
-    background-color: rgb(227, 227, 227);
-    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background-color: rgb(244, 244, 244)
 }
 
+.calendar-container {
+    width: 95%;
+    max-width: 600px;
+    margin: auto; 
+    height: auto; 
+}
 
-.statistics-panel {
+.appointments-section {
     background-color: rgb(240, 240, 240);
     padding: 15px;
+    display: flex;
+    flex-direction: column;
     position: relative;
+    height: calc(100% - 60px);
+    overflow: hidden;
+}
+
+.appointments-container {
+    flex-grow: 1;
+    overflow-y: auto; 
+    display: flex;
+    flex-direction: column;
+}
+
+.card-container {
+    display: grid;
+    grid-template-columns: auto auto;
+    align-items: start; 
+    margin: 15px auto; 
+    gap: 0px; 
+}
+
+.button-element {
+    border-radius: 6px;
+    border: 1px solid gray;
+    color: darkred;
+    background-color: white;
+    height: 30px;
+    width: 100%;
+}
+
+.pagination-component {
+    margin-top: auto; 
+    width: 100%;
+    text-align: center;
+    padding: 10px 0; 
+    background-color: inherit; 
 }
 
 .add-button {
@@ -209,15 +316,6 @@ function redirectToForm() {
     margin: 10px auto;
 }
 
-.pagination-component {
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: auto;
-    margin-bottom: 7%;
-}
-
 .not-found {
     display: flex;
     justify-content: center;
@@ -231,12 +329,51 @@ function redirectToForm() {
 }
 
 
-@media(max-width: 600px) {
-
+@media (max-width: 600px){
     .content {
         grid-template-columns: 1fr; 
+        grid-template-rows: 40% 60%; 
+        overflow-x: hidden;
     }
 
+    .history-section {
+        overflow: hidden;
+        width: 100%; 
+    }
+
+    .calendar-container {
+        width: 90%; 
+        max-width: none; 
+        margin: 0;
+        height: auto; 
+    }
+
+    .appointments-section {
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 10px 0;
+    }
 }
+
+@media (max-width: 1024px) and (min-width: 601px) {
+    .history-section {
+        overflow: hidden;
+        width: 100%; 
+    }
+
+    .calendar-container {
+        width: 90%; 
+        max-width: none; 
+        margin: 0; 
+        height: auto;
+    }
+
+    .appointments-section {
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+}
+
+
 
 </style>

@@ -45,29 +45,22 @@ const newDate = computed(() => {
 
 <template>
     <div class="card">
-        <div v-if="isEditable"> <i class="fas fa-plus"> </i> MODIFICA </div>
-        <p> <span class="title"> Valoare </span> {{ props.systolic }} / {{ props.diastolic }} </p>
-        <p> <span class="title"> Puls </span> {{ props.pulse }} </p>
-        <p> <span class="title"> Data </span> {{ newDate }} </p>
-        <p> <span class="title"> Tip </span> <span :style="{ color: tendencyColor }"> {{ tendencyTranslation }} </span> </p> 
+        <p> <span class="title"> <i class="fas fa-heartbeat"></i> Val: </span> {{ props.systolic }} / {{ props.diastolic }} mmHg <b class="title">||</b> {{ props.pulse }} <i class="fa fa-heart" style="font-size:15px;color:red"></i> bpm  </p>
+        <p> <span class="title"> <i class="fas fa-calendar-alt"></i> Data: </span> {{ newDate }} </p>
+        <p> <span class="title"> <i class="fas fa-tachometer-alt"></i> Tip: </span> <span :style="{ color: tendencyColor }"> {{ tendencyTranslation }} </span> </p> 
     </div>
 
 </template>
 
 <style scoped>
-
 .card {
     background-color: rgb(250, 250, 250);
-    width: 12vw;
     border-radius: 10px;
     padding: 15px;
     font-size: 17px;
     font-weight: bold;
-    margin: 20px auto;
-}
-
-.card:hover{
-    border: 2px solid slategray;
+    width: 300px; 
+    box-sizing: border-box;
 }
 
 .title {
@@ -75,9 +68,11 @@ const newDate = computed(() => {
   font-weight: bold;
 }
 
-@media(max-width: 750px) {
+@media (max-width: 900px) {
     .card {
-        width: 35vw;
+        width: 240px;
+        font-size: 13px;
     }
 }
+
 </style>

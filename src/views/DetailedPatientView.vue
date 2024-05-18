@@ -1,7 +1,10 @@
 <script setup>
 import { onMounted, ref, watch } from 'vue';
-import { getPatientById, getMedicalConditions } from '../services/patient_service';
-import { getPatientsPagedAppointments } from '@/services/appointments_service';
+import { getPatientById, getMedicalConditions } from '../services/patient_service.js';
+import { getPatientsAppointments } from '@/services/appointments_service.js';
+import { getCurrentMedicalConditions, getAllMedicalConditions } from '@/services/medical_condition_service.js'
+import { getMostRecentOfPatientAppointments } from '../services/appointments_service.js';
+import { getTreatmentsForCondition } from '@/services/treatment_service.js'
 import { useRoute  } from "vue-router";
 import router from "@/router";
 
@@ -22,27 +25,48 @@ watch(() => localStorage.getItem("token"), (newToken) => {
 const patientName = ref('');
 const patientAppointments = ref([]);
 const patientTreatments = ref([]);
+const patientCurrentMedicalConditions = ref([]);
 const patientMedicalHistory = ref([]);
+
+const latestAppointment = ref(null);
+
 onMounted(async () => {
     if (route.query.patientId) {
         let id = route.query.patientId;
         const data = await getPatientById(id);
         patientName.value = data.fullName;
+        
+        try {
+            latestAppointment.value = await getMostRecentOfPatientAppointments(data.email);
+        } catch(error) {
+            if(error.message === 'No appointments') {
+                latestAppointment.value = 'Pacientul nu are programari';
+            } else if(error.message === 'No past appointments') {
+                latestAppointment.value = 'Doar programari viitoare';
+            }
+        }
 
-        /*
-        patientAppointments.value = data.appointments.map((appointment) => ({
-                ...appointment
-            }));
-            */
+        console.log("ULTIMA: ", latestAppointment.value);
 
-        let medcond = await getMedicalConditions(id);
+        let medcond = await getAllMedicalConditions(data.email);
+        let current = await getCurrentMedicalConditions(data.email);
         patientMedicalHistory.value = medcond.map(m => m);
+        patientCurrentMedicalConditions.value = current.map(m => m);
 
-            /*
-        patientTreatments.value = data.treatments.map((t) => ({
-            ...t
-        }));
-        */
+    
+       let medicalCondition = '';
+       if(data.tendency === 'Hypertension') {
+          medicalCondition = "Hipertensiune";
+       } else if(data.tendency === 'Hypotension') {
+          medicalCondition = "Hipotensiune";
+       }
+
+       console.log(medicalCondition);
+       let treatments = await getTreatmentsForCondition(data.email, medicalCondition);
+       patientTreatments.value = treatments.map(t => t);
+
+       let appointments = await getPatientsAppointments(data.email);
+       patientAppointments.value = appointments.map(a => a);
 
         console.log("programari: ", patientAppointments.value[0], ", boli: ", patientMedicalHistory.value, " si tratamente ", patientTreatments.value);
         console.log("In pagina de detalii: ", data);
@@ -89,6 +113,8 @@ function convertDateOnly(originalDate) {
     const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
     return date.toLocaleDateString('ro-RO', options);
 }
+
+
 </script>
 
 <template>
@@ -106,19 +132,24 @@ function convertDateOnly(originalDate) {
                 <p v-if="!treatmentHistory && !medicalHistory && !visitsHistory"> 
                     AICI SUNT ULTIMELE DATE PENTRU PACIENTUL {{ patientName }} : <br> <br>
                     <h3> Ultima programare: </h3>
-                    <div v-if="patientAppointments.length !== 0">
-                        
-                        Data: {{ convertDateToSuitableFormat(patientAppointments[0].date) }} <br>
-                        Tip: {{ patientAppointments[0].visitType }} 
+
+                    <div v-if="latestAppointment && (latestAppointment === 'Pacientul nu are programari' || latestAppointment === 'Doar programari viitoare')">
+                        {{ latestAppointment }}
                     </div>
-                    <div v-else>
-                        <p> Inca nu ati avut intalniri cu pacientul {{ patientName }}</p>
+                    <div v-else-if="latestAppointment && (typeof latestAppointment == 'object')">
+                        <p> Data: {{ convertDateToSuitableFormat(latestAppointment.date) }}</p>
+                        <p> Tip: {{ latestAppointment.visitType }}</p>
+                    </div>
+                    
+                    <h3> Afectiuni curente: </h3>
+                    <div v-if="patientCurrentMedicalConditions.length > 0">
+                        <ul>
+                            <li v-for="condition in patientCurrentMedicalConditions" :key="condition.id">
+                                {{ condition.name }} de la {{ convertDateOnly(condition.startingDate) }}
+                            </li>
+                        </ul>
                     </div>
 
-                    <h3> Afectiuni: </h3>
-                    <div v-if="patientMedicalHistory.length > 0">
-                        {{  patientMedicalHistory[0].name}}
-                    </div>
                     <div v-else>
                         <p> Pacientul {{ patientName }} nu are nicio afectiune inregistrata </p>
                     </div>
@@ -167,7 +198,14 @@ function convertDateOnly(originalDate) {
 
                 <!-- sectiune boli -->
                 <div v-if="medicalHistory">
-                    AICI O SA AFISEZ BOLILE PENTRU PACIENT
+                    AICI O SA AFISEZ TOATE BOLILE PENTRU PACIENT
+                    <div v-if="patientMedicalHistory.length > 0">
+                        <ul>
+                            <li v-for="condition in patientMedicalHistory" :key="condition.id">
+                                {{ condition.name }} de la {{ convertDateOnly(condition.startingDate) }} la {{ condition.endingDate != null ? convertDateOnly(condition.endingDate) : 'nu e incheiat' }}
+                            </li>
+                        </ul>
+                    </div>
                 </div>
 
                 <!-- sectiune vizite -->
@@ -179,15 +217,9 @@ function convertDateOnly(originalDate) {
                             class="card"
                         >
                             <p>Tip vizită: {{ appointment.visitType }}</p>
+                            <p> Motiv: {{ appointment.comment }}</p>
                             <p>Data: {{ convertDateToSuitableFormat(appointment.date) }}</p>
                         </div>
-
-                        <Pagination 
-                            :totalPages="totalPages"
-                            :currentPage="currentPage"
-                            @changePage="changePage"
-                            class="pagination-component"
-                        />
                     </div>
                     <div v-else>
                         <p>Pacientul {{ patientName }} nu are vizite la activ.</p>
@@ -201,7 +233,7 @@ function convertDateOnly(originalDate) {
         </div>
 </div>
 <div v-else>
-    <p> NEAUTENTIFICAAAT </p>
+    <NotAuthenticatedView />
 </div>
 </template>
 
@@ -216,6 +248,7 @@ function convertDateOnly(originalDate) {
 .content {
     display: grid;
     grid-template-columns: 20% 40% 40%;
+    max-height: 100vh; /* Added to make sure the content doesn't exceed the viewport height */
 }
 
 .options-sidebar {
@@ -225,7 +258,7 @@ function convertDateOnly(originalDate) {
     display: flex;
     flex-direction: column;
     justify-content: space-evenly;
-
+    overflow-y: hidden;
 }
 
 .option-button {
@@ -238,23 +271,25 @@ function convertDateOnly(originalDate) {
 }
 
 .option-button:hover {
-    background-color: rgb(198, 111, 111);;
+    background-color: rgb(198, 111, 111);
 }
 
 .middle-container {
     display: flex;
     flex-direction: column;
-    position: relative; 
+    position: relative;
     background-color: rgb(255, 221, 227);
     padding: 25px;
+    overflow-y: auto; /* Changed from hidden to auto to allow scrolling */
+    max-height: 90vh; /* Ensure it does not exceed the viewport height */
 }
 
 .pagination-component {
     position: absolute;
-    bottom: 0; /* Poziționează la baza containerului `.patients-list` */
-    left: 50%; /* Începe la jumătatea `.patients-list` */
-    transform: translateX(-50%); /* Centrează-l în mod corect pe orizontală */
-    width: auto; /* Setează lățimea să fie auto sau cât de mare trebuie să fie */
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: auto;
 }
 
 .card {
@@ -268,7 +303,7 @@ function convertDateOnly(originalDate) {
 .not-found {
     display: flex;
     justify-content: center;
-    align-items: center; 
+    align-items: center;
     height: 100%;
     text-align: center;
     color: darkred;
@@ -281,6 +316,7 @@ function convertDateOnly(originalDate) {
     background-color: rgb(240, 240, 240);
     height: 100vh;
     padding: 15px;
+    overflow-y: auto; /* Ensure it is scrollable if content exceeds height */
 }
 
 @media(max-width: 600px) {
@@ -294,4 +330,5 @@ function convertDateOnly(originalDate) {
         background-color: red;
     }
 }
+
 </style>

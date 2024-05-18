@@ -88,7 +88,21 @@ async function updateBloodPressure(bloodPressureDto, id) {
     return data;
 }
 
+async function deleteBloodPressure(id) {
+    const response = await fetch(API_URL + "/" + id, {
+        method: "DELETE", 
+        headers: {
+            "Content-type": "application/json; charset=UTF-8",
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+    });
+
+    return response.status;
+}
+
+
 export { addBloodPressure, 
         getBloodPressures, 
         getBloodPressureById,
-        updateBloodPressure }
+        updateBloodPressure,
+        deleteBloodPressure }

@@ -110,7 +110,7 @@ function redirectToPage() {
         />
   </div>
   <div v-else> 
-    <p> NEAUTENTIFICAAAT </p>
+    <NotAuthenticatedView />
   </div>
 </template>
 

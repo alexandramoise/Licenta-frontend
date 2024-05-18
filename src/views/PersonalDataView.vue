@@ -5,7 +5,9 @@ import CustomInput from '../components/CustomInput.vue';
 import CustomButton from '../components/CustomButton.vue';
 import CustomModal from '../components/CustomModal.vue';
 import { getDoctorByEmail, updateDoctorByEmail } from '../services/doctor_service.js';
-import { getPatientByEmail, updatePatientByEmail, getMedicalConditions } from '../services/patient_service.js';
+import { getPatientByEmail, updatePatientByEmail } from '../services/patient_service.js';
+import { getCurrentMedicalConditions } from '@/services/medical_condition_service.js';
+import NotAuthenticatedView from './NotAuthenticatedView.vue';
 
 // checking whether or not the user is authenticated based on the token's existence
 const token = localStorage.getItem("token");
@@ -82,7 +84,7 @@ if(userType === "doctor") {
         dateOfBirth.value = data.dateofBirth.slice(0,10);
     }
 
-    let medcond = await getMedicalConditions(data.id);
+    let medcond = await getCurrentMedicalConditions(email);
     patientMedicalConditions.value = medcond.map(m => m.name);
 
     if (medcond.length !== 0) {
@@ -286,7 +288,7 @@ function closeDialog() {
         />
 </div>
 <div v-else>
-    <p> NEAUTENTIFICAAAT </p>
+    <NotAuthenticatedView />
 </div>
 </template>
 

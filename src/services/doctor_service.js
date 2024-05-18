@@ -6,8 +6,7 @@ async function createDoctorAccount(email) {
 
     //console.log("Incepe crearea: ", email);
     try {
-
-        response = await fetch(`${API_URL}/new-doctor-account?email=${email}`, {
+        response = await fetch(`${API_URL}/new?email=${email}`, {
             method: "POST",
         });
     } catch (error) {
@@ -23,7 +22,7 @@ async function createDoctorAccount(email) {
         throw new Error(result.message);
     }
 
-    return result;
+    return response;
 }
 
 async function getDoctorByEmail(doctorEmail) {
@@ -40,6 +39,26 @@ async function getDoctorByEmail(doctorEmail) {
         }
         const data = await response.json();
         console.log("data for doctorEmail ", doctorEmail, data);
+        return data;
+    } catch (error) {
+        console.error("Could not get the doctor", error);
+    }
+}
+
+async function getFirstLogin(doctorEmail) {
+    try {
+        const response = await fetch(API_URL + "/first-login?email=" + doctorEmail, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+            });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log("firstLogin for doctorEmail ", doctorEmail, data);
         return data;
     } catch (error) {
         console.error("Could not get the doctor", error);
@@ -104,5 +123,6 @@ export {
     getDoctorByEmail,
     updateDoctorByEmail,
     changePasswordDoctor,
-    requestNewPasswordDoctor
+    requestNewPasswordDoctor, 
+    getFirstLogin
 };

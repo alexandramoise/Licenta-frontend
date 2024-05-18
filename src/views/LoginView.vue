@@ -4,9 +4,10 @@ import { ref, onBeforeUnmount} from 'vue';
 import router from "../router";
 import CustomInput from "../components/CustomInput.vue";
 import CustomModal from "../components/CustomModal.vue";
+import CustomLoader from '@/components/CustomLoader.vue';
 
 import { requestNewPasswordPatient } from '@/services/patient_service.js';
-import { requestNewPasswordDoctor } from '@/services/doctor_service.js';
+import { requestNewPasswordDoctor, getFirstLogin } from '@/services/doctor_service.js';
 
 const emailText = ref('');
 const passwordText = ref('');
@@ -32,6 +33,7 @@ const changePasswordModal = ref(false);
 const modalTitle = ref('');
 const modalMessage = ref('');
 
+const firstLoginEver = ref(false);
 
 async function loginFunction() {
     if (emailText.value === '' || emailText.value === null 
@@ -54,11 +56,13 @@ async function loginFunction() {
             localStorage.setItem('user', emailText.value);
             modalShow.value = true;
             modalTitle.value = "Succes";
-            modalMessage.value = "Veti fi redirectionat la pagina principala";
+            modalMessage.value = "Veti putea intra in aplicatie";
         }
     }
 }
 
+
+const isLoading = ref(false);
 
 async function requestChangePassword() {
     if(emailText.value === null || emailText.value === '') {
@@ -69,9 +73,13 @@ async function requestChangePassword() {
         try {
             let response;
             if(userType === 'patient') {
+                isLoading.value = true;
                 response  = await requestNewPasswordPatient(emailText.value);
+                isLoading.value = false;
             } else if(userType === 'doctor') {
+                isLoading.value = true;
                 response  = await requestNewPasswordDoctor(emailText.value);
+                isLoading.value = false;
             }
 
             modalShow.value = true;
@@ -95,25 +103,20 @@ function closeDialog() {
     modalShow.value = false;
     if(modalTitle.value === "Succes" && !changePasswordModal.value) {
         if(userType === "doctor") {
-            setTimeout(() => {
-                router.push("main-doctor");
-            }, 300);
+            router.push("main-doctor");
         } else {
-            setTimeout(() => {
-                router.push("main-patient");
-            }, 300);
+            router.push("main-patient");
         }
     } else if(changePasswordModal.value && modalTitle.value === "Succes") {
-        setTimeout(() => {
-            router.push({
-                name: "change-password",
-                query: {
-                    for: userType.substring(0,1).toLowerCase(),
-                },
-            });
-        }, 300);
+        router.push({
+            name: "change-password",
+            query: {
+                for: userType.substring(0,1).toLowerCase(),
+            },
+        });
     }
 }
+
 
 function redirectToRegister() {
     router.push({
@@ -133,14 +136,18 @@ onBeforeUnmount(() => {
     window.removeEventListener("keydown", handleKeyPress);
 });
 
-window.history.pushState(null, null, window.location.href);
+/* window.history.pushState(null, null, window.location.href);
 window.onpopstate = function () {
 window.history.go(1);
-};
+}; */
 </script>
 
 <template>
     <div class="page">
+        <div v-if="isLoading" class="loading-animation" aria-label="Se incarca, asteptati">
+                <CustomLoader size="100" />
+        </div>
+
         <div class="login-container" :style="{ height: userType === 'patient' ? '250px' : '290px'}">
             <h2>Accesare cont</h2>
             <CustomInput 
@@ -183,6 +190,19 @@ window.history.go(1);
     height: 100vh;
     width: 100vw;
     background-color: rgb(163, 2, 2);
+}
+
+.loading-animation {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(255, 255, 255, 0.5); 
+    z-index: 1000; /* is positioned above other components */
 }
 
 .login-container {

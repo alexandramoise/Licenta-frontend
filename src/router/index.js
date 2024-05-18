@@ -79,7 +79,11 @@ const router = createRouter({
       name: 'my-profile',
       component: () => import('../views/PersonalDataView.vue')
     },
-    
+    {
+      path: '/not-authenticated',
+      name: 'not-authenticated',
+      component: () => import('../views/NotAuthenticatedView.vue')
+    }
   ]
 })
 

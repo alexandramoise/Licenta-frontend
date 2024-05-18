@@ -70,48 +70,40 @@ export default {
       navVisible.value = !navVisible.value;
     };
 
-    const navigateTo = async (path) => {
-      if(path === "home") {
-          if(userType === "doctor") {
-              router.push("main-doctor");
-          } else {
-              router.push("main-patient");
-          }
-      } 
-      else if(path === "appointments") {
-          router.push("appointments");
-      } 
-      else if(path === "add-patient") {
-        router.push({
-            name: "new",
-            query: {
-                accountType: "pacient",
-            },
-        });
+const navigateTo = async (path) => {
+  if(path === "home") {
+      router.push(userType === "doctor" ? "main-doctor" : "main-patient");
+  } 
+  else if(path === "appointments") {
+      router.push("appointments");
+  } 
+  else if(path === "add-patient") {
+    router.push({ name: "new", query: { accountType: "pacient" } });
+  }
+  else if(path === "data") {
+    router.push("my-profile");
+  } 
+  else if(path === "recommandations") {
+    router.push("recommandations");
+  } else if(path === "add-recommandation") {
+    router.push("add-recommandation");
+  } else if(path === "logout") {
+    localStorage.clear();
+    router.push("/");
+  } else if(path === "change-password") {
+    try {
+      if(userType === 'patient') {
+        await requestNewPasswordPatient(userEmail);
+      } else {
+        await requestNewPasswordDoctor(userEmail);
       }
-      else if(path === "data") {
-        router.push("my-profile");
-      } 
-      else if(path === "recommandations") {
-        router.push("recommandations");
-      } else if(path === "add-recommandation") {
-        router.push("add-recommandation");
-      } else if(path === "logout") {
-        localStorage.clear() // ending session by clearing local storage - token, userEmail 
-        router.push("/") // back to homepage
-      } else if(path === "change-password") {
+      router.push("change-password");
+    } catch (error) {
+      console.error('Error when requesting new password:', error);
+    }
+  }
+};
 
-        // to include both doctor and patient functions and to check the role
-         if(userType === 'patient') {
-            await requestNewPasswordPatient(userEmail);
-         } else if(userType === 'doctor') {
-            await requestNewPasswordDoctor(userEmail);
-         }
-         setTimeout(() => {
-            router.push("change-password");
-        }, 300);
-      }
-    };
 
     return { 
       dropdownVisible, 
@@ -150,13 +142,13 @@ export default {
 .navbar-item,
 .navbar-item-logo {
   color:  rgb(172, 0, 0);
-  margin-right: 1rem;
-  font-size: 18px;
+  margin-right: 0.2rem;
+  font-size: 1.1rem;
 }
 
 .navbar-item-logo {
   font-weight: bold;
-  font-size: 22px;
+  font-size: 1.3rem;
 }
 
 .logo {
@@ -184,9 +176,9 @@ export default {
   display: block;
   background-color: white;
   border-bottom: 1px solid rgb(176, 176, 176);
-  width: 120px;
+  width: 100%;
   height: 25px;
-  font-size: 16px;
+  font-size: 1rem;
 }
 
 @media only screen and (max-width: 600px) {
@@ -209,7 +201,7 @@ export default {
     padding: 1rem;
     border-top: 1px solid #ddd;
     display: block; 
-    font-size: 15px;
+    font-size: 0.8rem;
   }
 
   .toggle-button {
@@ -218,6 +210,22 @@ export default {
 
   .profile-btn {
     margin-bottom: 0.5rem; 
+  }
+}
+
+@media (max-width: 768px) and (min-width: 601px) {
+  .navbar-item {
+    font-size: 0.8rem;
+    margin-right: 2px;
+  }
+
+  .navbar-item-logo {
+    font-size: 1rem;
+    margin-right: 2px;
+  }
+
+  .dropdown-item {
+    font-size: 0.7rem;
   }
 }
 </style>

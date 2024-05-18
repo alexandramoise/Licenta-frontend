@@ -7,6 +7,7 @@ import FilteringPatientsSidebar from "../components/FilteringPatientsSidebar.vue
 import Pagination from "../components/Pagination.vue";
 import { getPagedPatients, getPagedFilteredPatients } from "../services/patient_service.js";        
 import router from '@/router';
+import NotAuthenticatedView from './NotAuthenticatedView.vue';
  
 // checking whether or not the user is authenticated based on the token's existence
 const token = localStorage.getItem("token");
@@ -23,13 +24,13 @@ const isLoading = ref(false);
 
 const criteria = ref({
     "name": "",
-    "maxAge": "0",
+    "maxAge": 0,
     "gender": "",
     "type": "",
-    "lastVisit": "0"
 });
 
 function handleUpdateCriteria(newCriteria) {
+    currentPage.value = 1; // always going back on the first page when i do filtering
     Object.entries(newCriteria).forEach(([key, value]) => {
         if (criteria.value[key] !== value) {
             criteria.value[key] = value;
@@ -38,11 +39,11 @@ function handleUpdateCriteria(newCriteria) {
 }
 
 function resetCriteria() {
+    currentPage.value = 1; // always going back on the first page when i do filtering
     criteria.value.name = "",
     criteria.value.maxAge = 0;
     criteria.value.gender = "";
     criteria.value.type = "";
-    criteria.value.lastVisit = 0;
 }
 
 const pageSize = 3;
@@ -63,14 +64,13 @@ watch(criteria, () => {
 
 async function fetchPatients() {
     isLoading.value = true;
-    
+
     const data = await getPagedFilteredPatients(
             userEmail,
             criteria.value.name, 
-            criteria.value.maxAge,
+            criteria.value.maxAge, 
             criteria.value.gender,
             criteria.value.type,
-            criteria.value.lastVisit,
             pageSize, 
             currentPage.value - 1,
             "dateOfBirth"
@@ -108,8 +108,6 @@ function redirectToPatientDetails(id) {
         },
     });
 }
-
-
 </script>
 
 <template>
@@ -160,7 +158,7 @@ function redirectToPatientDetails(id) {
         </div>
     </div>
     <div v-else> 
-        <p> NEAUTENTIFICAAAT </p>
+        <NotAuthenticatedView />
     </div>
 </template>
 

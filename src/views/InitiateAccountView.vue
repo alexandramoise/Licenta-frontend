@@ -1,5 +1,6 @@
 <script setup>
 import { createDoctorAccount } from '../services/doctor_service.js'
+import { createPatientAccount } from '@/services/patient_service.js'
 import { ref, onBeforeUnmount, onMounted } from 'vue';
 import router from "../router";
 import { useRoute } from 'vue-router';
@@ -7,6 +8,7 @@ import { useRoute } from 'vue-router';
 import CustomInput from "../components/CustomInput.vue";
 import CustomModal from '../components/CustomModal.vue';
 import CustomNavbar from '@/components/CustomNavbar.vue';
+import CustomLoader from '@/components/CustomLoader.vue';
 
 const emailText = ref('');
 
@@ -26,6 +28,9 @@ if(localStorage.getItem('role') === "doctor") {
 const modalShow = ref(false);
 const modalTitle = ref('');
 const modalMessage = ref('');   
+
+const isLoading = ref(false);
+
 async function createAccount() {
     if (emailText.value === '' || emailText.value === null) {
         modalShow.value = true;
@@ -40,8 +45,18 @@ async function createAccount() {
                 modalTitle.value = "Eroare";
                 modalMessage.value = "Adresa de mail nu este valida";
             } else {
-                console.log("S-A INTRODUS: ", emailText.value);
-                alert(emailText.value)
+                let result;
+                //console.log("S-A INTRODUS: ", emailText.value);
+                if(role.value === 'pacient') {
+                    isLoading.value = true;
+                    result = await createPatientAccount(emailText.value, localStorage.getItem('user'));
+                    isLoading.value = false;
+                } else {
+                    isLoading.value = true;
+                    result = await createDoctorAccount(emailText.value);
+                    isLoading.value = false;
+                }
+
                 if(role.value === "doctor") {
                     modalMessage.value = "Verificati inbox-ul la adresa de email introdusa";
                 } else {
@@ -51,9 +66,12 @@ async function createAccount() {
                 modalTitle.value = "Succes";
             }
         } catch (error) {
+            isLoading.value = false;
             modalShow.value = true;
             modalTitle.value = "Eroare";
-            modalMessage.value = error.message;
+            if(error.message === "An account with this email already exists") {
+                modalMessage.value = "Exista deja un cont asociat acestei adrese de mail";
+            }
             console.error(error);
         }
     }
@@ -71,14 +89,15 @@ function closeDialog() {
     modalShow.value = false;
     if(modalTitle.value === "Succes") {
         if(role.value === "doctor") {
-            setTimeout(() => {
-                router.push("login");
-            }, 300);
+            router.push({
+            name: "change-password",
+            query: {
+                for: "d",
+            },
+        });
         } else {
-            console.log("Merg la dashboard: ", role)
-            setTimeout(() => {
-                router.push("main-doctor");
-            }, 300);
+            //console.log("Merg la dashboard: ", role)
+            router.push("main-doctor");
         }
     }
 }
@@ -118,6 +137,10 @@ onBeforeUnmount(() => {
             :message="modalMessage"
             @close="closeDialog"
         />
+
+        <div v-if="isLoading" class="loading-animation">
+            <CustomLoader size="100" />
+        </div>
     </div>
 </template>
 
@@ -128,6 +151,19 @@ onBeforeUnmount(() => {
     justify-content: center; 
     width: 100vw;
     background-color: rgb(163, 2, 2);
+}
+
+.loading-animation {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(255, 255, 255, 0.5); 
+    z-index: 1000; /* is positioned above other components */
 }
 
 .register-container {

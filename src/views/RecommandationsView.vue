@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch, reactive } from 'vue';
 import router from '@/router';
 import { getPatientByEmail } from '@/services/patient_service';
 import { getAllRecommandations, getRecommandationsByType, 
@@ -9,6 +9,8 @@ import { getAllRecommandations, getRecommandationsByType,
 import CustomNavbar from '@/components/CustomNavbar.vue';
 import Pagination from '@/components/Pagination.vue';
 import CustomButton from '@/components/CustomButton.vue';
+import CustomLoader from '@/components/CustomLoader.vue';
+import NotAuthenticatedView from './NotAuthenticatedView.vue';
 
 // checking whether or not the user is authenticated based on the token's existence
 const token = localStorage.getItem("token");
@@ -36,6 +38,9 @@ let userEmail = localStorage.getItem('user');
 let doctorEmail;
 let patientType;
 
+// Define a cache object
+const recommendationsCache = reactive(new Map());
+
 if(!isDoctor.value) {
     let data = await getPatientByEmail(userEmail);
     patientType = data.tendency;
@@ -57,28 +62,45 @@ const typeTranslations = {
 };
 
 
+const isLoading = ref(false);
 async function fetchRecommendations() {
-  let data
+  const cacheKey = `${doctorEmail}-${selectedTag.value}-${selectedType.value}-${currentPage.value}`;
+  if (recommendationsCache.has(cacheKey)) {
+    // Load from cache
+    const cachedData = recommendationsCache.get(cacheKey);
+    recommendations.value = cachedData.content;
+    totalPages.value = Math.ceil(cachedData.totalElements / pageSize);
+    return;
+  }
+
+  isLoading.value = true;
+  let data;
   // fetch-urile pentru doctor: dupa eticheta, tip, eticheta si tip sau toate
   if (isDoctor.value) {
     if (selectedTag.value && selectedType.value) {
       let typeInEnglish = typeTranslations[selectedType.value] || selectedType.value;
       data = await getRecommandationsByHashtagAndType(doctorEmail, typeInEnglish, selectedTag.value, pageSize, currentPage.value - 1);
+      isLoading.value = false;
     } else if (selectedTag.value) {
       data = await getRecommandationsByHashtag(doctorEmail, selectedTag.value, pageSize, currentPage.value - 1);
+      isLoading.value = false;
     } else if (selectedType.value) {
       let typeInEnglish = typeTranslations[selectedType.value] || selectedType.value;
       data = await getRecommandationsByType(doctorEmail, typeInEnglish, pageSize, currentPage.value - 1);
+      isLoading.value = false;
     } else {
       data = await getAllRecommandations(doctorEmail, pageSize, currentPage.value - 1);
+      isLoading.value = false;
     }
   } 
   // fetch-urile pentru pacient, dupa eticheta sau toate
   else {
     if (selectedTag.value) {
-      data = await getRecommandationsForPatientByHashtag(doctorEmail, patientType, selectedTag.value, pageSize, currentPage.value - 1)
+      data = await getRecommandationsForPatientByHashtag(doctorEmail, patientType, selectedTag.value, pageSize, currentPage.value - 1);
+      isLoading.value = false;
     } else {
       data = await getAllRecommandationsForPatient(doctorEmail, patientType, pageSize, currentPage.value - 1);
+      isLoading.value = false;
     }
   }
 
@@ -86,6 +108,10 @@ async function fetchRecommendations() {
       recommendations.value = data.content.map((r) => ({
           ...r
       }));
+
+
+      // saving the result from the request
+      recommendationsCache.set(cacheKey, data);
 
       totalPages.value = Math.ceil(data.totalElements / pageSize);
   } else {
@@ -118,6 +144,11 @@ function redirectToAdd() {
 </script>
 
 <template>
+
+    <div v-if="isLoading" class="loading-animation" aria-label="Se incarca, asteptati">
+          <CustomLoader size="100" />
+    </div>
+
     <div class="page-container" v-if="isAuthenticated">
     <CustomNavbar />
 
@@ -171,7 +202,7 @@ function redirectToAdd() {
     </div>
   </div>
   <div v-else> 
-    <p> NEAUTENTIFICAAAT </p>
+    <NotAuthenticatedView />
   </div>
 </template>
 
@@ -180,6 +211,19 @@ function redirectToAdd() {
     display: flex;
     flex-direction: column;
     height: 100vh;
+}
+
+.loading-animation {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(255, 255, 255, 0.5); 
+    z-index: 1000; /* is positioned above other components */
 }
 
 .content {

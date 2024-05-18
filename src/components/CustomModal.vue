@@ -83,7 +83,7 @@ const emits = defineEmits(["close", "confirm", "cancel"]);
 }
 
 .modal-body {
-background-color: #fff; 
+  background-color: #fff; 
   padding: 16px;
   text-align: center;
   font-size: 16px;
@@ -102,18 +102,27 @@ background-color: #fff;
 .modal-default-button {
   height: 30px;
   width: 60px;
-  border: 1px solid slategray;
   border-radius: 5px;
   margin-right: 10px;
+}
+
+.modal-default-button, 
+.modal-default-button1 {
+  border: 1px solid slategray;
 }
 
 .modal-default-button1:hover {
   box-shadow: 0 2px 2px slategray;
   background-color: rgba(163, 161, 161, 0.565);
 }
+
+.modal-default-button2 {
+  background: #ec5e6c;
+  border: 1px solid #54020a; 
+}
 .modal-default-button2:hover {
-  box-shadow: 0 2px 2px slategray;
-  background-color: orange;
+  box-shadow: 0 2px 2px #54020a; 
+  background-color: #c31122; 
 }
 
 .modal-default-button {

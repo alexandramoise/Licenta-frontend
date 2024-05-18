@@ -51,11 +51,11 @@ async function getPagedPatients(doctorEmail, pageSize, pageNumber, sortCategory)
     }
 }
 
-async function getFilteredPatients(email, name, maxAge, gender, type, lastVisit) {
+async function getFilteredPatients(email, name, maxAge, gender, type) {
     if(localStorage.getItem("token")) {
         try {
             const response = await fetch(API_URL + "/filtered?email=" + encodeURIComponent(email) 
-            + "&name=" + name + "&maxAge=" + maxAge + "&gender=" + gender + "&type=" + type + "&lastVisit=" + lastVisit, {
+            + "&name=" + name + "&maxAge=" + maxAge + "&gender=" + gender + "&type=" + type, {
                 method: 'GET',
                 headers: {
                   'Content-Type': 'application/json',
@@ -78,12 +78,12 @@ async function getFilteredPatients(email, name, maxAge, gender, type, lastVisit)
     }
 }
 
-async function getPagedFilteredPatients(email, name, maxAge, gender, type, lastVisit, pageSize, pageNumber, sortCategory) {
+async function getPagedFilteredPatients(email, name, maxAge, gender, type, pageSize, pageNumber, sortCategory) {
     if(localStorage.getItem("token")) {
         console.log(localStorage.getItem("token"));
         try {
             const response = await fetch(API_URL + "/filtered/paged?email=" + encodeURIComponent(email) 
-            + "&name=" + name + "&maxAge=" + maxAge + "&gender=" + gender + "&type=" + type + "&lastVisit=" + lastVisit+ "&pageSize=" 
+            + "&name=" + name + "&maxAge=" + maxAge + "&gender=" + gender + "&type=" + type + "&pageSize=" 
             + pageSize + "&pageNumber=" + pageNumber + "&sortCategory=" + sortCategory, {
                 method: 'GET',
                 headers: {
@@ -148,6 +148,26 @@ async function getPatientByEmail(patientEmail) {
     }
 }
 
+async function getFirstLoginPatient(patientEmail) {
+    try {
+        const response = await fetch(API_URL + "/first-login?email=" + patientEmail, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+            });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log("firstLogin for patientEmail ", patientEmail, data);
+        return data;
+    } catch (error) {
+        console.error("Could not get the patient", error);
+    }
+}
+
 async function updatePatientByEmail(patientUpdateDto, patientEmail) {
     const response = await fetch(API_URL + "?email=" + patientEmail, {
         method: "PUT", 
@@ -171,6 +191,33 @@ async function updatePatientByEmail(patientUpdateDto, patientEmail) {
     }
     
     return data;
+}
+
+async function createPatientAccount(email, doctorEmail) {
+    let connectionError = false;
+    let response;
+
+    try {
+        response = await fetch(`${API_URL}?email=${email}&doctorEmail=${doctorEmail}`, {
+            method: "POST",
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+        });
+    } catch (error) {
+        connectionError = true;
+    }
+
+    if (connectionError) {
+        throw new Error("Server connection error");
+    }
+
+    const result = await response.json();
+    if (!response.ok) {
+        throw new Error(result.message);
+    }
+
+    return response;
 }
 
 async function getMedicalConditions(patientId) {
@@ -234,8 +281,10 @@ export {
     getPatientByEmail,
     updatePatientByEmail,
     getMedicalConditions, 
+    createPatientAccount,
     requestNewPasswordPatient,
     changePasswordPatient, 
     getFilteredPatients, 
-    getPagedFilteredPatients
+    getPagedFilteredPatients, 
+    getFirstLoginPatient
 }; 

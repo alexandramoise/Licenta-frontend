@@ -2,15 +2,17 @@
 import { useRoute } from 'vue-router';
 import router from "@/router";
 import { ref, onMounted, watch } from 'vue';
-import CustomInput from "../components/CustomInput.vue";
+import CustomLoader from "../components/CustomLoader.vue";
 import CustomNavbar from "../components/CustomNavbar.vue";
 import CustomButton from "../components/CustomButton.vue";
 import CustomModal from "../components/CustomModal.vue";
+import CustomInput from '@/components/CustomInput.vue';
 import { getDoctorsPatients } from "../services/patient_service.js";
-import { createNewAppointment } from "../services/appointments_service.js";
+import { createNewAppointment, getAppointmentById, updateAppointment } from "../services/appointments_service.js";
 
 import Datepicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
+import NotAuthenticatedView from './NotAuthenticatedView.vue';
 
 // checking whether or not the user is authenticated based on the token's existence
 const token = localStorage.getItem("token");
@@ -33,8 +35,12 @@ const dateInput = ref('');
 const visitTypeOptions = ['Rutina', 'Consultatie'];
 const selectedVisitType = ref('');
 
+const commentText = ref('');
+
 let doctorEmail;
 const selectedPatientEmail = ref('');
+
+const update = ref(false);
 
 if(isDoctor.value) {
     doctorEmail = localStorage.getItem('user') // VA FI ADRESA DIN STORAGE
@@ -69,30 +75,61 @@ onMounted(() => {
     getPatients();
 });
 
+onMounted(async () => {
+    if (route.query.updateId) {
+        update.value = true;
+        let id = route.query.updateId;
+        const data = await getAppointmentById(id);
+        selectedVisitType.value = data.visitType;
+        commentText.value = data.comment;
+        const newDate = new Date(data.date);
+        newDate.setHours(newDate.getHours() + 3);
+        dateInput.value = newDate.toISOString().slice(0,16);
+    }
+});
+
 const modalShow = ref(false);
 const modalTitle = ref('');
 const modalMessage = ref('');
 
-async function createAppointment() {
-    if(selectedVisitType.value && dateInput.value) {
+const isLoading = ref(false);
+async function createOrUpdateAppointment() {
+    if(selectedVisitType.value && dateInput.value && commentText.value) {
         try {
             const appointmentDto = {
                 doctorEmail: doctorEmail,
                 patientEmail: selectedPatientEmail.value,
                 date: dateInput.value,
                 visitType: selectedVisitType.value,
+                comment: commentText.value,
             };
 
             console.log("appointmentDto: ", appointmentDto);
-            const data = await createNewAppointment(appointmentDto);
+
+            let data;
+            if(update.value) {
+                isLoading.value = true;
+                data = await updateAppointment(appointmentDto, route.query.updateId);
+                isLoading.value = false;
+            } else {
+                isLoading.value = true;
+                data = await createNewAppointment(appointmentDto);
+                isLoading.value = false;
+            }
+
             modalShow.value = true;
             modalTitle.value = "Succes";
             modalMessage.value = "S-a salvat!";
             return data;
         } catch(error) {
+            isLoading.value = false;
             modalShow.value = true;
             modalTitle.value = "Eroare";
-            modalMessage.value = error.message;
+            if(error.message === "Doctor is not available at that time") {
+                modalMessage.value = "Doctorul nu este disponibil la data aleasa";
+            } else if(error.message === "Date can not be in the past") {
+                modalMessage.value = "Nu puteti alege o data in trecut";
+            }
         }
     } else {
         modalShow.value = true;
@@ -104,9 +141,7 @@ async function createAppointment() {
 function closeDialog() {
     modalShow.value = false;
     if(modalTitle.value === "Succes") {
-        setTimeout(() => {
-            router.push("appointments");
-    }, 300);
+        router.push("appointments");
     }
 }
 </script>
@@ -144,7 +179,20 @@ function closeDialog() {
                 </select>
                 </div>
 
-                <CustomButton @click="createAppointment" class="submit-button">Gata</CustomButton>
+                <div class="inputs-row">
+                    <label class="form-label"> Motiv </label>
+                    <CustomInput 
+                        v-model="commentText"
+                        :placeholder="'motiv'"
+                        :type="'text'"
+                    />
+                </div>
+
+                <CustomButton @click="createOrUpdateAppointment" class="submit-button">Gata</CustomButton>
+
+                <div v-if="isLoading" class="loading-animation">
+                    <CustomLoader size="100" />
+                </div>
       </div>
     </div>
 
@@ -157,7 +205,7 @@ function closeDialog() {
         />
   </div>
   <div v-else>
-    <p> NEAUTENTIFICAAAT </p>
+    <NotAuthenticatedView />
   </div>
 </template>
 
@@ -175,6 +223,19 @@ function closeDialog() {
   width: 100%;
   display: flex;
   justify-content: center;
+}
+
+.loading-animation {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(255, 255, 255, 0.5); 
+    z-index: 1000; /* is positioned above other components */
 }
 
 .form-content {
