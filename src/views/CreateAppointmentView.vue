@@ -149,53 +149,53 @@ function closeDialog() {
 <template>
     <div class="page" v-if="isAuthenticated">
         <CustomNavbar />
-
         <div class="form-container">
-         <div class="form-content">
-                <div v-if="isDoctor">
-                    <div v-if="! noPatients">
-                        <label for="visitType" class="form-label"> Pacient </label>
-                        <select id="visitType" name="visitType" v-model="selectedPatientEmail" class="custom-input">
-                            <option v-for="patient in patients" :key="patient.email" :value="patient.email">
-                                {{ patient.fullName }}
+            <div class="form-content">
+                <h1 class="form-title"> {{ !update ? "Programare noua" : "Modifica programare" }} </h1>
+                
+                <div v-if="isDoctor" class="input-row full-width">
+                    <label for="patientSelect" class="form-label">Pacient</label>
+                    <select id="patientSelect" name="patientSelect" v-model="selectedPatientEmail" class="custom-input">
+                        <option v-for="patient in patients" :key="patient.email" :value="patient.email">
+                            {{ patient.fullName }}
+                        </option>
+                    </select>
+                </div>
+                
+                <div class="input-row">
+                    <div class="input-wrapper">
+                        <label for="date" class="form-label">Data</label>
+                        <Datepicker v-model="dateInput"></Datepicker>
+                    </div>
+                    <div class="input-wrapper">
+                        <label for="visitTypeSelect" class="form-label">Tipul vizitei</label>
+                        <select id="visitTypeSelect" v-model="selectedVisitType" class="custom-input">
+                            <option v-for="opt in visitTypeOptions" :key="opt" :value="opt">
+                                {{ opt }}
                             </option>
                         </select>
                     </div>
-                    <div v-else>
-                        <p> Nu aveti niciun pacient. </p>
-                    </div>
                 </div>
-                <div class="inputs-row">
-                <label for="date" class="form-label"> Data </label>
-                <Datepicker v-model="dateInput"></Datepicker>
-                </div>
-
-                <div class="inputs-row">
-                <label for="visitTypeSelect" class="form-label">Tipul vizitei</label>
-                <select id="visitTypeSelect" v-model="selectedVisitType" class="custom-input">
-                    <option v-for="opt in visitTypeOptions" :key="opt" :value="opt">
-                    {{ opt }}
-                    </option>
-                </select>
-                </div>
-
-                <div class="inputs-row">
-                    <label class="form-label"> Motiv </label>
-                    <CustomInput 
+                
+                <div class="input-row full-width">
+                    <label for="commentText" class="form-label">Motiv</label>
+                    <textarea 
+                        id="commentText"
                         v-model="commentText"
-                        :placeholder="'motiv'"
-                        :type="'text'"
-                    />
+                        :maxlength="100"
+                        class="custom-input textarea"
+                    ></textarea>
+                    <div class="char-counter">{{ commentText.length }}/100</div>
                 </div>
-
+                
                 <CustomButton @click="createOrUpdateAppointment" class="submit-button">Gata</CustomButton>
-
+                
                 <div v-if="isLoading" class="loading-animation">
                     <CustomLoader size="100" />
                 </div>
-      </div>
-    </div>
-
+            </div>
+        </div>
+        
         <CustomModal
             :open="modalShow"
             :forConfirmation="false"
@@ -203,11 +203,12 @@ function closeDialog() {
             :message="modalMessage"
             @close="closeDialog"
         />
-  </div>
-  <div v-else>
-    <NotAuthenticatedView />
-  </div>
+    </div>
+    <div v-else>
+        <NotAuthenticatedView />
+    </div>
 </template>
+
 
 <style scoped>
 .page {
@@ -218,11 +219,16 @@ function closeDialog() {
 }
 
 .form-container {
-  margin-top: auto; /* Centrat vertical */
-  margin-bottom: auto;
-  width: 100%;
-  display: flex;
-  justify-content: center;
+    margin: 50px auto;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.form-title {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #b80f20;
 }
 
 .loading-animation {
@@ -234,59 +240,94 @@ function closeDialog() {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-color: rgba(255, 255, 255, 0.5); 
+    background-color: rgba(255, 255, 255, 0.5);
     z-index: 1000; /* is positioned above other components */
 }
 
 .form-content {
-  background-color: white;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
-.inputs-row {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  max-width: 600px; /* Ajustează la latimea dorită */
-  margin-bottom: 15px;
+.input-row {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 600px;
+    margin-bottom: 15px;
+}
+
+.input-row.full-width {
+    flex-direction: column;
 }
 
 .input-wrapper {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  margin-right: 10px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    margin-right: 10px;
 }
 
 .input-wrapper:last-child {
-  margin-right: 0;
+    margin-right: 0;
 }
 
 .custom-input {
-  border: 1px solid #ccc;
-  padding: 10px;
-  border-radius: 8px;
-  margin-top: 5px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 5px;
 }
 
 .form-label {
-  font-weight: bold;
-  margin-bottom: 5px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.textarea {
+    resize: none;
+    height: 80px;
+}
+
+.char-counter {
+    font-size: 12px;
+    color: #555;
+    text-align: right;
+    margin-top: 5px;
 }
 
 .submit-button {
-  background-color: #b80f20;
-  color: white;
-  padding: 10px 20px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  width: 100%; /* Butonul va ocupa întreaga lățime a formularului */
-  max-width: 600px; /* Ajustează la latimea dorită */
+    background-color: #b80f20;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    width: 100%; 
+    max-width: 600px; 
+}
+
+@media (max-width: 600px) {
+    .form-content {
+        padding: 15px;
+    }
+
+    .input-row {
+        flex-direction: column;
+    }
+
+    .input-wrapper {
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+
+    .submit-button {
+        width: 100%;
+    }
 }
 </style>

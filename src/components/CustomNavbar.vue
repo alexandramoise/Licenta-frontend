@@ -132,6 +132,7 @@ const navigateTo = async (path) => {
   color: rgb(172, 0, 0);
   font-size: 2rem;
   display: none;
+  cursor: pointer;
 }
 
 .nav-links {
@@ -144,11 +145,13 @@ const navigateTo = async (path) => {
   color:  rgb(172, 0, 0);
   margin-right: 0.2rem;
   font-size: 1.1rem;
+  cursor: pointer;
 }
 
 .navbar-item-logo {
   font-weight: bold;
   font-size: 1.3rem;
+  cursor: pointer;
 }
 
 .logo {
@@ -179,6 +182,7 @@ const navigateTo = async (path) => {
   width: 100%;
   height: 25px;
   font-size: 1rem;
+  cursor: pointer;
 }
 
 @media only screen and (max-width: 600px) {

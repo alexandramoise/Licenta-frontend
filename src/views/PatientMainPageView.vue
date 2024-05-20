@@ -4,8 +4,9 @@ import CustomNavbar from "../components/CustomNavbar.vue";
 import CustomModal from '@/components/CustomModal.vue';
 import CustomButton from "../components/CustomButton.vue";
 import CustomLoader from '@/components/CustomLoader.vue';
+import CustomInput from '@/components/CustomInput.vue';
 import BloodPressureCard from "../components/BloodPressureCard.vue";
-import BarChartComponent from '../components/charts/BarChartComponent.vue'
+import LineChartComponent from '../components/charts/LineChartComponent.vue'
 import { getBloodPressures, getBloodPressureById, deleteBloodPressure } from "../services/bloodpressure_service.js";
 import router from '@/router';
 import NotAuthenticatedView from './NotAuthenticatedView.vue';
@@ -23,14 +24,45 @@ const selectedBpId = ref(null);
 
 const noTrackings = ref(false);
 const isLoading = ref(false);
+
+// filtering blood pressures by date
+const fromDate = ref(null);
+const toDate = ref(null);
+const filterModalShow = ref(false);
+const filterModalTitle = ref('');
+const filterModalMessage = ref('');
+
+function filterByDate() {
+    const fromDateValue = new Date(fromDate.value);
+    const toDateValue = new Date(toDate.value);
+    const currentDate = new Date();
+
+    if (toDate.value !== null && toDate.value !== '' && fromDate.value > toDate.value) {
+        filterModalShow.value = true;
+        filterModalTitle.value = "Problema";
+        filterModalMessage.value = "Interval invalid";
+        return;
+    }
+
+    if (fromDateValue > currentDate || toDateValue > currentDate) {
+        filterModalShow.value = true;
+        filterModalTitle.value = "Problema";
+        filterModalMessage.value = "Datele nu pot fi în viitor";
+        return;
+    }
+
+    fetchBloodPressures();
+}
+
 async function fetchBloodPressures() {
     isLoading.value = true;
+    noTrackings.value = false;
     
-    bloodPressures.value = await getBloodPressures(userEmail);
+    bloodPressures.value = await getBloodPressures(userEmail, fromDate.value, toDate.value);
     if(bloodPressures.value.length == 0) {
         noTrackings.value = true;
     }
-
+    
     isLoading.value = false;
 }
 
@@ -90,6 +122,7 @@ async function deleteBp(bpId) {
 
 function closeDialog() {
     modalShow.value = false;
+    filterModalShow.value = false;
 }
 
 const buttonText = ref('Adauga');  // Initial text state
@@ -119,6 +152,35 @@ onMounted(() => {
                 <div class="header">
                     <p class="title"> Istoric inregistrari tensiune: <i> {{ userEmail }} </i></p>
                     <CustomButton class="add-button" @click="() => router.push('add-bloodpressure')"> {{buttonText}} </CustomButton>
+                </div>
+
+                <div class="date-inputs">
+                    <div class="input-group">
+                        <label for="fromDate">Inceput</label>
+                        <CustomInput 
+                            v-model="fromDate"
+                            :type="'date'"
+                            name="fromDate"
+                            class="custom-input"
+                        />
+                    </div>
+                    <div class="input-group">
+                        <label for="toDate">Final</label>
+                        <CustomInput 
+                            v-model="toDate"
+                            :type="'date'"
+                            name="toDate"
+                            class="custom-input"
+                        />
+                    </div>
+                    <CustomButton class="filter-button" @click="filterByDate"> Filtrare </CustomButton>
+                    <CustomModal
+                        :open="filterModalShow"
+                        :forConfirmation="false"
+                        :title="filterModalTitle"
+                        :message="filterModalMessage"
+                        @close="closeDialog"
+                    />
                 </div>
 
                 <div class="list" v-if="!noTrackings">
@@ -152,7 +214,7 @@ onMounted(() => {
                 
             </div>
             <div class="statistics-panel">
-                <BarChartComponent />
+                <LineChartComponent :bloodPressureData="bloodPressures"/>
             </div>
         </div>
     </div>
@@ -211,7 +273,7 @@ onMounted(() => {
 
 .title {
     font-size: 15px; 
-    color: black;
+    color: rgb(163, 2, 2);
     margin: 0; 
     font-weight: bold;
     font-family: Georgia, serif;
@@ -228,6 +290,42 @@ onMounted(() => {
     font-size: 14px;
     margin-left: 5px;
     margin-right: 10px;
+}
+
+.date-inputs {
+    display: grid;
+    grid-template-columns: 30% 30% 40%;
+    gap: 10px; 
+    margin-bottom: 10px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.input-group label {
+    margin-bottom: 5px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.filter-button {
+    background-color: white;
+    color: rgb(163, 2, 2);
+    height: 40px;
+    width: 60%;
+    margin-top: 15px;
+    font-weight: bold;
+    border: 1px solid rgb(163, 2, 2);
+    border-radius: 10px;
+    font-size: 13px;
+}
+
+.filter-button:hover {
+    background-color: rgb(255, 247, 247);
+    font-size: 14px;
 }
 
 .bp-container {
