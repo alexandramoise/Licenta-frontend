@@ -1,15 +1,14 @@
 <script setup>
-import { onMounted, onBeforeUnmount, ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import CustomNavbar from "../components/CustomNavbar.vue";
 import CustomLoader from '../components/CustomLoader.vue';
 import PatientCard from "../components/PatientCard.vue";
 import FilteringPatientsSidebar from "../components/FilteringPatientsSidebar.vue";
 import Pagination from "../components/Pagination.vue";
-import { getPagedPatients, getPagedFilteredPatients } from "../services/patient_service.js";        
+import { getPagedFilteredPatients } from "../services/patient_service.js";        
 import router from '@/router';
 import NotAuthenticatedView from './NotAuthenticatedView.vue';
  
-// checking whether or not the user is authenticated based on the token's existence
 const token = localStorage.getItem("token");
 const isAuthenticated = ref(token !== null);
 watch(() => localStorage.getItem("token"), (newToken) => {
@@ -30,7 +29,7 @@ const criteria = ref({
 });
 
 function handleUpdateCriteria(newCriteria) {
-    currentPage.value = 1; // always going back on the first page when i do filtering
+    currentPage.value = 1; 
     Object.entries(newCriteria).forEach(([key, value]) => {
         if (criteria.value[key] !== value) {
             criteria.value[key] = value;
@@ -39,16 +38,23 @@ function handleUpdateCriteria(newCriteria) {
 }
 
 function resetCriteria() {
-    currentPage.value = 1; // always going back on the first page when i do filtering
+    currentPage.value = 1; 
     criteria.value.name = "",
     criteria.value.maxAge = 0;
     criteria.value.gender = "";
     criteria.value.type = "";
 }
 
-const pageSize = 3;
+const sizes = [3, 5, 10, 20, 50];
+const categories = {
+    "Varsta": "dateOfBirth",
+    "Nume": "lastName",
+}
+
+const pageSize = ref(3);
 const totalPages = ref(0);
 const currentPage = ref(1);
+const sortCategory = ref("Varsta");
 
 onMounted(() => {
     fetchPatients();
@@ -71,9 +77,9 @@ async function fetchPatients() {
             criteria.value.maxAge, 
             criteria.value.gender,
             criteria.value.type,
-            pageSize, 
+            pageSize.value, 
             currentPage.value - 1,
-            "dateOfBirth"
+            categories[sortCategory.value]
         );
 
     if (data && data.content) { 
@@ -83,7 +89,7 @@ async function fetchPatients() {
             }));
 
             patientsNotFound.value = false;
-            totalPages.value = Math.ceil(data.totalElements / pageSize);
+            totalPages.value = Math.ceil(data.totalElements / pageSize.value);
         
         } else {
             totalPages.value = 0;
@@ -108,6 +114,12 @@ function redirectToPatientDetails(id) {
         },
     });
 }
+
+function updateSortCriteria() {
+    currentPage.value = 1; // always going back on first page when i do filtering
+    fetchPatients();
+}
+
 </script>
 
 <template>
@@ -117,14 +129,33 @@ function redirectToPatientDetails(id) {
         <div class="content">
             <div class="filtering-sidebar">
                 <FilteringPatientsSidebar
-                    @update-criteria = "handleUpdateCriteria"
-                    @reset-filters = "resetCriteria"
+                    @update-criteria="handleUpdateCriteria"
+                    @reset-filters="resetCriteria"
                 />
             </div>
             <div class="patients-list">
-                <div v-if="!patientsNotFound">
+                <div class="input-section">
+                    <div class="select-container">
+                        <label for="pageSizeSelect" class="form-label">Afiseaza</label>
+                        <select id="pageSizeSelect" name="pageSizeSelect" v-model="pageSize" class="custom-input" @change="fetchPatients">
+                            <option v-for="size in sizes" :key="size" :value="size">
+                                {{ size }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="select-container">
+                        <label for="sortBySelect" class="form-label">Sorteaza dupa</label>
+                        <select id="sortBySelect" name="sortBySelect" v-model="sortCategory" class="custom-input" @change="updateSortCriteria">
+                            <option v-for="(value, key) in categories" :key="key" :value="key">
+                                {{ key }}
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <div v-if="!patientsNotFound" class="patients-container">
                     <PatientCard
-                        :class="card"
                         v-for="patient in patients"
                         :key="patient.id" 
                         :name="patient.fullName" 
@@ -162,6 +193,7 @@ function redirectToPatientDetails(id) {
     </div>
 </template>
 
+
 <style scoped>
 .page {
     height: 100vh;
@@ -180,22 +212,61 @@ function redirectToPatientDetails(id) {
     height: 100vh;
     float: left;
     overflow-y: auto;
+    scrollbar-width: thin; 
+    scrollbar-color: #c9c9c9 #ececec;
+}
+
+.input-section {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px; 
+}
+
+.select-container {
+    flex: 1;
+    margin: 2px 5px; 
 }
 
 .patients-list {
-    overflow-y: auto;
     display: flex;
     flex-direction: column;
-    position: relative; /* Adăugăm poziționare relativă aici */
     max-height: 90vh;
+    padding-bottom: 60px; 
+    position: relative;
+}
+
+.patients-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    scrollbar-width: thin; 
+    scrollbar-color: #c9c9c9 #ececec; 
+}
+
+.form-label {
+    font-size: 17px;
+    padding: 10px;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-weight: 400;
+}
+
+.custom-input {
+    border: 1px solid #ccc;
+    height: 100%;
+    padding: 3px;
+    border-radius: 4px;
+    font-size: 15px;
 }
 
 .pagination-component {
     position: absolute;
-    bottom: 0;
-    left: 50%; 
-    transform: translateX(-50%); 
-    width: auto; 
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: auto;
+    background-color: inherit;
+    margin-top: auto; 
+    text-align: center;
+    padding: 10px 0;  
 }
 
 .loading-animation {
@@ -208,9 +279,8 @@ function redirectToPatientDetails(id) {
     width: 100vw;
     height: 100vh;
     background-color: rgba(255, 255, 255, 0.5); 
-    z-index: 1000; /* is positioned above other components */
+    z-index: 1000; 
 }
-
 
 .not-found {
     display: flex;
@@ -236,3 +306,4 @@ function redirectToPatientDetails(id) {
     }
 }
 </style>
+

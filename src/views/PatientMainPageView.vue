@@ -6,12 +6,12 @@ import CustomButton from "../components/CustomButton.vue";
 import CustomLoader from '@/components/CustomLoader.vue';
 import CustomInput from '@/components/CustomInput.vue';
 import BloodPressureCard from "../components/BloodPressureCard.vue";
-import LineChartComponent from '../components/charts/LineChartComponent.vue'
+import LineChartComponent from '../components/charts/LineChartComponent.vue';
+import Pagination from '@/components/Pagination.vue';
 import { getBloodPressures, getBloodPressureById, deleteBloodPressure } from "../services/bloodpressure_service.js";
 import router from '@/router';
 import NotAuthenticatedView from './NotAuthenticatedView.vue';
 
-// checking whether or not the user is authenticated based on the token's existence
 const token = localStorage.getItem("token");
 const isAuthenticated = ref(token !== null);
 watch(() => localStorage.getItem("token"), (newToken) => {
@@ -19,23 +19,38 @@ watch(() => localStorage.getItem("token"), (newToken) => {
 });
 
 const userEmail = localStorage.getItem('user');
+
+// 50 trackings per page to balance the load on the system and to ensure the line chart shows a significant evolution without overwhelming the system with hundreds of data points in a single request.
+const pageSize = 50; 
+const currentPage = ref(1);
+const totalPages = ref(0);
+
 const bloodPressures = ref([]);
 const selectedBpId = ref(null);
 
 const noTrackings = ref(false);
 const isLoading = ref(false);
 
-// filtering blood pressures by date
 const fromDate = ref(null);
 const toDate = ref(null);
 const filterModalShow = ref(false);
 const filterModalTitle = ref('');
 const filterModalMessage = ref('');
 
+function changePage(newPage) {
+    currentPage.value = newPage;
+}
+
+watch(currentPage, (newPage, oldPage) => {
+  fetchBloodPressures();
+});
+
 function filterByDate() {
     const fromDateValue = new Date(fromDate.value);
     const toDateValue = new Date(toDate.value);
     const currentDate = new Date();
+
+    currentPage.value = 1; // always going back on the first page when i do filtering
 
     if (toDate.value !== null && toDate.value !== '' && fromDate.value > toDate.value) {
         filterModalShow.value = true;
@@ -56,12 +71,27 @@ function filterByDate() {
 
 async function fetchBloodPressures() {
     isLoading.value = true;
-    noTrackings.value = false;
     
-    bloodPressures.value = await getBloodPressures(userEmail, fromDate.value, toDate.value);
-    if(bloodPressures.value.length == 0) {
-        noTrackings.value = true;
+    const data = await getBloodPressures(userEmail, fromDate.value, toDate.value, pageSize, currentPage.value - 1);
+ 
+    if(data && data.content) {
+        if(data.content.length !== 0) {
+            bloodPressures.value = data.content.map(b => b);
+            
+            totalPages.value = Math.ceil(data.totalElements / pageSize);
+            noTrackings.value = false;
+
+            console.log("PAGINI: ", totalPages.value);
+            console.log("Sunt pe pagina: ", currentPage.value);
+        } else {
+            totalPages.value = 0;
+            noTrackings.value = true;
+        }
+    } else {
+        console.error("No content returned from the API");
     }
+
+    
     
     isLoading.value = false;
 }
@@ -87,10 +117,6 @@ const modalShow = ref(false);
 const modalTitle = ref('');
 const modalMessage = ref('');
 
-/* 
-dynamically creates a function to capture the specific `bpId` at the time the modal is opened
-this ensures that each deletion confirmation is correctly associated with its respective blood pressure record, since bp.id is defined dynamically inside a loop
-*/
 let confirmDelete = () => {};
 
 function convertDate(dateParam) {
@@ -125,7 +151,7 @@ function closeDialog() {
     filterModalShow.value = false;
 }
 
-const buttonText = ref('Adauga');  // Initial text state
+const buttonText = ref('Adauga');
 
 function updateButtonText() {
     if (window.innerWidth < 500 || window.innerWidth > 700) {
@@ -207,6 +233,16 @@ onMounted(() => {
                             @confirm="confirmDelete"
                         />
                     </div>
+                    
+                    <div v-if="totalPages > 1">
+                        <Pagination 
+                            :totalPages="totalPages"
+                            :currentPage="currentPage"
+                            @changePage="changePage"
+                            class="pagination-component"
+                        />
+                    </div>
+                    
                 </div>
                 <div v-else class="not-found">
                    <p> Nu au fost gasite inregistrari ale tensiunii. </p>
@@ -222,7 +258,6 @@ onMounted(() => {
         <NotAuthenticatedView />
     </div>
 </template>
-
 
 <style scoped>
 .page {
@@ -262,6 +297,9 @@ onMounted(() => {
     background-color: rgb(227, 227, 227);
     padding: 15px;
     overflow-y: auto;
+    position: relative;
+    scrollbar-width: thin; 
+    scrollbar-color: #c9c9c9 #ececec;
 }
 
 .header {
@@ -352,9 +390,11 @@ onMounted(() => {
     height: 30px;
     width: 40px;
 }
+
 .list {
     display: flex;
     flex-direction: column;
+    flex-grow: 1;
 }
 
 .not-found {
@@ -374,11 +414,26 @@ onMounted(() => {
     padding: 15px;
 }
 
+.pagination-component {
+    width: 100%;
+    text-align: center;
+    padding: 10px 0; 
+    background-color: inherit;
+    position: absolute;
+    bottom: 0;
+    z-index: 100; 
+    margin-top: auto;
+    margin-bottom: 20px;
+}
+
+
 @media (max-width: 1000px) and (min-width: 610px) {
     .history-section {
         overflow-y: auto;
+        scrollbar-width: thin; 
+        scrollbar-color: #c9c9c9 #ececec;
     }
-
+    
     .bp-container {
         margin-left: 10%;
     }
@@ -389,19 +444,21 @@ onMounted(() => {
         grid-template-columns: 1fr;
         grid-template-rows: 55% 45%;
     }
-
+    
     .history-section {
         overflow-y: auto;
+        scrollbar-width: thin; 
+        scrollbar-color: #c9c9c9 #ececec;
     }
-
+    
     .bp-container {
         margin-left: 10%;
     }
-
+    
     .header {
         grid-template-columns: 1fr;
     }
-
+    
     .add-button {
         margin: 10px auto;
     }

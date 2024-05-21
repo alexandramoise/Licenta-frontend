@@ -397,54 +397,53 @@ input[type='checkbox']:checked {
   accent-color: #b80f20; 
 }
 
-/* Stilurile de bază, valabile pentru desktop */
-/* ... (stilurile tale actuale) ... */
 
-/* Stiluri pentru ecrane mici (telefoane) */
 @media (max-width: 768px) {
   .page {
-    overflow-y: auto; /* permite derularea pe ecrane mici */
+    overflow-y: auto;
+    scrollbar-width: thin; 
+    scrollbar-color: #c9c9c9 #ececec; 
   }
 
   .card, .doctor-card {
-    margin: 20px; /* mai puțin spațiu în jurul cardurilor */
-    width: auto; /* se extinde să se potrivească cu spațiul disponibil */
+    margin: 20px; 
+    width: auto; 
   }
 
   .input-row {
-    grid-template-columns: 1fr; /* stivuiește input-urile vertical */
+    grid-template-columns: 1fr; 
   }
 
   .conditions-grid, .habits-row {
-    grid-template-columns: 1fr 1fr; /* 2 coloane pentru afecțiuni și obiceiuri */
+    grid-template-columns: 1fr 1fr; 
   }
 
   .radio-container, .checkbox-item {
-    flex-direction: column; /* stivuiește radio buttons și checkboxes vertical */
-    align-items: start; /* aliniază la start pentru a nu se întinde pe tot ecranul */
+    flex-direction: column;
+    align-items: start; 
   }
 
   button {
-    width: calc(100% - 40px); /* ajustează lățimea butonului la padding */
+    width: calc(100% - 40px); 
   }
 
   .checkbox-item, .radio-container {
-    flex-direction: row; /* schimbați înapoi la row pentru a avea eticheta alături */
-    align-items: center; /* centrați elementele pe verticală */
+    flex-direction: row; 
+    align-items: center;
   }
 
   .checkbox-item input, .radio-container input {
-    margin-right: 10px; /* spațiu între caseta de selectat și etichetă, dacă este necesar */
+    margin-right: 10px; 
   }
 
   .checkbox-item label, .radio-container label {
-    margin: 0; /* Eliminați marginile dacă sunt setate */
-    white-space: nowrap; /* asigurați-vă că textul nu trece la linia următoare */
+    margin: 0; 
+    white-space: nowrap; 
   }
   
-  /* Ajustați lățimea containerelor de input pentru a se potrivi cu noua structură */
+  
   .input-container, .conditions-grid, .habits-row {
-    width: 100%; /* utilizarea completă a lățimii disponibile */
+    width: 100%; 
   }
 }
 

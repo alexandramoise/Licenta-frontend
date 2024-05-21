@@ -1,20 +1,19 @@
 <script setup>
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch, computed } from 'vue';
 import { getPatientById, getMedicalConditions } from '../services/patient_service.js';
 import { getPatientsAppointments } from '@/services/appointments_service.js';
 import { getCurrentMedicalConditions, getAllMedicalConditions } from '@/services/medical_condition_service.js'
 import { getMostRecentOfPatientAppointments } from '../services/appointments_service.js';
 import { getTreatmentsForCondition } from '@/services/treatment_service.js'
-import { useRoute  } from "vue-router";
-import router from "@/router";
+import { useRoute } from "vue-router";
 
 import CustomNavbar from '@/components/CustomNavbar.vue';
 import CustomButton from '@/components/CustomButton.vue';
-import Pagination from '@/components/Pagination.vue';
+import CustomInput from '@/components/CustomInput.vue';
+import CustomModal from '@/components/CustomModal.vue';
 
 const route = useRoute();
 
-// checking whether or not the user is authenticated based on the token's existence
 const token = localStorage.getItem("token");
 console.log(token);
 const isAuthenticated = ref(token !== null);
@@ -27,6 +26,7 @@ const patientAppointments = ref([]);
 const patientTreatments = ref([]);
 const patientCurrentMedicalConditions = ref([]);
 const patientMedicalHistory = ref([]);
+const medicineName = ref('');
 
 const latestAppointment = ref(null);
 
@@ -46,14 +46,11 @@ onMounted(async () => {
             }
         }
 
-        console.log("ULTIMA: ", latestAppointment.value);
-
         let medcond = await getAllMedicalConditions(data.email);
         let current = await getCurrentMedicalConditions(data.email);
         patientMedicalHistory.value = medcond.map(m => m);
         patientCurrentMedicalConditions.value = current.map(m => m);
 
-    
        let medicalCondition = '';
        if(data.tendency === 'Hypertension') {
           medicalCondition = "Hipertensiune";
@@ -76,6 +73,20 @@ onMounted(async () => {
 const treatmentHistory = ref(false);
 const medicalHistory = ref(false);
 const visitsHistory = ref(false);
+
+const filteredTreatments = computed(() => {
+    return patientTreatments.value.filter(treatment => 
+        treatment.medicineName.toLowerCase().includes(medicineName.value.toLowerCase())
+    );
+});
+
+const conditionStyles = computed(() => {
+    return condition => {
+        return {
+            backgroundColor: condition.endingDate ? '#f8d7da' : '#d4edda'
+        };
+    };
+});
 
 function showMTreatmentHistory() {
     treatmentHistory.value = true;
@@ -114,221 +125,308 @@ function convertDateOnly(originalDate) {
     return date.toLocaleDateString('ro-RO', options);
 }
 
-
 </script>
 
 <template>
-<div class="page" v-if="isAuthenticated">
-    <CustomNavbar />
-    
-    <div class="content">
+    <div class="page" v-if="isAuthenticated">
+        <CustomNavbar />
+        
+        <div class="content">
             <div class="options-sidebar">
                 <CustomButton class="option-button" @click="showMTreatmentHistory"> Istoric tratament </CustomButton>
                 <CustomButton class="option-button" @click="showMedicalHistory"> Istoric medical </CustomButton>
                 <CustomButton class="option-button" @click="showVisitsHistory"> Istoric vizite </CustomButton>
                 <CustomButton class="option-button" @click="showAllInformation"> Inapoi la toate informatiile </CustomButton>
             </div>
-            <div class="middle-container">
-                <p v-if="!treatmentHistory && !medicalHistory && !visitsHistory"> 
-                    AICI SUNT ULTIMELE DATE PENTRU PACIENTUL {{ patientName }} : <br> <br>
-                    <h3> Ultima programare: </h3>
-
-                    <div v-if="latestAppointment && (latestAppointment === 'Pacientul nu are programari' || latestAppointment === 'Doar programari viitoare')">
-                        {{ latestAppointment }}
-                    </div>
-                    <div v-else-if="latestAppointment && (typeof latestAppointment == 'object')">
-                        <p> Data: {{ convertDateToSuitableFormat(latestAppointment.date) }}</p>
-                        <p> Tip: {{ latestAppointment.visitType }}</p>
+            <div class="main-content">
+                <div class="details-section">
+                    <div v-if="!treatmentHistory && !medicalHistory && !visitsHistory"> 
+                        <h3>Ultima programare:</h3>
+                        <div v-if="latestAppointment && (latestAppointment === 'Pacientul nu are programari' || latestAppointment === 'Doar programari viitoare')">
+                            {{ latestAppointment }}
+                        </div>
+                        <div v-else-if="latestAppointment && (typeof latestAppointment == 'object')" class="card">
+                            <p> Data: {{ convertDateToSuitableFormat(latestAppointment.date) }}</p>
+                            <p> Tip: {{ latestAppointment.visitType }}</p>
+                            <p> Motiv: {{ latestAppointment.comment }}</p>
+                        </div>
+                        
+                        <h3>Afectiuni curente:</h3>
+                        <div v-if="patientCurrentMedicalConditions.length > 0">
+                            <ul>
+                                <li v-for="condition in patientCurrentMedicalConditions" :key="condition.id">
+                                    {{ condition.name }} de la {{ convertDateOnly(condition.startingDate) }}
+                                </li>
+                            </ul>
+                        </div>
+                        <div v-else>
+                            <p>Pacientul {{ patientName }} nu are nicio afectiune inregistrata</p>
+                        </div>
+                        
+                        <h3>Ultimul tratament:</h3>
+                        <div v-if="patientTreatments.length !== 0" class="card">
+                            <p>Afectiune: {{ patientTreatments[0].medicalConditionName }}</p>
+                            <p>Nume medicament: {{ patientTreatments[0].medicineName }}</p>
+                            <p>Doza zilnica: {{ patientTreatments[0].doses }}</p>
+                            <p>Comentariu: {{ patientTreatments[0].comment }}</p>
+                            <p>Data inceput: {{ convertDateOnly(patientTreatments[0].startingDate) }}</p>
+                            <p>Data final: {{ patientTreatments[0].endingDate != null ? convertDateOnly(patientTreatments[0].endingDate) : 'nu e incheiat' }}</p>
+                        </div>
+                        <div v-else>
+                            <p>Pacientul {{ patientName }} nu are niciun tratament inregistrat</p>
+                        </div>
                     </div>
                     
-                    <h3> Afectiuni curente: </h3>
-                    <div v-if="patientCurrentMedicalConditions.length > 0">
-                        <ul>
-                            <li v-for="condition in patientCurrentMedicalConditions" :key="condition.id">
-                                {{ condition.name }} de la {{ convertDateOnly(condition.startingDate) }}
-                            </li>
-                        </ul>
-                    </div>
-
-                    <div v-else>
-                        <p> Pacientul {{ patientName }} nu are nicio afectiune inregistrata </p>
-                    </div>
-
-                    <h3> Ultimul tratament: </h3>
-                    <div v-if="patientTreatments.length !== 0">
-                        <p> <span style="font-size: 17px; color: darkred; font-weight: 700;"> Afectiune: </span> {{ patientTreatments[0].medicalConditionName }} </p>
-                        <p> <span style="font-size: 17px; color: darkred; font-weight: 700;"> Nume medicament: </span> {{ patientTreatments[0].medicineName }} </p>
-                        <p> <span style="font-size: 17px; color: darkred; font-weight: 700;"> Doza zilnica: </span> {{ patientTreatments[0].doses }} </p>
-                        <p> <span style="font-size: 17px; color: darkred; font-weight: 700;"> Comentariu: </span> {{ patientTreatments[0].comment }} </p>
-                        <p> <span style="font-size: 17px; color: darkred; font-weight: 700;"> Data inceput: </span> {{ convertDateOnly(patientTreatments[0].startingDate) }}</p>
-                        <p> <span style="font-size: 17px; color: darkred; font-weight: 700;"> Data final: </span> {{ patientTreatments[0].endingDate != null ? convertDateOnly(patientTreatments[0].endingDate) : 'nu e incheiat' }}</p>
-                    </div>
-                    <div v-else>
-                        <p> Pacientul {{ patientName }} nu are niciun tratament inregistrat </p>
-                    </div>
-                </p>
-
-                <!-- sectiune tratamente -->
-                <div v-if="treatmentHistory">
-                    AICI O SA AFISEZ TRATAMENTELE PENTRU PACIENT SI BUTONUL 
-                    <div v-if="patientTreatments.length !== 0">
-                        <div 
-                            v-for="treatment in patientTreatments" 
-                            :key="treatment.id"
-                            class="card"
-                        >
-                            <p> Afectiune: {{ treatment.medicalConditionName }} </p>
-                            <p> Nume tratament: {{ treatment.medicineName }} </p>
-                            <p> Doza zilnica: {{ treatment.doses }} </p>
-                            <p> Data inceput: {{ convertDateOnly(treatment.startingDate) }}</p>
-                            <p> Data final: {{ treatment.endingDate != null ? convertDateOnly(treatment.endingDate) : 'nu e incheiat' }}</p>
+                    <!-- sectiune tratamente -->
+                    <div v-if="treatmentHistory">
+                        <div class="header">
+                            <h3>Istoric tratamente:</h3>
+                            <CustomInput 
+                                v-model="medicineName"
+                                :type="'text'"
+                                name="medicineName"
+                                placeholder="nume medicament"
+                            />
                         </div>
 
-                        <Pagination 
-                            :totalPages="totalPages"
-                            :currentPage="currentPage"
-                            @changePage="changePage"
-                            class="pagination-component"
-                        />
-                    </div>
-                    <div v-else>
-                        <p>Pacientul {{ patientName }} nu are tratamente adaugate.</p>
-                    </div>
-                </div>
+                        <div class="date-inputs">
+                                <div class="input-group">
+                                    <label for="fromDate">Inceput</label>
+                                    <CustomInput 
+                                        v-model="fromDate"
+                                        :type="'date'"
+                                        name="fromDate"
+                                        class="custom-input"
+                                    />
+                                </div>
+                                <div class="input-group">
+                                    <label for="toDate">Final</label>
+                                    <CustomInput 
+                                        v-model="toDate"
+                                        :type="'date'"
+                                        name="toDate"
+                                        class="custom-input"
+                                    />
+                                </div>
+                                <CustomButton class="filter-button" @click="filterByDate"> Filtrare </CustomButton>
+                                <CustomModal
+                                    :open="filterModalShow"
+                                    :forConfirmation="false"
+                                    :title="filterModalTitle"
+                                    :message="filterModalMessage"
+                                    @close="closeDialog"
+                                />
+                            </div>
 
-                <!-- sectiune boli -->
-                <div v-if="medicalHistory">
-                    AICI O SA AFISEZ TOATE BOLILE PENTRU PACIENT
-                    <div v-if="patientMedicalHistory.length > 0">
-                        <ul>
-                            <li v-for="condition in patientMedicalHistory" :key="condition.id">
-                                {{ condition.name }} de la {{ convertDateOnly(condition.startingDate) }} la {{ condition.endingDate != null ? convertDateOnly(condition.endingDate) : 'nu e incheiat' }}
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- sectiune vizite -->
-                <div v-if="visitsHistory">
-                    <div v-if="patientAppointments.length !== 0">
-                        <div 
-                            v-for="appointment in patientAppointments" 
-                            :key="appointment.id"
-                            class="card"
-                        >
-                            <p>Tip vizită: {{ appointment.visitType }}</p>
-                            <p> Motiv: {{ appointment.comment }}</p>
-                            <p>Data: {{ convertDateToSuitableFormat(appointment.date) }}</p>
+                        <div v-if="filteredTreatments.length !== 0">
+                            <div v-for="treatment in filteredTreatments" :key="treatment.id" class="card" :style="conditionStyles(treatment)">
+                                <p>Afectiune: {{ treatment.medicalConditionName }}</p>
+                                <p>Nume tratament: {{ treatment.medicineName }}</p>
+                                <p>Doza zilnica: {{ treatment.doses }}</p>
+                                <p>Data inceput: {{ convertDateOnly(treatment.startingDate) }}</p>
+                                <p>Data final: {{ treatment.endingDate != null ? convertDateOnly(treatment.endingDate) : 'nu e incheiat' }}</p>
+                            </div>
+                        </div>
+                        <div v-else>
+                            <p>Pacientul {{ patientName }} nu a avut tratamentul {{ medicineName }} prescris.</p>
                         </div>
                     </div>
-                    <div v-else>
-                        <p>Pacientul {{ patientName }} nu are vizite la activ.</p>
+                    
+                    <!-- sectiune boli -->
+                    <div v-if="medicalHistory">
+                        <h3>Istoric medical:</h3>
+                        <div v-if="patientMedicalHistory.length > 0">
+                            <ul>
+                                <li v-for="condition in patientMedicalHistory" :key="condition.id" :style="conditionStyles(condition)">
+                                    {{ condition.name }} de la {{ convertDateOnly(condition.startingDate) }} la {{ condition.endingDate != null ? convertDateOnly(condition.endingDate) : 'nu e incheiat' }}
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- sectiune vizite -->
+                    <div v-if="visitsHistory">
+                        <h3>Istoric vizite:</h3>
+                        <div v-if="patientAppointments.length !== 0">
+                            <div v-for="appointment in patientAppointments" :key="appointment.id" class="card">
+                                <p>Tip vizită: {{ appointment.visitType }}</p>
+                                <p>Motiv: {{ appointment.comment }}</p>
+                                <p>Data: {{ convertDateToSuitableFormat(appointment.date) }}</p>
+                            </div>
+                        </div>
+                        <div v-else>
+                            <p>Pacientul {{ patientName }} nu are vizite la activ.</p>
+                        </div>
                     </div>
                 </div>
-
-            </div>
-            <div class="statistics-panel">
-                <p> AICI VOR FI STATISTICILE </p>
+                <div class="statistics-panel">
+                    <p>AICI VOR FI STATISTICILE</p> <br>
+                    
+                </div>
             </div>
         </div>
-</div>
-<div v-else>
-    <NotAuthenticatedView />
-</div>
+    </div>
+    <div v-else>
+        <NotAuthenticatedView />
+    </div>
 </template>
+
 
 <style scoped>
 .page {
-    max-height: 100vh;
+    height: 100vh;
     width: 100vw;
-    background-color: rgb(255, 255, 255);
+    background-color: #f8f9fa;
     overflow-y: hidden;
 }
 
 .content {
-    display: grid;
-    grid-template-columns: 20% 40% 40%;
-    max-height: 100vh; /* Added to make sure the content doesn't exceed the viewport height */
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .options-sidebar {
-    background-color: rgb(248, 231, 237);
-    float: left;
-    max-height: 100vh;
     display: flex;
-    flex-direction: column;
-    justify-content: space-evenly;
-    overflow-y: hidden;
+    justify-content: space-around;
+    background-color: #f8d7da;
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
 }
 
 .option-button {
-    background-color: rgb(231, 149, 149);
-    border-color: transparent;
-    border-radius: 10px;
-    width: 60%;
-    margin: auto;
-    height: 6%;
+    background-color: #d9534f;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 10px 20px;
+    margin: 5px;
 }
 
 .option-button:hover {
-    background-color: rgb(198, 111, 111);
+    background-color: #c9302c;
 }
 
-.middle-container {
+.main-content {
+    display: flex;
+    height: calc(100% - 70px);
+}
+
+.details-section {
+    width: 40%;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.date-inputs {
+    display: grid;
+    grid-template-columns: 30% 30% 40%;
+    gap: 10px; 
+    margin-bottom: 10px;
+}
+
+.input-group {
     display: flex;
     flex-direction: column;
-    position: relative;
-    background-color: rgb(255, 221, 227);
-    padding: 25px;
-    overflow-y: auto; /* Changed from hidden to auto to allow scrolling */
-    max-height: 90vh; /* Ensure it does not exceed the viewport height */
 }
 
-.pagination-component {
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: auto;
+.input-group label {
+    margin-bottom: 5px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.filter-button {
+    background-color: white;
+    color: rgb(163, 2, 2);
+    height: 40px;
+    width: 60%;
+    margin-top: 15px;
+    font-weight: bold;
+    border: 1px solid rgb(163, 2, 2);
+    border-radius: 10px;
+    font-size: 13px;
+}
+
+.filter-button:hover {
+    background-color: rgb(255, 247, 247);
+    font-size: 14px;
+}
+
+.statistics-panel {
+    width: 60%;
+    padding: 20px;
+    background-color: #f0f0f0;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.1);
 }
 
 .card {
     background-color: white;
-    width: 40%;
-    padding: 10px;
-    border-radius: 6px;
-    margin-bottom: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    width: 80%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.not-found {
+.card h2 {
+    margin-top: 0;
+    color: #d9534f;
+}
+
+.header {
     display: flex;
-    justify-content: center;
     align-items: center;
-    height: 100%;
-    text-align: center;
-    color: darkred;
-    font-size: 17px;
-    font-weight: bold;
-    font-family: Arial, Helvetica, sans-serif;
+    justify-content: space-between;
+    width: 90%;
 }
 
-.statistics-panel {
-    background-color: rgb(240, 240, 240);
-    height: 100vh;
-    padding: 15px;
-    overflow-y: auto; /* Ensure it is scrollable if content exceeds height */
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+ul li {
+    background: #e5e5e5c6;
+    margin: 5px 0;
+    padding: 10px;
+    border-radius: 5px;
+    width: 85%;
+}
+
+p {
+    margin: 0;
+    color: #555;
 }
 
 @media(max-width: 600px) {
     .content {
-        grid-template-columns: 0% 50% 50%;
+        flex-direction: column;
     }
 
-    .filtering-sidebar {
-        display: flex;
+    .options-sidebar {
         flex-direction: row;
-        background-color: red;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        padding: 10px;
+    }
+
+    .option-button {
+        width: 48%;
+        margin: 5px 0;
+    }
+
+    .main-content {
+        flex-direction: column;
+        height: auto;
+    }
+
+    .details-section, .statistics-panel {
+        width: 100%;
+        height: calc((100vh - 140px) / 2);
+        overflow-y: auto;
     }
 }
-
 </style>

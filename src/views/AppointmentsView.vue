@@ -276,6 +276,8 @@ async function cancelAppointment(apId) {
     overflow-y: auto; 
     display: flex;
     flex-direction: column;
+    scrollbar-width: thin; 
+    scrollbar-color: #c9c9c9 #ececec;
 }
 
 .card-container {
@@ -352,6 +354,8 @@ async function cancelAppointment(apId) {
         overflow-y: auto;
         overflow-x: hidden;
         padding: 10px 0;
+        scrollbar-width: thin; 
+        scrollbar-color: #c9c9c9 #ececec;
     }
 }
 
@@ -371,6 +375,8 @@ async function cancelAppointment(apId) {
     .appointments-section {
         overflow-y: auto;
         overflow-x: hidden;
+        scrollbar-width: thin; 
+        scrollbar-color: #c9c9c9 #ececec;
     }
 }
 

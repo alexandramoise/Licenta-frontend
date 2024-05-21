@@ -63,9 +63,10 @@ const cardBackgroundColor = computed(() => {
 
 .card {
   width: 25vw;
+  height: 140px;
   border-radius: 10px;
   padding: 15px;
-  margin-top: 20px; 
+  margin-top: 15px; 
   font-size: 20px;
   margin-left: 2vw;
   font-weight: bold;

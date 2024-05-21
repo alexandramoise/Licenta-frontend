@@ -24,9 +24,9 @@ async function addBloodPressure(bloodPressureDto, patientEmail) {
     return data;
 }
 
-async function getBloodPressures(patientEmail, fromDate, toDate) {
+async function getBloodPressures(patientEmail, fromDate, toDate, pageSize, pageNumber) {
     try {
-        let urlToFetch = API_URL + "/byDate?email=" + patientEmail;
+        let urlToFetch = API_URL + "/byDate?email=" + patientEmail + "&pageSize=" + pageSize + "&pageNumber=" + pageNumber + "&sortCategory=date";
         if((fromDate === null || fromDate === '') && (toDate !== null && toDate !== '')) {
             urlToFetch += "&fromDate=1940-01-01&toDate=" + toDate;
         } else if((toDate === null || toDate === '') && (fromDate !== null && fromDate !== '')) {
@@ -34,7 +34,7 @@ async function getBloodPressures(patientEmail, fromDate, toDate) {
         } else if(fromDate !== null && fromDate !== '' && toDate !== null && toDate !== '') {
             urlToFetch += "&fromDate=" + fromDate + "&toDate=" + toDate;
         } else if((fromDate === null || fromDate === '') && (toDate === null || toDate === '')) {
-            urlToFetch = API_URL + "?email=" + patientEmail;
+            urlToFetch = API_URL + "/paged?email=" + patientEmail + "&pageSize=" + pageSize + "&pageNumber=" + pageNumber + "&sortCategory=date";
         }
 
         const response = await fetch(urlToFetch, {

@@ -141,15 +141,31 @@ function redirectToAdd() {
   router.push("add-recommandation");
 }
 
+// get the icon associated with each tag
+const getIconPath = (tag) => {
+  switch (tag) {
+    case 'Sport':
+      return '/src/assets/images/sport.png';
+    case 'Alimentatie':
+      return '/src/assets/images/alimentatie.png';
+    case 'Stres':
+      return '/src/assets/images/stres.png';
+    case 'Obiceiuri':
+      return '/src/assets/images/obiceiuri.png';
+    default:
+      return '/src/assets/images/logo.png';
+  }
+};
+
 </script>
 
+
 <template>
+  <div v-if="isLoading" class="loading-animation" aria-label="Se incarca, asteptati">
+    <CustomLoader size="100" />
+  </div>
 
-    <div v-if="isLoading" class="loading-animation" aria-label="Se incarca, asteptati">
-          <CustomLoader size="100" />
-    </div>
-
-    <div class="page-container" v-if="isAuthenticated">
+  <div class="page-container" v-if="isAuthenticated">
     <CustomNavbar />
 
     <div class="content">
@@ -159,18 +175,17 @@ function redirectToAdd() {
       </div>
 
       <div class="filter-bar">
-        
         <div class="radio-group">
-            <template v-for="tag in tags" :key="`radio-${tag}`">
+          <template v-for="tag in tags" :key="`radio-${tag}`">
             <input
-                :id="tag"
-                type="radio"
-                :value="tag"
-                name="tag"
-                v-model="selectedTag"
+              :id="tag"
+              type="radio"
+              :value="tag"
+              name="tag"
+              v-model="selectedTag"
             />
             <label :for="tag">{{ `#${tag}` }}</label>
-            </template>
+          </template>
         </div>
 
         <select v-if="isDoctor" v-model="selectedType" class="type-selector" @change="fetchRecommendations()">
@@ -181,30 +196,36 @@ function redirectToAdd() {
       </div>
 
       <div v-if="recommendations.length !== 0">
-      <div class="recommendations">
-        <div v-for="recommendation in recommendations" :key="recommendation.id" class="card">
-          <h3>{{ recommendation.hashtag }}</h3>
-          <p>{{ recommendation.text }}</p>
-          <p> Pentru: {{ recommendation.recommandationType }}</p>
+        <div class="recommendations">
+          <div v-for="recommendation in recommendations" :key="recommendation.id" class="card">
+            <div class="card-content">
+              <h3> #{{ recommendation.hashtag }}</h3>
+              <p>{{ recommendation.text }}</p>
+              <p> Pentru: {{ recommendation.recommandationType }}</p>
+            </div>
+            <div class="card-icon">
+              <img :src="getIconPath(recommendation.hashtag)" alt="icon">
+            </div>
+          </div>
         </div>
-      </div>
 
-      <Pagination
-        :totalPages="totalPages"
-        :currentPage="currentPage"
-        @changePage="changePage"
-        class="pagination-component"
-      />
-    </div>
-    <div v-else>
-      <p class="not-found"> Nu s-au gasit recomandari. </p>
-    </div>
+        <Pagination
+            :totalPages="totalPages"
+            :currentPage="currentPage"
+            @changePage="changePage"
+            class="pagination-component"
+        />
+      </div>
+      <div v-else>
+        <p class="not-found"> Nu s-au gasit recomandari. </p>
+      </div>
     </div>
   </div>
   <div v-else> 
     <NotAuthenticatedView />
   </div>
 </template>
+
 
 <style scoped>
 .page-container {
@@ -334,8 +355,21 @@ function redirectToAdd() {
     border-radius: 10px;
     padding: 20px;
     background-color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
   
+.card-content {
+    flex: 1;
+}
+
+.card-icon img {
+    width: 100px;
+    height: 120px;
+    margin-left: 10px;
+}
+
 @media (max-width: 768px) {
     .recommendations {
       flex-direction: column;
@@ -343,7 +377,7 @@ function redirectToAdd() {
     }
   
     .card {
-      width: 50%;
+      width: 70%;
       max-width: 300px;
     }
 
@@ -370,6 +404,12 @@ function redirectToAdd() {
       border: none;
       cursor: pointer;
       display: block;
+  }
+
+    .card-icon img {
+      width: 70px;
+      height: 70px;
+      margin-left: 10px;
   }
 
 }
