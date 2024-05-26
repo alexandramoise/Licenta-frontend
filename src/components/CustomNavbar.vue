@@ -19,10 +19,10 @@
 
       <CustomButton class="navbar-item" @click="navigateTo('recommandations')"> <i class="fas fa-lightbulb"> </i> Recomandări</CustomButton>
       <div class="profile-dropdown">
-        <CustomButton class="navbar-item" @click.stop="dropdownAccountVisible = !dropdownAccountVisible"> <i class="fas fa-user"> </i> {{ userEmail }} <i class='fas fa-caret-down'> </i></CustomButton>
+        <CustomButton class="navbar-item" @click.stop="dropdownAccountVisible = !dropdownAccountVisible"> <i class="fas fa-user"> </i> {{ userName }} <i class='fas fa-caret-down'> </i></CustomButton>
         <div v-if="dropdownAccountVisible" class="dropdown-content">
           <CustomButton class="dropdown-item" @click="navigateTo('data')"> Datele mele <i class="fas fa-address-book"></i></CustomButton>
-          <CustomButton class="dropdown-item" @click="navigateTo('change-password')">Schimbă parola <i class="fas fa-lock"></i> </CustomButton>
+          <CustomButton class="dropdown-item" @click="navigateTo('change-password')"> Schimb parola <i class="fas fa-lock"></i> </CustomButton>
           <CustomButton class="dropdown-item" @click="navigateTo('logout')">Deconectare <i class="fas fa-arrow-right"></i> </CustomButton>
         </div>
       </div>
@@ -33,8 +33,8 @@
 <script>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { routerViewLocationKey, useRouter } from 'vue-router';
-import { requestNewPasswordPatient } from '@/services/patient_service.js';
-import { requestNewPasswordDoctor } from '@/services/doctor_service.js';
+import { requestNewPasswordPatient, getPatientByEmail } from '@/services/patient_service.js';
+import { requestNewPasswordDoctor, getDoctorByEmail } from '@/services/doctor_service.js';
 import router from '@/router';
 
 export default {
@@ -61,6 +61,18 @@ export default {
       handleResize();
       window.addEventListener('resize', handleResize);
     });
+
+    let user;
+    const userName = ref('');
+    onMounted(async () => {
+      if(userType === 'doctor') {
+         user = await getDoctorByEmail(userEmail);
+      } else {
+         user = await getPatientByEmail(userEmail); 
+      }
+
+      userName.value = user.fullName;
+    })
 
     onBeforeUnmount(() => {
       window.removeEventListener('resize', handleResize);
@@ -114,6 +126,7 @@ const navigateTo = async (path) => {
       navigateTo, 
       userType, 
       userEmail,
+      userName
     };
   }
 };

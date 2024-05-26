@@ -1,14 +1,15 @@
 <script setup>
 import { useRoute } from 'vue-router';
-import router from "@/router";
 import { ref, onMounted, watch, computed } from 'vue';
+import router from "@/router";
 import CustomLoader from "../components/CustomLoader.vue";
 import CustomNavbar from "../components/CustomNavbar.vue";
 import CustomButton from "../components/CustomButton.vue";
 import CustomModal from "../components/CustomModal.vue";
 import CustomInput from '@/components/CustomInput.vue';
-import { getDoctorsPatients, getPatientById, getPatientByEmail } from "../services/patient_service.js";
-import { createNewAppointment, getAppointmentById, updateAppointment } from "../services/appointments_service.js";
+import { getMedicinesForMedicalCondition } from "../services/medicine_service.js";
+import { getPatientById } from '@/services/patient_service.js' 
+import { addTreatment, getTreatmentById, updateTreatment } from '@/services/treatment_service.js'
 import NotAuthenticatedView from './NotAuthenticatedView.vue';
 
 // checking whether or not the user is authenticated based on the token's existence and expiration
@@ -38,125 +39,132 @@ onMounted(() => {
     availableUntil.value = localStorage.getItem("availableUntil");
 });
 
+const route = useRoute();
 
-const isDoctor = ref(false);
+const patientMedicalCondition = ref('Normala')
+const medicines = ref([]);
 
-const route = useRoute()
-isDoctor.value = localStorage.getItem('role') === 'doctor'; 
-
-const dateInput = ref('');
-
-const visitTypeOptions = ['Rutina', 'Consultatie'];
-const selectedVisitType = ref('');
-
+const selectedMedicine = ref('');
+const dosesInput = ref(0);
 const commentText = ref('');
 
-let doctorEmail;
-const selectedPatientEmail = ref('');
-
-const update = ref(false);
-
-const patientName = ref('');
-const idFromUrl = ref(false);
-if(route.query.updateId) {
-    const data = await getAppointmentById(route.query.updateId);
-    selectedPatientEmail.value = data.patientEmail;
-    idFromUrl.value = true;
-}
-
-if(isDoctor.value) {
-    doctorEmail = localStorage.getItem('user') // VA FI ADRESA DIN STORAGE
-} else {
-    selectedPatientEmail.value = localStorage.getItem('user') // VA FI ADRESA DIN STORAGE
-    const patient = await getPatientByEmail(selectedPatientEmail.value);
-    doctorEmail = patient.doctorEmailAddress;
-}
-
-const patients = ref([]);
-const noPatients = ref(false);
-async function getPatients() {
-    if(isDoctor.value) {
-        try {
-            const data = await getDoctorsPatients(doctorEmail);
+async function getMedicines() {
+    try {
+        if(patientMedicalCondition.value !== 'Normala') {
+            const data = await getMedicinesForMedicalCondition(patientMedicalCondition.value);
             if (data && data.length !== 0) {
-                patients.value = data.map(patient => ({
-                    fullName: patient.fullName,
-                    email: patient.email
-                }));
-                
-                noPatients.value = false;
+                medicines.value = data.map(m => m);
             } else {
-                console.log("No patients found or empty content");
-                noPatients.value = true;
+                console.log("No medicines found or empty content");
             }
-        } catch (error) {
-            console.error("No content returned from the API or error occurred: ", error);
         }
+    } catch (error) {
+        console.error("No content returned from the API or error occurred: ", error);
     }
 }
 
-onMounted(() => {
-    getPatients();
+onMounted(async () => {
+    const patientId = ref(route.query.patientId);
+    const patientData = await getPatientById(patientId.value);
+    const patientTendency = ref(patientData.tendency);
+    if(patientTendency.value === "Hypotension") {
+        patientMedicalCondition.value = "Hipotensiune";
+    } else if(patientTendency.value === "Hypertension") {
+        patientMedicalCondition.value = "Hipertensiune";
+    }
+
+    getMedicines();
+});
+
+const update = ref(false);
+const initialValues = ref({
+    selectedMedicine: '',
+    dosesInput: 0,
+    commentText: ''
 });
 
 onMounted(async () => {
-    if (route.query.updateId) {
+    if(route.query.updateId) {
         update.value = true;
-        let id = route.query.updateId;
-        const data = await getAppointmentById(id);
-        selectedVisitType.value = data.visitType;
-        commentText.value = data.comment;
-        const newDate = new Date(data.date);
-        //newDate.setHours(newDate.getHours() + 3);
-        dateInput.value = newDate.toISOString().slice(0,16);
+        const treatment = await getTreatmentById(route.query.updateId);
+        selectedMedicine.value = treatment.medicineName;
+        dosesInput.value = treatment.doses;
+        commentText.value = treatment.comment;
+
+        initialValues.value = {
+            selectedMedicine: treatment.medicineName,
+            dosesInput: treatment.doses,
+            commentText: treatment.comment
+        };
     }
-});
+})
+
+function hasChanges() {
+    return selectedMedicine.value !== initialValues.value.selectedMedicine ||
+           dosesInput.value !== initialValues.value.dosesInput ||
+           commentText.value !== initialValues.value.commentText;
+}
 
 const modalShow = ref(false);
 const modalTitle = ref('');
 const modalMessage = ref('');
 
 const isLoading = ref(false);
-async function createOrUpdateAppointment() {
-    if(selectedVisitType.value && dateInput.value && commentText.value) {
+async function createOrUpdateTreatment() {
+    if(selectedMedicine.value && dosesInput.value && commentText.value) {
         try {
-            const dateFromInput = new Date(dateInput.value);
-            const adjustedDate = dateFromInput.toISOString();
-
-            const appointmentDto = {
-                doctorEmail: doctorEmail,
-                patientEmail: selectedPatientEmail.value,
-                date: adjustedDate,
-                visitType: selectedVisitType.value,
+            if(dosesInput.value > 5 || dosesInput.value < 1) {
+                modalShow.value = true;
+                modalTitle.value = "Problema";
+                modalMessage.value = "Doza trebuie sa fie intre 1 si 5";
+                return;
+            }
+            
+            const treatmentDto = {
+                patientId: route.query.patientId,
+                medicalConditionName: patientMedicalCondition.value,
+                medicineName: selectedMedicine.value,
+                doses: dosesInput.value,
                 comment: commentText.value,
             };
 
-            console.log("appointmentDto: ", appointmentDto);
+            const updateTreatmentDto = {
+                medicineName: selectedMedicine.value,
+                doses: dosesInput.value,
+                comment: commentText.value,
+            };
 
-            let data;
+            isLoading.value = true;
+            let data = ''
             if(update.value) {
-                isLoading.value = true;
-                data = await updateAppointment(appointmentDto, route.query.updateId);
-                isLoading.value = false;
+                if(hasChanges) {
+                    data = await updateTreatment(route.query.updateId, updateTreatmentDto);
+                } else {
+                    return;
+                }
             } else {
-                isLoading.value = true;
-                data = await createNewAppointment(appointmentDto);
-                isLoading.value = false;
+                data = await addTreatment(treatmentDto);
             }
+
+            isLoading.value = false;
 
             modalShow.value = true;
             modalTitle.value = "Succes";
             modalMessage.value = "S-a salvat!";
+
             return data;
         } catch(error) {
+            console.error(error);
             isLoading.value = false;
             modalShow.value = true;
             modalTitle.value = "Eroare";
-            if(error.message === "Doctor is not available at that time") {
-                modalMessage.value = "Doctorul nu este disponibil la data aleasa";
-            } else if(error.message === "Date can not be in the past") {
-                modalMessage.value = "Nu puteti alege o data in trecut";
-            }
+            if(error.message === "Patient already takes that medicine") {
+                modalMessage.value = "Pacientul are deja prescris acest medicament, modificati-l pe acela.";
+            } else if(error.message === "Patient does not have this medical condition") {
+                modalMessage.value = "Pacientul nu sufera de " + !update.value ? treatmentDto.medicalConditionName : updateTreatmentDto.medicalConditionName;
+            } else if(error.message === "This medicine does not work for that medical condition") {
+                modalMessage.value = "Medicamentul " + !update.value ? treatmentDto.medicineName : updateTreatmentDto.medicineName; + " nu are efect pentru afectiunea " + !update.value ? treatmentDto.medicalConditionName : updateTreatmentDto.medicalConditionName;
+            } 
         }
     } else {
         modalShow.value = true;
@@ -168,49 +176,49 @@ async function createOrUpdateAppointment() {
 function closeDialog() {
     modalShow.value = false;
     if(modalTitle.value === "Succes") {
-        router.push("appointments");
+        router.push({
+            name: "patient-detailed",
+            query: {
+                patientId: route.query.patientId,
+            },
+        });
     }
 }
 </script>
 
+
 <template>
     <div class="page" v-if="isAuthenticated">
         <CustomNavbar />
-        <div class="form-container">
+        <div v-if="patientMedicalCondition !== 'Normala'" class="form-container">
             <div class="form-content">
-                <h1 class="form-title"> {{ !update ? "Programare noua" : "Modifica programare" }} </h1>
-                
-                <div v-if="isDoctor" class="input-row full-width">
-                    <label for="patientSelect" class="form-label">Pacient</label>
-                    <select id="patientSelect" name="patientSelect" v-model="selectedPatientEmail" class="custom-input" :disabled="idFromUrl">
-                        <option v-for="patient in patients" :key="patient.email" :value="patient.email">
-                            {{ patient.fullName }}
-                        </option>
-                    </select>
-                </div>
+                <h1 class="form-title"> {{ !update ? "Tratament nou" : "Modifica tratament" }} </h1>
                 
                 <div class="input-row">
                     <div class="input-wrapper">
-                        <label for="date" class="form-label">Data</label>
-                        <CustomInput 
-                            v-model="dateInput"
-                            :type="'datetime-local'"
-                            name="date"
-                            class="custom-input"
-                        />
+                        <label for="medicineSelect" class="form-label">Medicament</label>
+                        <select id="medicineSelect" name="patientSelect" v-model="selectedMedicine" class="custom-input" :disabled="update">
+                        <option v-for="medicine in medicines" :key="medicine" :value="medicine">
+                            {{ medicine }}
+                        </option>
+                    </select>
                     </div>
                     <div class="input-wrapper">
-                        <label for="visitTypeSelect" class="form-label">Tipul vizitei</label>
-                        <select id="visitTypeSelect" v-model="selectedVisitType" class="custom-input">
-                            <option v-for="opt in visitTypeOptions" :key="opt" :value="opt">
-                                {{ opt }}
-                            </option>
-                        </select>
+                        <label for="visitTypeSelect" class="form-label"> Doza zilnica </label>
+                        <CustomInput 
+                            v-model="dosesInput"
+                            :type="'number'"
+                            name="doses"
+                            min="1"
+                            max="5"
+                            step="1"
+                            class="custom-input"
+                        />
                     </div>
                 </div>
                 
                 <div class="input-row full-width">
-                    <label for="commentText" class="form-label">Motiv</label>
+                    <label for="commentText" class="form-label"> Comentariu </label>
                     <textarea 
                         id="commentText"
                         v-model="commentText"
@@ -220,12 +228,15 @@ function closeDialog() {
                     <div class="char-counter">{{ commentText.length }}/100</div>
                 </div>
                 
-                <CustomButton @click="createOrUpdateAppointment" class="submit-button">Gata</CustomButton>
+                <CustomButton @click="createOrUpdateTreatment" class="submit-button">Gata</CustomButton>
                 
                 <div v-if="isLoading" class="loading-animation">
                     <CustomLoader size="100" />
                 </div>
             </div>
+        </div>
+        <div v-else>
+            <p> Tensiunea normala nu necesita tratament. </p>
         </div>
         
         <CustomModal
@@ -235,6 +246,7 @@ function closeDialog() {
             :message="modalMessage"
             @close="closeDialog"
         />
+        
     </div>
     <div v-else>
         <NotAuthenticatedView />
@@ -323,7 +335,7 @@ function closeDialog() {
 
 .textarea {
     resize: none;
-    height: 80px;
+    height: 50px;
 }
 
 .char-counter {
@@ -342,7 +354,6 @@ function closeDialog() {
     cursor: pointer;
     width: 100%; 
     max-width: 600px; 
-    cursor: pointer;
 }
 
 @media (max-width: 600px) {

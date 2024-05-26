@@ -45,6 +45,38 @@ async function getPatientsAppointments(patientEmail) {
     }
 }
 
+async function getPatientAppointmentsInTime(patientEmail, fromDate, toDate) {
+    try {
+        let urlToFetch = API_URL + "/byDate?email=" + patientEmail;
+        if((fromDate === null || fromDate === '') && (toDate !== null && toDate !== '')) {
+            urlToFetch += "&fromDate=1940-01-01&toDate=" + toDate;
+        } else if((toDate === null || toDate === '') && (fromDate !== null && fromDate !== '')) {
+            urlToFetch += "&fromDate=" + fromDate + "&toDate=2100-01-01";
+        } else if(fromDate !== null && fromDate !== '' && toDate !== null && toDate !== '') {
+            urlToFetch += "&fromDate=" + fromDate + "&toDate=" + toDate;
+        } else if((fromDate === null || fromDate === '') && (toDate === null || toDate === '')) {
+            urlToFetch = API_URL + "/patient?email=" + patientEmail;
+        }
+
+        const response = await fetch(urlToFetch, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log("DATA: ", data);
+        return data;
+    } catch (error) {
+        console.error("Could not fetch the appointments", error);
+        throw error;
+    }
+}
+
 async function getDoctorsPagedAppointments(doctorEmail, pageSize, pageNumber) {
     try {
         const response = await fetch(API_URL + "/paged-doctor?email=" + doctorEmail + 
@@ -245,6 +277,7 @@ export { getDoctorsPagedAppointments,
      getDoctorsAppointmentsOnACertainDay,
      getMostRecentOfPatientAppointments,
      getPatientsAppointments,
+     getPatientAppointmentsInTime,
      createNewAppointment, 
      getAppointmentById, 
      updateAppointment, 

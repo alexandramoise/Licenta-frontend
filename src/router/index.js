@@ -65,6 +65,11 @@ const router = createRouter({
       component: () => import('../views/CreateAppointmentView.vue')
     },
     {
+      path: '/add-treatment',
+      name: 'add-treatment',
+      component: () => import('../views/AddOrUpdateTreatmentView.vue')
+    },    
+    {
       path: '/recommandations',
       name: 'recommandations',
       component: () => import('../views/RecommandationsView.vue')

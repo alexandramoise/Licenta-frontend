@@ -1,10 +1,10 @@
 <script setup>
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch, computed } from 'vue';
 import CustomNavbar from "../components/CustomNavbar.vue";
 import CustomModal from '@/components/CustomModal.vue';
 import CustomButton from "../components/CustomButton.vue";
 import CustomLoader from '@/components/CustomLoader.vue';
-import CustomInput from '@/components/CustomInput.vue';
+import DateFiltering from '@/components/DateFiltering.vue';
 import BloodPressureCard from "../components/BloodPressureCard.vue";
 import LineChartComponent from '../components/charts/LineChartComponent.vue';
 import Pagination from '@/components/Pagination.vue';
@@ -12,10 +12,31 @@ import { getBloodPressures, getBloodPressureById, deleteBloodPressure } from "..
 import router from '@/router';
 import NotAuthenticatedView from './NotAuthenticatedView.vue';
 
-const token = localStorage.getItem("token");
-const isAuthenticated = ref(token !== null);
-watch(() => localStorage.getItem("token"), (newToken) => {
-  isAuthenticated.value = newToken !== null;
+// checking whether or not the user is authenticated based on the token's existence and expiration
+const token = ref(localStorage.getItem("token"));
+const availableUntil = ref(localStorage.getItem("availableUntil"));
+const currentDate = ref(new Date());
+
+const isAuthenticated = computed(() => {
+    if (!token.value) return false;
+    const expirationDate = new Date(availableUntil.value);
+    return currentDate.value < expirationDate;
+});
+
+watch([token, availableUntil], ([newToken, newExpireDate]) => {
+    if (newToken === null || newExpireDate === null) {
+        isAuthenticated.value = false;
+    } else {
+        const expirationDate = new Date(newExpireDate);
+        const currentDate = new Date();
+        isAuthenticated.value = currentDate < expirationDate;
+    }
+});
+
+onMounted(() => {
+    currentDate.value = new Date();
+    token.value = localStorage.getItem("token");
+    availableUntil.value = localStorage.getItem("availableUntil");
 });
 
 const userEmail = localStorage.getItem('user');
@@ -33,9 +54,6 @@ const isLoading = ref(false);
 
 const fromDate = ref(null);
 const toDate = ref(null);
-const filterModalShow = ref(false);
-const filterModalTitle = ref('');
-const filterModalMessage = ref('');
 
 function changePage(newPage) {
     currentPage.value = newPage;
@@ -45,26 +63,9 @@ watch(currentPage, (newPage, oldPage) => {
   fetchBloodPressures();
 });
 
-function filterByDate() {
-    const fromDateValue = new Date(fromDate.value);
-    const toDateValue = new Date(toDate.value);
-    const currentDate = new Date();
-
-    currentPage.value = 1; // always going back on the first page when i do filtering
-
-    if (toDate.value !== null && toDate.value !== '' && fromDate.value > toDate.value) {
-        filterModalShow.value = true;
-        filterModalTitle.value = "Problema";
-        filterModalMessage.value = "Interval invalid";
-        return;
-    }
-
-    if (fromDateValue > currentDate || toDateValue > currentDate) {
-        filterModalShow.value = true;
-        filterModalTitle.value = "Problema";
-        filterModalMessage.value = "Datele nu pot fi în viitor";
-        return;
-    }
+function filterByDate({ fromDate: from, toDate: to }) {
+    fromDate.value = from;
+    toDate.value = to;
 
     fetchBloodPressures();
 }
@@ -81,9 +82,8 @@ async function fetchBloodPressures() {
             totalPages.value = Math.ceil(data.totalElements / pageSize);
             noTrackings.value = false;
 
-            console.log("PAGINI: ", totalPages.value);
-            console.log("Sunt pe pagina: ", currentPage.value);
         } else {
+            bloodPressures.value = [];
             totalPages.value = 0;
             noTrackings.value = true;
         }
@@ -180,34 +180,9 @@ onMounted(() => {
                     <CustomButton class="add-button" @click="() => router.push('add-bloodpressure')"> {{buttonText}} </CustomButton>
                 </div>
 
-                <div class="date-inputs">
-                    <div class="input-group">
-                        <label for="fromDate">Inceput</label>
-                        <CustomInput 
-                            v-model="fromDate"
-                            :type="'date'"
-                            name="fromDate"
-                            class="custom-input"
-                        />
-                    </div>
-                    <div class="input-group">
-                        <label for="toDate">Final</label>
-                        <CustomInput 
-                            v-model="toDate"
-                            :type="'date'"
-                            name="toDate"
-                            class="custom-input"
-                        />
-                    </div>
-                    <CustomButton class="filter-button" @click="filterByDate"> Filtrare </CustomButton>
-                    <CustomModal
-                        :open="filterModalShow"
-                        :forConfirmation="false"
-                        :title="filterModalTitle"
-                        :message="filterModalMessage"
-                        @close="closeDialog"
-                    />
-                </div>
+                <DateFiltering 
+                    @filter-dates="filterByDate"
+                />
 
                 <div class="list" v-if="!noTrackings">
                     <div v-for="bp in bloodPressures" :key="bp.id" class="bp-container">
@@ -249,8 +224,12 @@ onMounted(() => {
                 </div>
                 
             </div>
+    
             <div class="statistics-panel">
-                <LineChartComponent :bloodPressureData="bloodPressures"/>
+                <div v-if="bloodPressures.length > 0">
+                    <LineChartComponent :bloodPressureData="bloodPressures" />
+                </div>
+                
             </div>
         </div>
     </div>
@@ -328,42 +307,7 @@ onMounted(() => {
     font-size: 14px;
     margin-left: 5px;
     margin-right: 10px;
-}
-
-.date-inputs {
-    display: grid;
-    grid-template-columns: 30% 30% 40%;
-    gap: 10px; 
-    margin-bottom: 10px;
-}
-
-.input-group {
-    display: flex;
-    flex-direction: column;
-}
-
-.input-group label {
-    margin-bottom: 5px;
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 13px;
-    font-weight: bold;
-}
-
-.filter-button {
-    background-color: white;
-    color: rgb(163, 2, 2);
-    height: 40px;
-    width: 60%;
-    margin-top: 15px;
-    font-weight: bold;
-    border: 1px solid rgb(163, 2, 2);
-    border-radius: 10px;
-    font-size: 13px;
-}
-
-.filter-button:hover {
-    background-color: rgb(255, 247, 247);
-    font-size: 14px;
+    cursor: pointer;
 }
 
 .bp-container {
@@ -389,6 +333,7 @@ onMounted(() => {
     background-color: white;
     height: 30px;
     width: 40px;
+    cursor: pointer;
 }
 
 .list {

@@ -4,15 +4,35 @@ import CustomInput from "@/components/CustomInput.vue";
 import CustomButton from "@/components/CustomButton.vue";
 import CustomModal from "../components/CustomModal.vue";
 import { addBloodPressure, updateBloodPressure, getBloodPressureById } from "@/services/bloodpressure_service.js";
-import { onMounted, ref, watch} from 'vue';
+import { onMounted, ref, watch, computed} from 'vue';
 import { useRoute  } from "vue-router";
 import router from "@/router";
 
-// checking whether or not the user is authenticated based on the token's existence
-const token = localStorage.getItem("token");
-const isAuthenticated = ref(token !== null);
-watch(() => localStorage.getItem("token"), (newToken) => {
-  isAuthenticated.value = newToken !== null;
+// checking whether or not the user is authenticated based on the token's existence and expiration
+const token = ref(localStorage.getItem("token"));
+const availableUntil = ref(localStorage.getItem("availableUntil"));
+const currentDate = ref(new Date());
+
+const isAuthenticated = computed(() => {
+    if (!token.value) return false;
+    const expirationDate = new Date(availableUntil.value);
+    return currentDate.value < expirationDate;
+});
+
+watch([token, availableUntil], ([newToken, newExpireDate]) => {
+    if (newToken === null || newExpireDate === null) {
+        isAuthenticated.value = false;
+    } else {
+        const expirationDate = new Date(newExpireDate);
+        const currentDate = new Date();
+        isAuthenticated.value = currentDate < expirationDate;
+    }
+});
+
+onMounted(() => {
+    currentDate.value = new Date();
+    token.value = localStorage.getItem("token");
+    availableUntil.value = localStorage.getItem("availableUntil");
 });
 
 const userEmail = localStorage.getItem('user');

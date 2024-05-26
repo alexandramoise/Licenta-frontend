@@ -1,28 +1,54 @@
 <script setup>
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch, computed } from 'vue';
 import CustomNavbar from "../components/CustomNavbar.vue";
 import CustomLoader from '../components/CustomLoader.vue';
+import CustomModal from '@/components/CustomModal.vue';
 import PatientCard from "../components/PatientCard.vue";
 import FilteringPatientsSidebar from "../components/FilteringPatientsSidebar.vue";
 import Pagination from "../components/Pagination.vue";
-import { getPagedFilteredPatients } from "../services/patient_service.js";        
+import StatisticsForListOfPatients from '@/components/StatisticsForListOfPatients.vue';
+import StatisticsForOnePatient from '@/components/StatisticsForOnePatient.vue';
+import { getPagedFilteredPatients } from "../services/patient_service.js";       
 import router from '@/router';
 import NotAuthenticatedView from './NotAuthenticatedView.vue';
- 
-const token = localStorage.getItem("token");
-const isAuthenticated = ref(token !== null);
-watch(() => localStorage.getItem("token"), (newToken) => {
-  isAuthenticated.value = newToken !== null;
+
+// checking whether or not the user is authenticated based on the token's existence and expiration
+const token = ref(localStorage.getItem("token"));
+const availableUntil = ref(localStorage.getItem("availableUntil"));
+const currentDate = ref(new Date());
+
+const isAuthenticated = computed(() => {
+    if (!token.value) return false;
+    const expirationDate = new Date(availableUntil.value);
+    return currentDate.value < expirationDate;
+});
+
+watch([token, availableUntil], ([newToken, newExpireDate]) => {
+    if (newToken === null || newExpireDate === null) {
+        isAuthenticated.value = false;
+    } else {
+        const expirationDate = new Date(newExpireDate);
+        const currentDate = new Date();
+        isAuthenticated.value = currentDate < expirationDate;
+    }
+});
+
+onMounted(() => {
+    currentDate.value = new Date();
+    token.value = localStorage.getItem("token");
+    availableUntil.value = localStorage.getItem("availableUntil");
 });
 
 const userEmail = localStorage.getItem("user");
 
 const patients = ref([]);
+const patientsList = ref([]); // list of all patients used for statistics
 const patientsNotFound = ref(false);
 const isLoading = ref(false);
 
 const criteria = ref({
     "name": "",
+    "minAge": 0,
     "maxAge": 0,
     "gender": "",
     "type": "",
@@ -40,6 +66,7 @@ function handleUpdateCriteria(newCriteria) {
 function resetCriteria() {
     currentPage.value = 1; 
     criteria.value.name = "",
+    criteria.value.minAge = 0;
     criteria.value.maxAge = 0;
     criteria.value.gender = "";
     criteria.value.type = "";
@@ -68,12 +95,27 @@ watch(criteria, () => {
   fetchPatients();
 }, { deep: true });
 
+const modalShow = ref(false);
+const modalTitle = ref('');
+const modalMessage = ref('');
+
+const statisticsForList = ref(false);
+const statisticsForOne = ref(true);
 async function fetchPatients() {
+    if(criteria.value.minAge !== 0 && criteria.value.maxAge !== 0 && criteria.value.minAge > criteria.value.maxAge) {
+        modalShow.value = true;
+        modalTitle.value = "Problema";
+        modalMessage.value = "Interval de varste invalid";
+        return;
+    } 
+
     isLoading.value = true;
 
-    const data = await getPagedFilteredPatients(
+    try {
+        const data = await getPagedFilteredPatients(
             userEmail,
             criteria.value.name, 
+            criteria.value.minAge,
             criteria.value.maxAge, 
             criteria.value.gender,
             criteria.value.type,
@@ -82,24 +124,57 @@ async function fetchPatients() {
             categories[sortCategory.value]
         );
 
-    if (data && data.content) { 
-        if(data.content.length !== 0) {
-            patients.value = data.content.map((patient) => ({
-                ...patient
-            }));
+        const dataForList = await getPagedFilteredPatients(
+            userEmail,
+            criteria.value.name, 
+            criteria.value.minAge,
+            criteria.value.maxAge, 
+            criteria.value.gender,
+            criteria.value.type,
+            500, // considering a max of 500 patients for a doctor 
+            0, 
+            categories[sortCategory.value]
+        );
 
-            patientsNotFound.value = false;
-            totalPages.value = Math.ceil(data.totalElements / pageSize.value);
-        
+        if (data && data.content) {
+            if(data.content.length !== 0) {
+                patients.value = data.content.map((patient) => ({ ...patient }));
+                patientsNotFound.value = false;
+                totalPages.value = Math.ceil(data.totalElements / pageSize.value);
+            } else {
+                totalPages.value = 0;
+                patientsNotFound.value = true;
+            }
         } else {
-            totalPages.value = 0;
-            patientsNotFound.value = true;
+            console.error("No content returned from the API");
         }
-    } else {
-        console.error("No content returned from the API");
-    }
 
-    isLoading.value = false;
+        if(dataForList && dataForList.content) {
+            if(dataForList.content.length !== 0) {
+                patientsList.value = dataForList.content.map((p) => ({ ...p }));
+
+                if(dataForList.content.length > 1) {
+                    statisticsForList.value = true;
+                    statisticsForOne.value = false;
+                } else {
+                    statisticsForList.value = false;
+                    statisticsForOne.value = true;
+                }
+            } else {
+                statisticsForList.value = false;
+                statisticsForOne.value = false;
+            }
+        }
+
+    } catch (error) {
+        console.error("An error occurred while fetching patients or statistics:", error);
+    } finally {
+        isLoading.value = false;
+    }
+}
+
+function closeDialog() {
+    modalShow.value = false;
 }
 
 function changePage(newPage) {
@@ -115,9 +190,15 @@ function redirectToPatientDetails(id) {
     });
 }
 
-function updateSortCriteria() {
+function updateViewCriteria() {
     currentPage.value = 1; // always going back on first page when i do filtering
     fetchPatients();
+}
+
+function convertDate(originalDate) {
+    const date = new Date(originalDate);
+    const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+    return date.toLocaleDateString('ro-RO', options);
 }
 
 </script>
@@ -126,7 +207,7 @@ function updateSortCriteria() {
     <div class="page" v-if="isAuthenticated">
         <CustomNavbar />
 
-        <div class="content">
+        <div :class="['content', { 'two-columns': patientsNotFound }]">
             <div class="filtering-sidebar">
                 <FilteringPatientsSidebar
                     @update-criteria="handleUpdateCriteria"
@@ -137,7 +218,7 @@ function updateSortCriteria() {
                 <div class="input-section">
                     <div class="select-container">
                         <label for="pageSizeSelect" class="form-label">Afiseaza</label>
-                        <select id="pageSizeSelect" name="pageSizeSelect" v-model="pageSize" class="custom-input" @change="fetchPatients">
+                        <select id="pageSizeSelect" name="pageSizeSelect" v-model="pageSize" class="custom-input" @change="updateViewCriteria">
                             <option v-for="size in sizes" :key="size" :value="size">
                                 {{ size }}
                             </option>
@@ -146,7 +227,7 @@ function updateSortCriteria() {
 
                     <div class="select-container">
                         <label for="sortBySelect" class="form-label">Sorteaza dupa</label>
-                        <select id="sortBySelect" name="sortBySelect" v-model="sortCategory" class="custom-input" @change="updateSortCriteria">
+                        <select id="sortBySelect" name="sortBySelect" v-model="sortCategory" class="custom-input" @change="updateViewCriteria">
                             <option v-for="(value, key) in categories" :key="key" :value="key">
                                 {{ key }}
                             </option>
@@ -178,13 +259,26 @@ function updateSortCriteria() {
                           <CustomLoader size="100" />
                     </div>
 
+                    <CustomModal
+                        :open="modalShow"
+                        :forConfirmation="false"
+                        :title="modalTitle"
+                        :message="modalMessage"
+                        @close="closeDialog"
+                    />
+
                 </div>
                 <div v-else class="not-found">
                     <p> Nu s-au gasit pacienti.  </p>
                 </div>
             </div>
-            <div class="statistics-panel">
-                <p> AICI VOR FI STATISTICILE </p>
+           <div class="statistics-panel" v-if="!patientsNotFound">
+                <div v-if="statisticsForList">
+                    <StatisticsForListOfPatients :patients="patientsList" />
+                </div>
+                <div v-if="statisticsForOne && patientsList.length > 0">
+                    <StatisticsForOnePatient :patientEmail="patientsList[0].email" />
+                </div>
             </div>
         </div>
     </div>
@@ -205,6 +299,10 @@ function updateSortCriteria() {
 .content {
     display: grid;
     grid-template-columns: 20% 35% 45%;
+}
+
+.two-columns {
+    grid-template-columns: 20% 80%; 
 }
 
 .filtering-sidebar {
@@ -295,10 +393,12 @@ function updateSortCriteria() {
 }
 
 .statistics-panel {
-    background-color: rgb(240, 240, 240);
-    height: 100vh;
-    padding: 15px;
+  background-color: rgb(240, 240, 240);
+  height: 100vh;
+  padding: 15px;
+  overflow-y: hidden;
 }
+
 
 @media(max-width: 600px) {
     .content {

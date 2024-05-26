@@ -2,17 +2,36 @@
 import CustomButton from '@/components/CustomButton.vue';
 import CustomNavbar from '@/components/CustomNavbar.vue';
 import CustomModal from '@/components/CustomModal.vue';
-import { ref, watch } from 'vue';
+import { ref, watch, computed, onMounted } from 'vue';
 import router from "@/router";
 
 import { addRecommandation } from '@/services/recommandation_service.js';
 
-// checking whether or not the user is authenticated based on the token's existence
-const token = localStorage.getItem("token");
-console.log(token);
-const isAuthenticated = ref(token !== null);
-watch(() => localStorage.getItem("token"), (newToken) => {
-  isAuthenticated.value = newToken !== null;
+// checking whether or not the user is authenticated based on the token's existence and expiration
+const token = ref(localStorage.getItem("token"));
+const availableUntil = ref(localStorage.getItem("availableUntil"));
+const currentDate = ref(new Date());
+
+const isAuthenticated = computed(() => {
+    if (!token.value) return false;
+    const expirationDate = new Date(availableUntil.value);
+    return currentDate.value < expirationDate;
+});
+
+watch([token, availableUntil], ([newToken, newExpireDate]) => {
+    if (newToken === null || newExpireDate === null) {
+        isAuthenticated.value = false;
+    } else {
+        const expirationDate = new Date(newExpireDate);
+        const currentDate = new Date();
+        isAuthenticated.value = currentDate < expirationDate;
+    }
+});
+
+onMounted(() => {
+    currentDate.value = new Date();
+    token.value = localStorage.getItem("token");
+    availableUntil.value = localStorage.getItem("availableUntil");
 });
 
 

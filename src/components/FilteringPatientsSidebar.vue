@@ -7,11 +7,14 @@ const emit = defineEmits(['updateCriteria', 'resetFilters']);
 const nameInput = ref('');
 const genderInput = ref('');
 const ageInput = ref(0);
+const minAgeInput = ref(0);
 const tendencyInput = ref('');
+
 function getFormData() {
     const formData = {
         name: nameInput.value,
         gender: genderInput.value,
+        minAge: minAgeInput.value,
         maxAge: ageInput.value,
         type: tendencyInput.value,
     };
@@ -23,12 +26,13 @@ function resetFilters() {
     nameInput.value = '';
     genderInput.value = '';
     ageInput.value = 0;
+    minAgeInput.value = 0;
     tendencyInput.value = '';
     emit('resetFilters');
 }
 
 const showResetButton = computed(() => {
-    return nameInput.value !== '' || genderInput.value !== '' || ageInput.value !== 0 || tendencyInput.value !== '';
+    return nameInput.value !== '' || genderInput.value !== '' || minAgeInput.value !== 0 || ageInput.value !== 0 || tendencyInput.value !== '';
 });
 
 </script>
@@ -55,6 +59,14 @@ const showResetButton = computed(() => {
         </div>
       </div>
   
+      <div class="filter-option">
+      <label class="filter-label" for="age">Vârstă minimă</label>
+      <div class="range-container">
+        <input type="range" id="age" name="age" v-model="minAgeInput" min="0" max="120" class="range-slider">
+        <span class="range-value">{{ minAgeInput }}</span>
+      </div>
+    </div>
+
       <div class="filter-option">
       <label class="filter-label" for="age">Vârstă maximă</label>
       <div class="range-container">
@@ -163,7 +175,9 @@ const showResetButton = computed(() => {
       border-radius: 20px;
       width: 220px;
       margin: auto;
-      font-size: 14px;
+      font-size: 15px;
+      cursor: pointer;
+      font-weight: bold;
   }
 
   .range-slider {
@@ -219,7 +233,6 @@ const showResetButton = computed(() => {
     border: 1px solid rgb(204, 204, 204);
 }
   
-/* responsive styling */
 @media (max-width: 1370px) {
   .sidepanel-container {
       grid-template-columns: repeat(4, 1fr); 
@@ -258,6 +271,7 @@ const showResetButton = computed(() => {
       border-radius: 15px; 
       grid-column: 1 / -1; 
       width: 90px;
+      cursor: pointer;
   }
 
   .last-visit-container {

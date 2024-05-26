@@ -59,7 +59,7 @@ onMounted(async () => {
 
 .card {
     background-color: rgb(250, 250, 250);
-    width: 250px;
+    width: 300px;
     border-radius: 10px;
     padding: 15px;
     font-size: 17px;

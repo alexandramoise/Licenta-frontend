@@ -79,6 +79,7 @@ const chartOptions = {
 
 // watch for changes in bloodPressureData prop and update chart data accordingly
 watch(() => props.bloodPressureData, (newData) => {
+  //props.bloodPressureData.reverse();
   if (newData && newData.length) {
     chartData.value.labels = newData.map(dp => new Date(dp.date).toLocaleDateString());
     chartData.value.datasets[0].data = newData.map(dp => dp.systolic);

@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, watch, reactive } from 'vue';
+import { onMounted, ref, watch, reactive, computed } from 'vue';
 import router from '@/router';
 import { getPatientByEmail } from '@/services/patient_service';
 import { getAllRecommandations, getRecommandationsByType, 
@@ -12,12 +12,31 @@ import CustomButton from '@/components/CustomButton.vue';
 import CustomLoader from '@/components/CustomLoader.vue';
 import NotAuthenticatedView from './NotAuthenticatedView.vue';
 
-// checking whether or not the user is authenticated based on the token's existence
-const token = localStorage.getItem("token");
-console.log(token);
-const isAuthenticated = ref(token !== null);
-watch(() => localStorage.getItem("token"), (newToken) => {
-  isAuthenticated.value = newToken !== null;
+// checking whether or not the user is authenticated based on the token's existence and expiration
+const token = ref(localStorage.getItem("token"));
+const availableUntil = ref(localStorage.getItem("availableUntil"));
+const currentDate = ref(new Date());
+
+const isAuthenticated = computed(() => {
+    if (!token.value) return false;
+    const expirationDate = new Date(availableUntil.value);
+    return currentDate.value < expirationDate;
+});
+
+watch([token, availableUntil], ([newToken, newExpireDate]) => {
+    if (newToken === null || newExpireDate === null) {
+        isAuthenticated.value = false;
+    } else {
+        const expirationDate = new Date(newExpireDate);
+        const currentDate = new Date();
+        isAuthenticated.value = currentDate < expirationDate;
+    }
+});
+
+onMounted(() => {
+    currentDate.value = new Date();
+    token.value = localStorage.getItem("token");
+    availableUntil.value = localStorage.getItem("availableUntil");
 });
 
 
@@ -340,6 +359,7 @@ const getIconPath = (tag) => {
 .type-selector {
     border-radius: 8px;
     border: 1px solid rgb(194, 191, 191);
+    padding: 5px;
 }
 
 .recommendations {
@@ -350,7 +370,7 @@ const getIconPath = (tag) => {
 }
   
 .card {
-    width: calc(30% - 60px);
+    width: calc(30% - 100px);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     border-radius: 10px;
     padding: 20px;

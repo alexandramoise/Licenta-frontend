@@ -31,6 +31,7 @@ async function login(loginRequestDto) {
         console.log(data);
         localStorage.setItem('token', data.jwtToken);
         localStorage.setItem('role', data.role);
+        localStorage.setItem('availableUntil', data.availableUntil);
         return { error: false, token: data.jwtToken };
 
     } catch (error) {

@@ -78,12 +78,12 @@ async function getFilteredPatients(email, name, maxAge, gender, type) {
     }
 }
 
-async function getPagedFilteredPatients(email, name, maxAge, gender, type, pageSize, pageNumber, sortCategory) {
+async function getPagedFilteredPatients(email, name, minAge, maxAge, gender, type, pageSize, pageNumber, sortCategory) {
     if(localStorage.getItem("token")) {
         console.log(localStorage.getItem("token"));
         try {
             const response = await fetch(API_URL + "/filtered/paged?email=" + encodeURIComponent(email) 
-            + "&name=" + name + "&maxAge=" + maxAge + "&gender=" + gender + "&type=" + type + "&pageSize=" 
+            + "&name=" + name + "&minAge=" + minAge +"&maxAge=" + maxAge + "&gender=" + gender + "&type=" + type + "&pageSize=" 
             + pageSize + "&pageNumber=" + pageNumber + "&sortCategory=" + sortCategory, {
                 method: 'GET',
                 headers: {
