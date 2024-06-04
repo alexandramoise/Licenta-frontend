@@ -7,6 +7,8 @@ import { addBloodPressure, updateBloodPressure, getBloodPressureById } from "@/s
 import { onMounted, ref, watch, computed} from 'vue';
 import { useRoute  } from "vue-router";
 import router from "@/router";
+import NotAuthenticatedView from './NotAuthenticatedView.vue';
+import NotFoundView from './NotFoundView.vue';
 
 // checking whether or not the user is authenticated based on the token's existence and expiration
 const token = ref(localStorage.getItem("token"));
@@ -56,19 +58,22 @@ function handleInput(event) {
 }
 
 const route = useRoute();
-onMounted(async () => {
+const notFoundError = ref(false);
     if (route.query.updateId) {
         update.value = true;
         let id = route.query.updateId;
-        const data = await getBloodPressureById(id, userEmail);
-        systolicInput.value = data.systolic;
-        diastolicInput.value = data.diastolic;
-        pulseInput.value = data.pulse;
-        const newDate = new Date(data.date);
-        newDate.setHours(newDate.getHours() + 3);
-        dateInput.value = newDate.toISOString().slice(0,16);
+        try {
+            const data = await getBloodPressureById(id, userEmail);
+            systolicInput.value = data.systolic;
+            diastolicInput.value = data.diastolic;
+            pulseInput.value = data.pulse;
+            const newDate = new Date(data.date);
+            newDate.setHours(newDate.getHours() + 3);
+            dateInput.value = newDate.toISOString().slice(0,16);
+        } catch(error) {
+            notFoundError.value = true;
+        }
     }
-});
 
 async function addOrUpdate() {
     console.log(systolicInput.value, diastolicInput.value, pulseInput.value, dateInput.value);
@@ -138,7 +143,7 @@ function redirectToDashboard() {
 </script>
 
 <template>
-  <div class="page" v-if="isAuthenticated">
+  <div class="page" v-if="isAuthenticated && !notFoundError">
     <CustomNavbar />
 
     <div class="form-container">
@@ -211,9 +216,12 @@ function redirectToDashboard() {
             @close="closeDialog"
         />
   </div>
-  <div v-else>
-    <NotAuthenticatedView />
+  <div v-else-if="!isAuthenticated && !notFoundError">
+        <NotAuthenticatedView />
   </div>
+  <div v-else="notFoundError">
+        <NotFoundView />
+   </div>
 </template>
 
 <style scoped>

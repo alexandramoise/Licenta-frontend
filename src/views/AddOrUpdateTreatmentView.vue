@@ -11,6 +11,7 @@ import { getMedicinesForMedicalCondition } from "../services/medicine_service.js
 import { getPatientById } from '@/services/patient_service.js' 
 import { addTreatment, getTreatmentById, updateTreatment } from '@/services/treatment_service.js'
 import NotAuthenticatedView from './NotAuthenticatedView.vue';
+import NotFoundView from './NotFoundView.vue';
 
 // checking whether or not the user is authenticated based on the token's existence and expiration
 const token = ref(localStorage.getItem("token"));
@@ -63,8 +64,9 @@ async function getMedicines() {
     }
 }
 
-onMounted(async () => {
-    const patientId = ref(route.query.patientId);
+const patientId = ref(route.query.patientId);
+const notFoundError = ref(false);
+try {
     const patientData = await getPatientById(patientId.value);
     const patientTendency = ref(patientData.tendency);
     if(patientTendency.value === "Hypotension") {
@@ -74,7 +76,9 @@ onMounted(async () => {
     }
 
     getMedicines();
-});
+} catch(error) {
+    notFoundError.value = true;
+}
 
 const update = ref(false);
 const initialValues = ref({
@@ -83,9 +87,9 @@ const initialValues = ref({
     commentText: ''
 });
 
-onMounted(async () => {
-    if(route.query.updateId) {
-        update.value = true;
+if(route.query.updateId) {
+    update.value = true;
+    try {
         const treatment = await getTreatmentById(route.query.updateId);
         selectedMedicine.value = treatment.medicineName;
         dosesInput.value = treatment.doses;
@@ -96,8 +100,10 @@ onMounted(async () => {
             dosesInput: treatment.doses,
             commentText: treatment.comment
         };
+    } catch(error) {
+        notFoundError.value = true;
     }
-})
+}
 
 function hasChanges() {
     return selectedMedicine.value !== initialValues.value.selectedMedicine ||
@@ -188,7 +194,7 @@ function closeDialog() {
 
 
 <template>
-    <div class="page" v-if="isAuthenticated">
+    <div class="page" v-if="isAuthenticated && !notFoundError">
         <CustomNavbar />
         <div v-if="patientMedicalCondition !== 'Normala'" class="form-container">
             <div class="form-content">
@@ -248,8 +254,11 @@ function closeDialog() {
         />
         
     </div>
-    <div v-else>
+    <div v-else-if="!isAuthenticated && !notFoundError">
         <NotAuthenticatedView />
+    </div>
+    <div v-else="notFoundError">
+        <NotFoundView />
     </div>
 </template>
 

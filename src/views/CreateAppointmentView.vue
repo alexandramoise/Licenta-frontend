@@ -10,6 +10,7 @@ import CustomInput from '@/components/CustomInput.vue';
 import { getDoctorsPatients, getPatientById, getPatientByEmail } from "../services/patient_service.js";
 import { createNewAppointment, getAppointmentById, updateAppointment } from "../services/appointments_service.js";
 import NotAuthenticatedView from './NotAuthenticatedView.vue';
+import NotFoundView from './NotFoundView.vue';
 
 // checking whether or not the user is authenticated based on the token's existence and expiration
 const token = ref(localStorage.getItem("token"));
@@ -56,12 +57,26 @@ const selectedPatientEmail = ref('');
 
 const update = ref(false);
 
-const patientName = ref('');
 const idFromUrl = ref(false);
+const notFoundError = ref(false);
 if(route.query.updateId) {
-    const data = await getAppointmentById(route.query.updateId);
-    selectedPatientEmail.value = data.patientEmail;
-    idFromUrl.value = true;
+    try {
+        const data = await getAppointmentById(route.query.updateId);
+        selectedPatientEmail.value = data.patientEmail; // patient email from the appointment
+        idFromUrl.value = true;
+    } catch(error) {
+        notFoundError.value = true;
+    }
+}
+
+if(route.query.patientId) {
+    try {
+        const data = await getPatientById(route.query.patientId);
+        selectedPatientEmail.value = data.email; // patient email from the appointment
+        idFromUrl.value = true;
+    } catch(error) {
+        notFoundError.value = true;
+    }
 }
 
 if(isDoctor.value) {
@@ -111,6 +126,7 @@ onMounted(async () => {
         dateInput.value = newDate.toISOString().slice(0,16);
     }
 });
+
 
 const modalShow = ref(false);
 const modalTitle = ref('');
@@ -174,7 +190,7 @@ function closeDialog() {
 </script>
 
 <template>
-    <div class="page" v-if="isAuthenticated">
+    <div class="page" v-if="isAuthenticated && !notFoundError">
         <CustomNavbar />
         <div class="form-container">
             <div class="form-content">
@@ -236,8 +252,11 @@ function closeDialog() {
             @close="closeDialog"
         />
     </div>
-    <div v-else>
+    <div v-else-if="!isAuthenticated && !notFoundError">
         <NotAuthenticatedView />
+    </div>
+    <div v-else="notFoundError">
+        <NotFoundView />
     </div>
 </template>
 

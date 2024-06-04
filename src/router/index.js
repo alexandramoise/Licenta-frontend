@@ -88,7 +88,18 @@ const router = createRouter({
       path: '/not-authenticated',
       name: 'not-authenticated',
       component: () => import('../views/NotAuthenticatedView.vue')
-    }
+    }, 
+    {
+      path: '/not-found',
+      name: 'not-found',
+      component: () => import('../views/NotFoundView.vue')
+    },
+    {
+      path: "/:pathMatch(.*)*",
+      alias: '/not-found',
+      name: "not-found",
+      component: () => import('../views/NotFoundView.vue'),
+    },
   ]
 })
 
