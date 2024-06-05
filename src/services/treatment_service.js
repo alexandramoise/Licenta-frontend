@@ -1,6 +1,6 @@
 const API_URL = "http://localhost:8080/api/treatments";
 
-async function getTreatmentsForCondition(patientEmail,medicalCondition, fromDate, toDate) {
+async function getTreatmentsForCondition(patientEmail, medicalCondition, fromDate, toDate) {
     try {
         let urlToFetch = API_URL + "/byDate?email=" + patientEmail + "&medicalCondition=" + medicalCondition;
         if((fromDate === null || fromDate === '') && (toDate !== null && toDate !== '')) {
@@ -55,6 +55,28 @@ async function addTreatment(treatmentDto) {
     }
 
     return data;
+}
+
+async function getCurrentTreatmentsForMedicalCondition(patientEmail, medicalCondition,) {
+    try {
+        const response = await fetch(API_URL + "/current?email=" + patientEmail + "&medicalCondition=" + medicalCondition, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+            });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("current treatments", data);
+
+        return data;
+    } catch (error) {
+        console.error("Could not get the treatment", error);
+    }
 }
 
 async function getTreatmentById(id) {
@@ -122,6 +144,7 @@ async function endTreatment(id) {
 
 export { getTreatmentsForCondition, 
     addTreatment, 
+    getCurrentTreatmentsForMedicalCondition,
     getTreatmentById, 
     updateTreatment,
     endTreatment }

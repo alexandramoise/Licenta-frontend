@@ -68,7 +68,12 @@ const router = createRouter({
       path: '/add-treatment',
       name: 'add-treatment',
       component: () => import('../views/AddOrUpdateTreatmentView.vue')
-    },    
+    },   
+    {
+      path: '/patient-treatment',
+      name: 'patient-treatment',
+      component: () => import('../views/TreatmentPatientView.vue')
+    }, 
     {
       path: '/recommandations',
       name: 'recommandations',

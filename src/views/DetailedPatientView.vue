@@ -90,7 +90,7 @@ onMounted(async () => {
        } 
 
        console.log(medicalCondition.value);
-       if(medicalCondition.value == "Hipertensiune" || medicalCondition.value === "Hipotensiune") {
+       if(medicalCondition.value === "Hipertensiune" || medicalCondition.value === "Hipotensiune") {
             let treatments = await getTreatmentsForCondition(patientEmail.value, medicalCondition.value, null, null);
             patientTreatments.value = treatments.map(t => t);
        }

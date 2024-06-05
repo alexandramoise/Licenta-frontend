@@ -42,8 +42,6 @@ function selectDate(day) {
     const date = new Date(currentMonth.value.getFullYear(), currentMonth.value.getMonth() + 1, 0);
     return new Array(date.getDate()).fill(null).map((_, index) => index + 1);
   });
-
-  
   
   // Calculate the previous month's "empty" days
   const previousMonthDays = computed(() => {

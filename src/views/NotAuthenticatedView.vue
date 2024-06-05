@@ -24,11 +24,12 @@ function goToLogin() {
     height: 100vh; 
     width: 100vw;
     overflow: hidden;
-    background-color: darkred;
     font-size: 20px; 
     text-align: center;
     padding: 20px;
     box-sizing: border-box;
+    background-image: url('D:\FACULTATE\AN 3\Licenta\frontend\frontend_licenta\src\assets\images\not_auth.png'); 
+    background-size: cover;
 }
 
 .text-container {

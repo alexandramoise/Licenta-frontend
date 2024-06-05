@@ -35,6 +35,8 @@ function goToHome() {
     text-align: center;
     padding: 20px;
     box-sizing: border-box;
+    background-image: url('D:\FACULTATE\AN 3\Licenta\frontend\frontend_licenta\src\assets\images\not_found.png'); 
+    background-size: cover;
 }
 
 .text-container {
