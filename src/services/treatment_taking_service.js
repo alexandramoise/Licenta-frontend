@@ -24,6 +24,30 @@ async function getTreatmentTakingsOfADay(treatmentId, patientEmail, date) {
     }
 }
 
+async function addTreatmentAdministration(treatmentAdministrationDto) {
+    const response = await fetch(API_URL, {
+        method: "POST", 
+        body: JSON.stringify({
+            treatmentId: treatmentAdministrationDto.treatmentId,
+            patientEmail: treatmentAdministrationDto.patientEmail,
+            administrationDate: treatmentAdministrationDto.administrationDate,
+        }),
+        headers: {
+            "Content-type": "application/json; charset=UTF-8",
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+    });
+
+    const data = await response.json();
+   
+    if (!response.ok) {
+        throw new Error(data.message || 'Eroare la adăugarea administrarii tratamentului');
+    }
+    
+    return data;
+}
+
 export {
-    getTreatmentTakingsOfADay
+    getTreatmentTakingsOfADay, 
+    addTreatmentAdministration
 }

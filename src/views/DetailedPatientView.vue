@@ -373,7 +373,7 @@ function closeDialog() {
                             <p>Pacientul {{ patientName }} nu are nicio afectiune inregistrata</p>
                         </div>
                         
-                        <h3>Ultimul tratament:</h3>
+                        <h3>Ultimul medicament adăugat:</h3>
                         <div v-if="patientTreatments.length !== 0" class="card">
                             <p>Afectiune: {{ patientTreatments[0].medicalConditionName }}</p>
                             <p>Nume medicament: {{ patientTreatments[0].medicineName }}</p>

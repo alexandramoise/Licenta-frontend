@@ -5,7 +5,7 @@
       
       <span class="current-page">
         <div class="current-page-container">
-          <span class="page-number">{{ currentPage }}</span>
+          <span class="page-number">{{ currentPage }} din {{ totalPages }}</span>
         </div>
         <div class="page-dropdown">
           <div class="dropdown-container">
@@ -53,6 +53,10 @@
     align-items: center;
     margin-top: 10px;
     font-size: 14px;
+  }
+
+  .page-number { 
+    font-size: 16px;
   }
   
   .current-page {

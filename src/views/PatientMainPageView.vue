@@ -176,7 +176,7 @@ onMounted(() => {
             </div>
             <div class="history-section">
                 <div class="header">
-                    <p class="title"> Istoric inregistrari tensiune: <i> {{ userEmail }} </i></p>
+                    <p class="title"> Istoric inregistrări tensiune </p>
                     <CustomButton class="add-button" @click="() => router.push('add-bloodpressure')"> {{buttonText}} </CustomButton>
                 </div>
 
@@ -289,11 +289,11 @@ onMounted(() => {
 }
 
 .title {
-    font-size: 15px; 
-    color: rgb(163, 2, 2);
+    font-size: 18px; 
+    text-align: center;
+    font-family: Georgia, serif;
     margin: 0; 
     font-weight: bold;
-    font-family: Georgia, serif;
 }
 
 .add-button {

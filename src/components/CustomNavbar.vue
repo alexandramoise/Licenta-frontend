@@ -99,6 +99,8 @@ const navigateTo = async (path) => {
     router.push("recommandations");
   } else if(path === "add-recommandation") {
     router.push("add-recommandation");
+  } else if(path === "add-treatment") {
+    router.push("patient-treatment");
   } else if(path === "logout") {
     localStorage.clear();
     router.push("/");

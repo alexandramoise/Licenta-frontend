@@ -25,15 +25,13 @@ if(localStorage.getItem("role") === "doctor") {
     showCreateAccountForDoctor.value = true;
 }
 
-const userType = localStorage.getItem('role');
+const userType = ref(localStorage.getItem('role'));
 //console.log("IN LOG IN VERIFIC USER TYPE", userType);
 
 const modalShow = ref(false);
 const changePasswordModal = ref(false);
 const modalTitle = ref('');
 const modalMessage = ref('');
-
-const firstLoginEver = ref(false);
 
 async function loginFunction() {
     if (emailText.value === '' || emailText.value === null 
@@ -54,6 +52,7 @@ async function loginFunction() {
             modalMessage.value = response.message;
         } else {
             localStorage.setItem('user', emailText.value);
+            userType.value = localStorage.getItem("role");
             modalShow.value = true;
             modalTitle.value = "Succes";
             modalMessage.value = "Veti putea intra in aplicatie";
@@ -72,11 +71,11 @@ async function requestChangePassword() {
     } else {
         try {
             let response;
-            if(userType === 'patient') {
+            if(userType.value === 'patient') {
                 isLoading.value = true;
                 response  = await requestNewPasswordPatient(emailText.value);
                 isLoading.value = false;
-            } else if(userType === 'doctor') {
+            } else if(userType.value === 'doctor') {
                 isLoading.value = true;
                 response  = await requestNewPasswordDoctor(emailText.value);
                 isLoading.value = false;
@@ -102,7 +101,7 @@ async function requestChangePassword() {
 function closeDialog() {
     modalShow.value = false;
     if(modalTitle.value === "Succes" && !changePasswordModal.value) {
-        if(userType === "doctor") {
+        if(userType.value === "doctor") {
             router.push("main-doctor");
         } else {
             router.push("main-patient");
@@ -148,7 +147,7 @@ window.history.go(1);
                 <CustomLoader size="100" />
         </div>
 
-        <div class="login-container" :style="{ height: userType === 'patient' ? '250px' : '290px'}">
+        <div class="login-container" :style="{ height: userType === 'doctor' ? '290px' : '250px'}">
             <h2>Accesare cont</h2>
             <CustomInput 
                 v-model="emailText"
