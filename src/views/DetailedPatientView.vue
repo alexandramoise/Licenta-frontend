@@ -16,6 +16,9 @@ import LineChartComponent from '@/components/charts/LineChartComponent.vue';
 import DateFiltering from '@/components/DateFiltering.vue';
 import router from '@/router';
 
+import NotAuthenticatedView from './NotAuthenticatedView.vue';
+import NotFoundView from './NotFoundView.vue';
+
 const route = useRoute();
 
 // checking whether or not the user is authenticated based on the token's existence and expiration
@@ -60,11 +63,16 @@ const appointmentComment = ref('');
 
 const isLoading = ref(false);
 
+const notFoundError = ref(false);
 if (route.query.patientId) {
-    const data = await getPatientById(id.value);
-    patientName.value = data.fullName;
-    patientEmail.value = data.email;
-    patientTendency.value = data.tendency;
+    try {
+        const data = await getPatientById(id.value);
+        patientName.value = data.fullName;
+        patientEmail.value = data.email;
+        patientTendency.value = data.tendency;
+    } catch(error) {
+        notFoundError.value = true;
+    } 
 }
 
 onMounted(async () => {
@@ -333,7 +341,7 @@ function closeDialog() {
 </script>
 
 <template>
-    <div class="page" v-if="isAuthenticated">
+    <div class="page" v-if="isAuthenticated && !notFoundError">
         <CustomNavbar />
 
         <div v-if="isLoading" class="loading-animation">
@@ -507,8 +515,11 @@ function closeDialog() {
             </div>
         </div>
     </div>
-    <div v-else>
+    <div v-else-if="!isAuthenticated && !notFoundError">
         <NotAuthenticatedView />
+    </div>
+    <div v-else-if="notFoundError">
+        <NotFoundView />
     </div>
 </template>
 

@@ -8,6 +8,7 @@ import { getDoctorByEmail, updateDoctorByEmail } from '../services/doctor_servic
 import { getPatientByEmail, updatePatientByEmail } from '../services/patient_service.js';
 import { getCurrentMedicalConditions } from '@/services/medical_condition_service.js';
 import NotAuthenticatedView from './NotAuthenticatedView.vue';
+import router from '@/router';
 
 // checking whether or not the user is authenticated based on the token's existence and expiration
 const token = ref(localStorage.getItem("token"));
@@ -129,10 +130,10 @@ function prepareMedicalConditionsForUpdate(selectedConditions, initialMedicalCon
     const wasSelectedBefore = initialMedicalConditions.includes(option.label);
 
     if (isSelectedNow && !wasSelectedBefore) {
-      console.log("selectat ", option.label)
+      // console.log("selectat ", option.label)
       return { name: option.value, startingDate: currentDate };
     } else if (!isSelectedNow && wasSelectedBefore) {
-      console.log("deselectat ", option.label)
+      // console.log("deselectat ", option.label)
       return { name: option.value, endingDate: currentDate };
     }
     return null; 
@@ -193,6 +194,8 @@ async function saveChangesPatient() {
 
 function closeDialog() {
     modalShow.value = false;
+    let route = "main-" + userType;
+    router.push(route);
 }
 </script>
 

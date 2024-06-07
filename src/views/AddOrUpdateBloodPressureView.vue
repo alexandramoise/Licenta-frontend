@@ -7,8 +7,10 @@ import { addBloodPressure, updateBloodPressure, getBloodPressureById } from "@/s
 import { onMounted, ref, watch, computed} from 'vue';
 import { useRoute  } from "vue-router";
 import router from "@/router";
+
 import NotAuthenticatedView from './NotAuthenticatedView.vue';
 import NotFoundView from './NotFoundView.vue';
+import NotAllowedView from "./NotAllowedView.vue";
 
 // checking whether or not the user is authenticated based on the token's existence and expiration
 const token = ref(localStorage.getItem("token"));
@@ -31,10 +33,14 @@ watch([token, availableUntil], ([newToken, newExpireDate]) => {
     }
 });
 
+const notAllowed = ref(false);
 onMounted(() => {
     currentDate.value = new Date();
     token.value = localStorage.getItem("token");
     availableUntil.value = localStorage.getItem("availableUntil");
+    if(localStorage.getItem("role") !== "patient") {
+        notAllowed.value = true;
+    }
 });
 
 const userEmail = localStorage.getItem('user');
@@ -143,7 +149,7 @@ function redirectToDashboard() {
 </script>
 
 <template>
-  <div class="page" v-if="isAuthenticated && !notFoundError">
+  <div class="page" v-if="isAuthenticated && !notFoundError && !notAllowed">
     <CustomNavbar />
 
     <div class="form-container">
@@ -216,11 +222,14 @@ function redirectToDashboard() {
             @close="closeDialog"
         />
   </div>
-  <div v-else-if="!isAuthenticated && !notFoundError">
+  <div v-else-if="!isAuthenticated && !notFoundError && !notAllowed">
         <NotAuthenticatedView />
   </div>
-  <div v-else="notFoundError">
+  <div v-else-if="notFoundError && !notAllowed">
         <NotFoundView />
+   </div>
+   <div v-else="notAllowed">
+        <NotAllowedView />
    </div>
 </template>
 

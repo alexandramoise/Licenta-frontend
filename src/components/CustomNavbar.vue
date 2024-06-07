@@ -47,6 +47,7 @@ export default {
 
     const userType = localStorage.getItem('role');
     const userEmail = localStorage.getItem('user');
+    const patientAge = ref(0);
 
     const handleResize = () => {
       isDesktop.value = window.innerWidth > 600;
@@ -69,6 +70,7 @@ export default {
          user = await getDoctorByEmail(userEmail);
       } else {
          user = await getPatientByEmail(userEmail); 
+         patientAge.value = user.age;
       }
 
       userName.value = user.fullName;
@@ -84,7 +86,17 @@ export default {
 
 const navigateTo = async (path) => {
   if(path === "home") {
-      router.push(userType === "doctor" ? "main-doctor" : "main-patient");
+    if(userType === "patient") {
+        if(patientAge.value === 0) {
+          // console.log("MERG LA DETALII");
+          router.push("my-profile");
+        } else {
+          // console.log("MERG LA MAIN");
+          router.push("main-patient");
+        }
+    } else {
+        router.push("main-doctor");
+    }
   } 
   else if(path === "appointments") {
       router.push("appointments");

@@ -101,11 +101,8 @@ async function requestChangePassword() {
 function closeDialog() {
     modalShow.value = false;
     if(modalTitle.value === "Succes" && !changePasswordModal.value) {
-        if(userType.value === "doctor") {
-            router.push("main-doctor");
-        } else {
-            router.push("main-patient");
-        }
+        let route = "main-" + userType.value;
+        router.push(route);
     } else if(changePasswordModal.value && modalTitle.value === "Succes") {
         router.push({
             name: "change-password",

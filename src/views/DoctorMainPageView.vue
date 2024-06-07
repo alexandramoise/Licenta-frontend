@@ -10,7 +10,9 @@ import StatisticsForListOfPatients from '@/components/StatisticsForListOfPatient
 import StatisticsForOnePatient from '@/components/StatisticsForOnePatient.vue';
 import { getPagedFilteredPatients } from "../services/patient_service.js";       
 import router from '@/router';
+
 import NotAuthenticatedView from './NotAuthenticatedView.vue';
+import NotAllowedView from './NotAllowedView.vue';
 
 // checking whether or not the user is authenticated based on the token's existence and expiration
 const token = ref(localStorage.getItem("token"));
@@ -40,6 +42,7 @@ onMounted(() => {
 });
 
 const userEmail = localStorage.getItem("user");
+const role = localStorage.getItem("role");
 
 const patients = ref([]);
 const patientsList = ref([]); // list of all patients used for statistics
@@ -101,6 +104,7 @@ const modalMessage = ref('');
 
 const statisticsForList = ref(false);
 const statisticsForOne = ref(true);
+const notFoundError = ref(false);
 async function fetchPatients() {
     if(criteria.value.minAge !== 0 && criteria.value.maxAge !== 0 && criteria.value.minAge > criteria.value.maxAge) {
         modalShow.value = true;
@@ -112,7 +116,8 @@ async function fetchPatients() {
     isLoading.value = true;
 
     try {
-        const data = await getPagedFilteredPatients(
+        if(role === "doctor") {
+            const data = await getPagedFilteredPatients(
             userEmail,
             criteria.value.name, 
             criteria.value.minAge,
@@ -165,9 +170,12 @@ async function fetchPatients() {
                 statisticsForOne.value = false;
             }
         }
-
+    } else {
+        notFoundError.value = true;
+    }
     } catch (error) {
-        console.error("An error occurred while fetching patients or statistics:", error);
+        notFoundError.value = true;
+        console.error("An error occurred while fetching patients or statistics:", error.message);
     } finally {
         isLoading.value = false;
     }
@@ -204,7 +212,7 @@ function convertDate(originalDate) {
 </script>
 
 <template>
-    <div class="page" v-if="isAuthenticated">
+    <div class="page" v-if="isAuthenticated && !notFoundError">
         <CustomNavbar />
 
         <div :class="['content', { 'two-columns': patientsNotFound }]">
@@ -282,8 +290,11 @@ function convertDate(originalDate) {
             </div>
         </div>
     </div>
-    <div v-else> 
+    <div v-else-if="!isAuthenticated && !notFoundError"> 
         <NotAuthenticatedView />
+    </div>
+    <div v-else-if="notFoundError">
+        <NotAllowedView />
     </div>
 </template>
 

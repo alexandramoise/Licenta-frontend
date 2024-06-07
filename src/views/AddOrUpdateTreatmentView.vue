@@ -10,8 +10,10 @@ import CustomInput from '@/components/CustomInput.vue';
 import { getMedicinesForMedicalCondition } from "../services/medicine_service.js";
 import { getPatientById } from '@/services/patient_service.js' 
 import { addTreatment, getTreatmentById, updateTreatment } from '@/services/treatment_service.js'
+
 import NotAuthenticatedView from './NotAuthenticatedView.vue';
 import NotFoundView from './NotFoundView.vue';
+import NotAllowedView from "./NotAllowedView.vue";
 
 // checking whether or not the user is authenticated based on the token's existence and expiration
 const token = ref(localStorage.getItem("token"));
@@ -34,10 +36,14 @@ watch([token, availableUntil], ([newToken, newExpireDate]) => {
     }
 });
 
+const notAllowed = ref(false);
 onMounted(() => {
     currentDate.value = new Date();
     token.value = localStorage.getItem("token");
     availableUntil.value = localStorage.getItem("availableUntil");
+    if(localStorage.getItem("role") !== "doctor") {
+        notAllowed.value = true;
+    }
 });
 
 const route = useRoute();
@@ -194,7 +200,7 @@ function closeDialog() {
 
 
 <template>
-    <div class="page" v-if="isAuthenticated && !notFoundError">
+    <div class="page" v-if="isAuthenticated && !notFoundError && !notAllowed">
         <CustomNavbar />
         <div v-if="patientMedicalCondition !== 'Normala'" class="form-container">
             <div class="form-content">
@@ -254,12 +260,15 @@ function closeDialog() {
         />
         
     </div>
-    <div v-else-if="!isAuthenticated && !notFoundError">
+    <div v-else-if="!isAuthenticated && !notFoundError && !notAllowed">
         <NotAuthenticatedView />
     </div>
-    <div v-else="notFoundError">
+    <div v-else="notFoundError && !notAllowed">
         <NotFoundView />
     </div>
+    <div v-else="notAllowed">
+        <NotAllowedView />
+   </div>
 </template>
 
 

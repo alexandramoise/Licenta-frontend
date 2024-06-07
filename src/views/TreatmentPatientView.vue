@@ -1,18 +1,19 @@
 <script setup>
-import { useRoute } from 'vue-router';
 import { ref, onMounted, watch, computed } from 'vue';
-import router from "@/router";
 import CustomNavbar from "../components/CustomNavbar.vue";
-import NotAuthenticatedView from './NotAuthenticatedView.vue';
 import CustomCalendar from '@/components/CustomCalendar.vue';
 import CustomModal from '@/components/CustomModal.vue';
 import CustomInput from '@/components/CustomInput.vue';
 import CustomLoader from '@/components/CustomLoader.vue';
+import CustomButton from '@/components/CustomButton.vue';
 
 import { getPatientByEmail } from '@/services/patient_service.js';
 import { getCurrentTreatmentsForMedicalCondition, getTreatmentById } from '@/services/treatment_service.js';
 import { getTreatmentTakingsOfADay, addTreatmentAdministration } from '@/services/treatment_taking_service.js';
-import CustomButton from '@/components/CustomButton.vue';
+
+
+import NotAuthenticatedView from './NotAuthenticatedView.vue';
+import NotAllowedView from "./NotAllowedView.vue";
 
 // checking whether or not the user is authenticated based on the token's existence and expiration
 const token = ref(localStorage.getItem("token"));
@@ -35,10 +36,14 @@ watch([token, availableUntil], ([newToken, newExpireDate]) => {
     }
 });
 
+const notAllowed = ref(false);
 onMounted(() => {
     currentDate.value = new Date();
     token.value = localStorage.getItem("token");
     availableUntil.value = localStorage.getItem("availableUntil");
+    if(localStorage.getItem("role") !== "patient") {
+        notAllowed.value = true;
+    }
 });
 
 const patientEmail = ref(localStorage.getItem('user'));
@@ -231,7 +236,7 @@ function getDayMoment(time) {
 </script>
 
 <template>
-    <div class="page" v-if="isAuthenticated">
+    <div class="page" v-if="isAuthenticated && !notAllowed">
         <CustomNavbar />
 
         <div v-if="isLoading" class="loading-animation">
@@ -247,8 +252,8 @@ function getDayMoment(time) {
                 <div class="treatment-administration">
                     <div class="treatment-administration-content">
                         <p class="title"> Administrări medicament <span> {{ medicineName.toUpperCase() }} </span> în data de: <span> {{ convertDateOnly(selectedDate) }} </span> </p>
-                        <p class="text">Doza zilnica prescrisa: <span> {{ treatmentDoses }} </span> buc. pe zi </p>
-                        <p class="text"> Doze administrate: <span> {{ treatmentAdministrations.length }} </span> </p>
+                        <p class="text">Doza zilnica <span style="color: rgb(3, 60, 130);"> prescrisa: </span> <span> {{ treatmentDoses }} </span> buc. pe zi </p>
+                        <p class="text"> Doze <span style="color: rgb(1, 110, 45);"> administrate: </span> <span> {{ treatmentAdministrations.length }} </span> </p>
                         <ul>
                             <li v-for="admin in treatmentAdministrations" :key="admin.id" class="admin-item"> {{ getDayMoment(convertTime(admin.administrationDate).substring(0,2)) }} la ora {{ convertTime(admin.administrationDate) }}</li>
                         </ul>
@@ -292,9 +297,12 @@ function getDayMoment(time) {
             @close="closeDialog"
         />
     </div>
-    <div v-else>
+    <div v-else-if="!isAuthenticated && !notAllowed">
         <NotAuthenticatedView />
     </div>
+    <div v-else="notAllowed">
+        <NotAllowedView />
+   </div>
 </template>
 
 <style scoped>
@@ -457,9 +465,8 @@ function getDayMoment(time) {
     color: white;
     border: none;
     padding: 5px;
-    border-radius: 5px;
+    border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.3s;
 }
 
 .add-dose-button:hover {

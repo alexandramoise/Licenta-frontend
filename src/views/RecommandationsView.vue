@@ -190,7 +190,7 @@ const getIconPath = (tag) => {
     <div class="content">
       <div class="header">
         <h2 class="title">Recomandari</h2>
-        <CustomButton v-if="isDoctor" class="add-button" @click="redirectToAdd">Adauga recomandare</CustomButton>
+        <CustomButton v-if="isDoctor" class="add-button" @click="redirectToAdd">Adaugă recomandare</CustomButton>
       </div>
 
       <div class="filter-bar">
@@ -371,6 +371,7 @@ const getIconPath = (tag) => {
   
 .card {
     width: calc(30% - 100px);
+    height: 150px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     border-radius: 10px;
     padding: 20px;

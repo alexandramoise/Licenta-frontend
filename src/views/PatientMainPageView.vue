@@ -10,7 +10,9 @@ import LineChartComponent from '../components/charts/LineChartComponent.vue';
 import Pagination from '@/components/Pagination.vue';
 import { getBloodPressures, getBloodPressureById, deleteBloodPressure } from "../services/bloodpressure_service.js";
 import router from '@/router';
+
 import NotAuthenticatedView from './NotAuthenticatedView.vue';
+import NotAllowedView from './NotAllowedView.vue';
 
 // checking whether or not the user is authenticated based on the token's existence and expiration
 const token = ref(localStorage.getItem("token"));
@@ -40,6 +42,7 @@ onMounted(() => {
 });
 
 const userEmail = localStorage.getItem('user');
+const role = localStorage.getItem("role");
 
 // 50 trackings per page to balance the load on the system and to ensure the line chart shows a significant evolution without overwhelming the system with hundreds of data points in a single request.
 const pageSize = 50; 
@@ -51,6 +54,7 @@ const selectedBpId = ref(null);
 
 const noTrackings = ref(false);
 const isLoading = ref(false);
+const notFoundError = ref(false);
 
 const fromDate = ref(null);
 const toDate = ref(null);
@@ -72,28 +76,33 @@ function filterByDate({ fromDate: from, toDate: to }) {
 
 async function fetchBloodPressures() {
     isLoading.value = true;
-    
-    const data = await getBloodPressures(userEmail, fromDate.value, toDate.value, pageSize, currentPage.value - 1);
+
+    try {
+        if(role === "patient") {
+            const data = await getBloodPressures(userEmail, fromDate.value, toDate.value, pageSize, currentPage.value - 1);
  
-    if(data && data.content) {
-        if(data.content.length !== 0) {
-            bloodPressures.value = data.content.map(b => b);
-            
-            totalPages.value = Math.ceil(data.totalElements / pageSize);
-            noTrackings.value = false;
+            if(data && data.content) {
+                if(data.content.length !== 0) {
+                    bloodPressures.value = data.content.map(b => b);
+                    
+                    totalPages.value = Math.ceil(data.totalElements / pageSize);
+                    noTrackings.value = false;
 
+                } else {
+                    bloodPressures.value = [];
+                    totalPages.value = 0;
+                    noTrackings.value = true;
+                }
+            }
         } else {
-            bloodPressures.value = [];
-            totalPages.value = 0;
-            noTrackings.value = true;
+            notFoundError.value = true;
         }
-    } else {
-        console.error("No content returned from the API");
+    
+    } catch(error) {
+        console.error("No content returned from the API", error.message);
+    } finally {
+        isLoading.value = false;
     }
-
-    
-    
-    isLoading.value = false;
 }
 
 onMounted(() => {
@@ -168,7 +177,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="page" v-if="isAuthenticated">
+    <div class="page" v-if="isAuthenticated && !notFoundError">
         <CustomNavbar />
         <div class="content">
             <div v-if="isLoading" class="loading-animation">
@@ -233,8 +242,11 @@ onMounted(() => {
             </div>
         </div>
     </div>
-    <div v-else>
+    <div v-else-if="!isAuthenticated && !notFoundError"> 
         <NotAuthenticatedView />
+    </div>
+    <div v-else-if="notFoundError">
+        <NotAllowedView />
     </div>
 </template>
 

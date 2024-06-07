@@ -7,6 +7,9 @@ import router from "@/router";
 
 import { addRecommandation } from '@/services/recommandation_service.js';
 
+import NotAuthenticatedView from './NotAuthenticatedView.vue';
+import NotAllowedView from "./NotAllowedView.vue";
+
 // checking whether or not the user is authenticated based on the token's existence and expiration
 const token = ref(localStorage.getItem("token"));
 const availableUntil = ref(localStorage.getItem("availableUntil"));
@@ -28,10 +31,14 @@ watch([token, availableUntil], ([newToken, newExpireDate]) => {
     }
 });
 
+const notAllowed = ref(false);
 onMounted(() => {
     currentDate.value = new Date();
     token.value = localStorage.getItem("token");
     availableUntil.value = localStorage.getItem("availableUntil");
+    if(localStorage.getItem("role") !== "doctor") {
+        notAllowed.value = true;
+    }
 });
 
 
@@ -100,7 +107,7 @@ function redirectToPage() {
 </script>
 
 <template>
-  <div class="container" v-if="isAuthenticated">
+  <div class="container" v-if="isAuthenticated && !notAllowed">
     <CustomNavbar />
     <div class="form-container">
       <h1 style="color: #b80f20; text-align: center">Adaugă o recomandare</h1>
@@ -128,9 +135,12 @@ function redirectToPage() {
             @close="closeDialog"
         />
   </div>
-  <div v-else> 
-    <NotAuthenticatedView />
-  </div>
+  <div v-else-if="!isAuthenticated && !notAllowed"> 
+     <NotAuthenticatedView />
+  </div> 
+  <div v-else="notAllowed">
+     <NotAllowedView />
+   </div>
 </template>
 
 <style scoped>
