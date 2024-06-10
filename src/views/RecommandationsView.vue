@@ -180,11 +180,11 @@ const getIconPath = (tag) => {
 
 
 <template>
-  <div v-if="isLoading" class="loading-animation" aria-label="Se incarca, asteptati">
+  <div v-if="isLoading" class="loading-animation">
     <CustomLoader size="100" />
   </div>
 
-  <div class="page-container" v-if="isAuthenticated">
+  <div class="page-container" v-if="isAuthenticated && !isLoading">
     <CustomNavbar />
 
     <div class="content">
@@ -240,7 +240,7 @@ const getIconPath = (tag) => {
       </div>
     </div>
   </div>
-  <div v-else> 
+  <div v-else-if="!isAuthenticated"> 
     <NotAuthenticatedView />
   </div>
 </template>

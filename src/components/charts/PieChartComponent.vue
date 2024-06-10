@@ -107,5 +107,4 @@ watch(() => props.dataDistribution, (newData) => {
 </script>
 
 <style scoped>
-/* Add any required styles here */
 </style>

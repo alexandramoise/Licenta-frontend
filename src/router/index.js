@@ -80,6 +80,16 @@ const router = createRouter({
       component: () => import('../views/RecommandationsView.vue')
     },
     {
+      path: '/patient-cluster',
+      name: 'patient-cluster',
+      component: () => import('../views/GroupForPatientView.vue')
+    },
+    {
+      path: '/all-patient-clusters',
+      name: 'all-patient-clusters',
+      component: () => import('../views/AllGroupsView.vue')
+    },
+    {
       path: '/add-recommandation',
       name: 'add-recommandation',
       component: () => import('../views/AddRecommandationView.vue')

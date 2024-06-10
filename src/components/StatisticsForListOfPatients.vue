@@ -124,13 +124,13 @@ async function fetchStatistics(patientList, from, to) {
                     :labels="genders"
                     :colors="genderColors"
                 />
-                <PieChartComponent
+                <PieChartComponent v-if="womenBpDistribution.totalPatients > 0"
                     propertyShown="womenDistribution"
                     :dataDistribution="womenBpDistribution"
                     :labels="bpTypes"
                     :colors="bpColors"
                 />
-                <PieChartComponent
+                <PieChartComponent v-if="menBpDistribution.totalPatients > 0"
                     propertyShown="menDistribution"
                     :dataDistribution="menBpDistribution"
                     :labels="bpTypes"

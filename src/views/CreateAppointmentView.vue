@@ -190,6 +190,10 @@ function closeDialog() {
 </script>
 
 <template>
+    <div v-if="isLoading" class="loading-animation">
+        <CustomLoader size="100" />
+    </div>
+
     <div class="page" v-if="isAuthenticated && !notFoundError">
         <CustomNavbar />
         <div class="form-container">
@@ -237,10 +241,6 @@ function closeDialog() {
                 </div>
                 
                 <CustomButton @click="createOrUpdateAppointment" class="submit-button">Gata</CustomButton>
-                
-                <div v-if="isLoading" class="loading-animation">
-                    <CustomLoader size="100" />
-                </div>
             </div>
         </div>
         

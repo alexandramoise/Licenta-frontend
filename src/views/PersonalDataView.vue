@@ -4,9 +4,12 @@ import CustomNavbar from '../components/CustomNavbar.vue';
 import CustomInput from '../components/CustomInput.vue';
 import CustomButton from '../components/CustomButton.vue';
 import CustomModal from '../components/CustomModal.vue';
-import { getDoctorByEmail, updateDoctorByEmail } from '../services/doctor_service.js';
-import { getPatientByEmail, updatePatientByEmail } from '../services/patient_service.js';
+import TermsAndConditionsModal from '../components/TermsAndConditionsModal.vue'
+
+import { getDoctorByEmail, updateDoctorByEmail, doctorAcceptsTerms } from '../services/doctor_service.js';
+import { getPatientByEmail, updatePatientByEmail, patientAcceptsTerms } from '../services/patient_service.js';
 import { getCurrentMedicalConditions } from '@/services/medical_condition_service.js';
+
 import NotAuthenticatedView from './NotAuthenticatedView.vue';
 import router from '@/router';
 
@@ -73,6 +76,8 @@ const userType = localStorage.getItem('role');
 let email = localStorage.getItem('user');
 let data;
 
+const acceptedTerms = ref(false);
+
 const patientMedicalConditions = ref([]);
 
 if(userType === "doctor") {
@@ -85,8 +90,20 @@ if(userType === "doctor") {
         lastName.value = name[1];
     }
 
+    if(data.acceptedTermsAndConditions === true) {
+        acceptedTerms.value = true;
+    }
+    
+    console.log("Acceptat: ", acceptedTerms.value);
+
 } else if(userType === "patient") {
     data = await getPatientByEmail(email);
+
+    if(data.acceptedTermsAndConditions === true) {
+        acceptedTerms.value = true;
+    }
+    
+    console.log("Acceptat: ", acceptedTerms.value);
 
     if(data.fullName !== null) {
         let name = data.fullName.split(' ');
@@ -150,8 +167,8 @@ const modalMessage = ref('');
 async function saveChangesDoctor() {
     try {
         const doctorUpdateDto = {
-            firstName: firstName.value,
-            lastName: lastName.value,
+            firstName: firstName.value.charAt(0).toUpperCase() + firstName.value.slice(1).toLowerCase(),
+            lastName: lastName.value.charAt(0).toUpperCase() + lastName.value.slice(1).toLowerCase(),
         };
 
         console.log("DoctorUpdateDto: ", doctorUpdateDto);
@@ -171,8 +188,8 @@ async function saveChangesDoctor() {
 async function saveChangesPatient() {
     try {
         const patientUpdateDto = {
-            firstName: firstName.value,
-            lastName: lastName.value,
+            firstName: firstName.value.charAt(0).toUpperCase() + firstName.value.slice(1).toLowerCase(),
+            lastName: lastName.value.charAt(0).toUpperCase() + lastName.value.slice(1).toLowerCase(),
             gender: gender.value,
             dateOfBirth: dateOfBirth.value,
             medicalConditions: prepareMedicalConditionsForUpdate(medicalConditions.value, patientMedicalConditions.value),
@@ -197,6 +214,29 @@ function closeDialog() {
     let route = "main-" + userType;
     router.push(route);
 }
+
+
+const showTermsAndConditionsModal = ref(false);
+async function acceptTermsAndConditions() {
+    acceptedTerms.value = true;
+    if(userType === "doctor") {
+        await doctorAcceptsTerms(email);
+        console.log("DOCTOR ", email, " A ACCEPTAT");
+    } else if(userType === "patient") {
+        await patientAcceptsTerms(email);
+        console.log("PACIENT ", email, " A ACCEPTAT");
+    }
+    showTermsAndConditionsModal.value = false;
+}
+
+function declineTermsAndConditions() {
+  showTermsAndConditionsModal.value = false;
+}
+
+function showTermsAndConditionsPopup() {
+  showTermsAndConditionsModal.value = true;
+}
+
 </script>
 
 <template>
@@ -269,8 +309,24 @@ function closeDialog() {
             </div>
 
             
+            <CustomButton
+                v-if="!acceptedTerms"
+                class="terms-and-conditions-button"
+                @click="showTermsAndConditionsPopup"
+            >
+                 Permisiune colectare date personale
+            </CustomButton>
+            
+
+            <TermsAndConditionsModal
+                :show="showTermsAndConditionsModal"
+                @accepted-terms-and-conditions="acceptTermsAndConditions"
+                @declined-terms-and-conditions="declineTermsAndConditions"
+            />
+            
+
             <div class="button-container">
-                <CustomButton @click="saveChangesPatient">Salvare</CustomButton>
+                <CustomButton class="save-button" @click="saveChangesPatient" :disabled="! acceptedTerms">Salvare</CustomButton>
             </div>
         </div>
 
@@ -295,8 +351,22 @@ function closeDialog() {
                         <CustomInput id="firstName" v-model="firstName" placeholder="Prenume" type="text" />
                     </div>
                 
+                    <CustomButton
+                        v-if="!acceptedTerms"
+                        class="terms-and-conditions-button"
+                        @click="showTermsAndConditionsPopup"
+                    >
+                        Permisiune colectare date personale
+                    </CustomButton>
+
+                    <TermsAndConditionsModal
+                        :show="showTermsAndConditionsModal"
+                        @accepted-terms-and-conditions="acceptTermsAndConditions"
+                        @declined-terms-and-conditions="declineTermsAndConditions"
+                    />
+
                     <div class="button-container">
-                        <CustomButton @click="saveChangesDoctor">Salvare</CustomButton>
+                        <CustomButton class="save-button" @click="saveChangesDoctor">Salvare</CustomButton>
                     </div>
          </div>
     </div>
@@ -380,13 +450,22 @@ function closeDialog() {
     align-items: center; 
 }
 
+.terms-and-conditions-button {
+    border: none;
+    background-color: transparent;
+    text-decoration: underline;
+    color: #780914;
+    font-style: bold;
+    font-size: 18px; 
+}
+
 .button-container {
     display: flex;
     justify-content: center; 
     margin-top: 20px; 
 }
 
-button {
+.save-button {
     width: 95%;
     padding: 10px 20px;
     border-radius: 8px;
@@ -399,8 +478,13 @@ button {
     margin: 20px auto;
 }
 
-button:hover {
+.save-button:hover {
     background-color: #930c1a; 
+}
+
+.save-button:disabled {
+    cursor: auto;
+    background-color: #a85860;
 }
 
 h2 {

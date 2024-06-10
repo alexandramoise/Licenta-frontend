@@ -101,6 +101,19 @@ async function requestNewPasswordDoctor(email) {
     }
 }
 
+async function doctorAcceptsTerms(email) {
+    try {
+        const response = await fetch(`${API_URL}/terms?email=${email}`, {
+            method: "PUT",
+        });
+
+        return response.status;
+
+    } catch (error) {
+        console.error("Request denied ", error);
+    }
+}
+
 
 async function changePasswordDoctor(changePasswordDto) {
     const response = await fetch(API_URL + "/change-password", {
@@ -124,5 +137,6 @@ export {
     updateDoctorByEmail,
     changePasswordDoctor,
     requestNewPasswordDoctor, 
+    doctorAcceptsTerms,
     getFirstLogin
 };

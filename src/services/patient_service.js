@@ -256,6 +256,40 @@ async function requestNewPasswordPatient(email) {
     }
 }
 
+async function patientAcceptsTerms(email) {
+    try {
+        const response = await fetch(`${API_URL}/terms?email=${email}`, {
+            method: "PUT",
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+        });
+
+        return response.status;
+
+    } catch (error) {
+        console.error("Request denied ", error);
+    }
+}
+
+async function patientAcceptsSharingData(email) {
+    try {
+        const response = await fetch(`${API_URL}/sharing-data?email=${email}`, {
+            method: "PUT",
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+        });
+
+        return response.status;
+
+    } catch (error) {
+        console.error("Request denied ", error);
+    }
+}
+
 
 async function changePasswordPatient(changePasswordDto) {
     const response = await fetch(API_URL + "/change-password", {
@@ -283,6 +317,8 @@ export {
     getMedicalConditions, 
     createPatientAccount,
     requestNewPasswordPatient,
+    patientAcceptsTerms,
+    patientAcceptsSharingData,
     changePasswordPatient, 
     getFilteredPatients, 
     getPagedFilteredPatients, 

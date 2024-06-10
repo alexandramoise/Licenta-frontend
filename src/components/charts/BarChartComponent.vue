@@ -40,12 +40,11 @@ const props = defineProps({
   },
 });
 
-// Initialize chart data
 const chartData = ref({
   labels: props.labels,
   datasets: [
     {
-      label: 'Procent din numarul total de pacienti',  // Set a meaningful label for the dataset
+      label: 'Procent din numarul total de pacienti',  
       backgroundColor: ["red", "#99ff99", "#80e5ff"],
       borderColor: ["red", "#99ff99", "#80e5ff"],
       borderWidth: 1,
@@ -78,7 +77,7 @@ const chartOptions = ref({
 
 watch(() => props.bpDistributionData, (newData) => {
   if (newData) {
-    chartData.value.labels = props.labels; // Ensure labels are updated
+    chartData.value.labels = props.labels; 
     chartData.value.datasets[0].data = [
       newData.hypertensivePercentage,
       newData.normalPercentage,

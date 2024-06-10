@@ -161,21 +161,12 @@ async function addTreatmentAdmin(index) {
         return;
     }
 
-    let [selectedHour, selectedMinute] = selectedTime.value[index].split(':').map(Number);
-    selectedHour -= 3;
-    if (selectedHour < 0) {
-        selectedHour += 24;
-    }
-    const adjustedTime = `${selectedHour.toString().padStart(2, '0')}:${selectedMinute.toString().padStart(2, '0')}`;
-
-    const administrationTime = `${selectedDate.value}T${adjustedTime}:00`;
-    console.log(administrationTime);
-
-    const currentHour = new Date().getHours();
-    const currentMinute = new Date().getMinutes();
-
     const selectedDateToCompare = new Date(selectedDate.value);
     const currentDate = new Date();
+
+    let [selectedHour, selectedMinute] = selectedTime.value[index].split(':').map(Number);
+    const currentHour = new Date().getHours();
+    const currentMinute = new Date().getMinutes();
 
     if (selectedDateToCompare.toDateString() === currentDate.toDateString() 
         && (selectedHour > currentHour || (selectedHour === currentHour && selectedMinute > currentMinute))) {
@@ -184,6 +175,15 @@ async function addTreatmentAdmin(index) {
         modalMessage.value = "Ora selectata nu poate fi in viitor";
         return;
     } 
+
+    selectedHour -= 3;
+    if (selectedHour < 0) {
+        selectedHour += 24;
+    }
+    const adjustedTime = `${selectedHour.toString().padStart(2, '0')}:${selectedMinute.toString().padStart(2, '0')}`;
+
+    const administrationTime = `${selectedDate.value}T${adjustedTime}:00`;
+    console.log(administrationTime);
 
     const treatmentAdministrationDto = {
         treatmentId: treatmentId.value, 
@@ -515,6 +515,13 @@ function getDayMoment(time) {
     .dose-item {
         flex: 1 0 100%;
         margin-right: 0;
+    }
+
+    .calendar-container {
+        width: 100%; 
+        max-width: none; 
+        margin: 0; 
+        height: auto;
     }
 }
 

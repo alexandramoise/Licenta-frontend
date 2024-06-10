@@ -72,7 +72,11 @@ const chartOptions = {
   },
   scales: {
     y: {
-      beginAtZero: true
+      beginAtZero: false
+    }, 
+
+    x: {
+      display: false
     }
   }
 };

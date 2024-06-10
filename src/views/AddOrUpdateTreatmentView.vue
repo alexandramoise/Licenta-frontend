@@ -200,7 +200,7 @@ function closeDialog() {
 
 
 <template>
-    <div class="page" v-if="isAuthenticated && !notFoundError && !notAllowed">
+    <div class="page" v-if="isAuthenticated && !notFoundError && !notAllowed && !isLoading">
         <CustomNavbar />
         <div v-if="patientMedicalCondition !== 'Normala'" class="form-container">
             <div class="form-content">

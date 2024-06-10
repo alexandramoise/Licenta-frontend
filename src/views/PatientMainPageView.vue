@@ -258,13 +258,6 @@ onMounted(() => {
     overflow-y: hidden;
 }
 
-.not-authenticated {
-    height: 100vh;
-    width: 100vw;
-    background-color: darkred;
-    overflow-y: hidden;
-}
-
 .loading-animation {
     display: flex;
     justify-content: center;

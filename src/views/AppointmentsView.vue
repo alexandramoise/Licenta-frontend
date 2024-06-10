@@ -287,6 +287,7 @@ async function cancelAppointment(apId) {
     flex-direction: column;
     position: relative;
     height: calc(100% - 60px);
+    margin-top: 2px;
     overflow: hidden;
 }
 

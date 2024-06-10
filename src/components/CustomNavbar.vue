@@ -5,17 +5,19 @@
       <CustomButton class="navbar-item-logo" @click="navigateTo('home')"> <img class="logo" src="../assets/images/logo.png"> CardioHealth Companion</CustomButton>
       <CustomButton class="navbar-item" @click="navigateTo('appointments')"> <i class="far fa-calendar-check"> </i> Programări</CustomButton>
 
-      <div class="profile-dropdown">
+      <CustomButton v-if="userType === 'patient'" class="navbar-item" @click="navigateTo('patient-cluster')"> <i class="fas fa-users"></i> Grup pacienți  </CustomButton>
+
+      <CustomButton v-if="userType === 'doctor'" class="navbar-item" @click="navigateTo('all-patient-clusters')"> <i class="fas fa-users"></i> Grupuri pacienți </CustomButton>
+
+      <div class="profile-dropdown" v-if="userType === 'doctor'">
         <CustomButton class="navbar-item" @click.stop="dropdownVisible = !dropdownVisible"> <i class="fas fa-plus"> </i> Adaugă <i class='fas fa-caret-down'> </i></CustomButton>
-        <div v-if="dropdownVisible && userType === 'doctor'" class="dropdown-content">
+        <div v-if="dropdownVisible" class="dropdown-content">
             <CustomButton class="dropdown-item" @click="navigateTo('add-patient')"> pacient <i class="fas fa-user"></i></CustomButton>
             <CustomButton class="dropdown-item" @click="navigateTo('add-recommandation')"> recomandare <i class="fas fa-lightbulb"></i> </CustomButton>
           </div>
-          <div v-if="dropdownVisible && userType === 'patient'" class="dropdown-content">
-            <CustomButton class="dropdown-item" @click="navigateTo('add-treatment')"> tratament <i class="fas fa-capsules"></i> </CustomButton>
-            <CustomButton class="dropdown-item" @click="navigateTo('add-journal')"> jurnal <i class="fas fa-book"></i></CustomButton>
-          </div>
       </div>
+
+      <CustomButton v-if="userType === 'patient'" class="navbar-item" @click="navigateTo('add-treatment')"> <i class="fas fa-capsules"></i> Tratament  </CustomButton>
 
       <CustomButton class="navbar-item" @click="navigateTo('recommandations')"> <i class="fas fa-lightbulb"> </i> Recomandări</CustomButton>
       <div class="profile-dropdown">
@@ -41,6 +43,7 @@ export default {
   setup() {
     const dropdownVisible = ref(false);
     const dropdownAccountVisible = ref(false);
+    const dropdownVisualizeVisible = ref(false);
     const navVisible = ref(false);
     const isDesktop = ref(true);
     //const router = useRouter();
@@ -55,6 +58,7 @@ export default {
         navVisible.value = false;
         dropdownVisible.value = false;
         dropdownAccountVisible.value = false;
+        dropdownVisualizeVisible.value = false;
       }
     };
 
@@ -87,15 +91,17 @@ export default {
 const navigateTo = async (path) => {
   if(path === "home") {
     if(userType === "patient") {
-        if(patientAge.value === 0) {
-          // console.log("MERG LA DETALII");
+        if(patientAge.value === 0 || userName.value === "first_name last_name") {
           router.push("my-profile");
         } else {
-          // console.log("MERG LA MAIN");
           router.push("main-patient");
         }
     } else {
-        router.push("main-doctor");
+        if(userName.value === "first_name last_name") {
+            router.push("my-profile");
+        } else {
+            router.push("main-doctor");
+        }
     }
   } 
   else if(path === "appointments") {
@@ -127,13 +133,16 @@ const navigateTo = async (path) => {
     } catch (error) {
       console.error('Error when requesting new password:', error);
     }
-  }
+  } else if(path === "patient-cluster" || path === "all-patient-clusters" || path === "journals") {
+    router.push(path);
+  } 
 };
 
 
     return { 
       dropdownVisible, 
       dropdownAccountVisible,
+      dropdownVisualizeVisible,
       navVisible, 
       isDesktop, 
       toggleNav, 
