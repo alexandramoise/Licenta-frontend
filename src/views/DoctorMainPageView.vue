@@ -209,6 +209,8 @@ function convertDate(originalDate) {
     return date.toLocaleDateString('ro-RO', options);
 }
 
+setInterval(fetchPatients, 60000);
+
 </script>
 
 <template>
@@ -407,7 +409,9 @@ function convertDate(originalDate) {
   background-color: rgb(240, 240, 240);
   height: 100vh;
   padding: 15px;
-  overflow-y: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin; 
+  scrollbar-color: #c9c9c9 #ececec;
 }
 
 

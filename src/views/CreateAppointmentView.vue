@@ -122,7 +122,7 @@ onMounted(async () => {
         selectedVisitType.value = data.visitType;
         commentText.value = data.comment;
         const newDate = new Date(data.date);
-        //newDate.setHours(newDate.getHours() + 3);
+        newDate.setHours(newDate.getHours() + 3);
         dateInput.value = newDate.toISOString().slice(0,16);
     }
 });

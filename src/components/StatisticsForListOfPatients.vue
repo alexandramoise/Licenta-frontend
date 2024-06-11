@@ -1,9 +1,11 @@
 <script setup>
 import { ref, watch } from 'vue';
+
 import DateFiltering from '@/components/DateFiltering.vue'
-import { getStatisticsForList } from '@/services/statistics_service.js'
 import BarChartComponent from '@/components/charts/BarChartComponent.vue';
 import PieChartComponent from '@/components/charts/PieChartComponent.vue';
+
+import { getStatisticsForList } from '@/services/statistics_service.js'
 
 const props = defineProps({
     patients: {
@@ -46,6 +48,21 @@ const menBpDistribution = ref({
     menWithNormal: 0,
     menWithHypotension: 0,
 }); 
+
+const minBp = ref({
+    systolic: 0,
+    diastolic: 0,
+});
+
+const maxBp = ref({
+    systolic: 0,
+    diastolic: 0,
+});
+
+const patientMinBp = ref('');
+const patientMaxBp = ref('');
+const maxVisits = ref(null);
+const patientMaxVisits = ref('');
 
 watch(
     () => [fromDate.value, toDate.value, props.patients],
@@ -99,6 +116,22 @@ async function fetchStatistics(patientList, from, to) {
         menWithNormal: statisticsData.menWithNormal,
         menWithHypotension: statisticsData.menWithHypotension,
     }
+
+    minBp.value = {
+        systolic: statisticsData.minBp.systolic,
+        diastolic: statisticsData.minBp.diastolic
+    }
+    patientMinBp.value = statisticsData.patientWithMinBloodPressure;
+
+    maxBp.value = {
+        systolic: statisticsData.maxBp.systolic,
+        diastolic: statisticsData.maxBp.diastolic
+    }
+    patientMaxBp.value = statisticsData.patientWithMaxBloodPressure;
+
+    maxVisits.value = statisticsData.maxVisits;
+    patientMaxVisits.value = statisticsData.patientWithMostVisits;
+    console.log("AFISEZ: ", patientMaxVisits.value);
 }
 </script>
 
@@ -138,6 +171,34 @@ async function fetchStatistics(patientList, from, to) {
                 />
             </div>
         </div>
+        <div class="extreme-values-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Minim</th>
+                            <th>Maxim</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Nume pacient</td>
+                            <td>{{ patientMinBp }}</td>
+                            <td>{{ patientMaxBp }}</td>
+                        </tr>
+                        <tr>
+                            <td>Valoare tensiune</td>
+                            <td>{{ minBp.systolic }}/{{ minBp.diastolic }}</td>
+                            <td>{{ maxBp.systolic }}/{{ maxBp.diastolic }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="most-visits">
+                <b>Pacientul cu cele mai multe vizite:</b>
+                <p>{{ patientMaxVisits }} - {{ maxVisits }} vizite {{ fromDate !== null && fromDate !== '' ? ' de la ' + convertDate(fromDate) : "" }} {{ toDate !== null && toDate !== '' ? ' până la ' + convertDate(toDate) : " până acum"}}</p>
+            </div>
     </div>
 </template>
 
@@ -146,7 +207,7 @@ async function fetchStatistics(patientList, from, to) {
     background-color: rgb(240, 240, 240);
     height: 100vh;
     padding: 15px;
-    overflow-y: auto;
+    overflow-y: hidden;
 }
 
 .statistics-header {
@@ -157,12 +218,8 @@ async function fetchStatistics(patientList, from, to) {
 
 .charts-container {
     display: grid;
-    grid-template-rows: 1fr 1fr; 
+    grid-template-rows: 1.5fr 1fr; 
     gap: 10px;
-    height: calc(100vh - 120px); 
-    overflow-y: auto;
-    scrollbar-width: thin; 
-    scrollbar-color: #c9c9c9 #ececec;
 }
 
 .bar-chart {
@@ -172,7 +229,6 @@ async function fetchStatistics(patientList, from, to) {
 
 .pie-charts {
     display: flex;
-    grid-row: 2;
     gap: 20px;
     height: 100%; 
 }
@@ -180,5 +236,45 @@ async function fetchStatistics(patientList, from, to) {
 .pie-charts > * {
     flex: 1;
     height: 100%;
+}
+
+.extreme-values-table {
+    margin: 20px auto;
+    text-align: center;
+}
+
+table {
+    margin: 0 auto;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+}
+
+th {
+    background-color: #f6f6f6;
+    font-weight: bold;
+}
+
+tr {
+    background-color: #f2f2f2;
+}
+
+tr:hover {
+    background-color: #f1f1f1;
+}
+
+.most-visits {
+    margin: auto;
+    text-align: center;
+    font-size: 17px;
+    background-color: #f6f6f6;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 70px;
 }
 </style>

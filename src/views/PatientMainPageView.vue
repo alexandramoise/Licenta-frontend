@@ -6,7 +6,7 @@ import CustomButton from "../components/CustomButton.vue";
 import CustomLoader from '@/components/CustomLoader.vue';
 import DateFiltering from '@/components/DateFiltering.vue';
 import BloodPressureCard from "../components/BloodPressureCard.vue";
-import LineChartComponent from '../components/charts/LineChartComponent.vue';
+import StatisticsForOnePatient from '@/components/StatisticsForOnePatient.vue';
 import Pagination from '@/components/Pagination.vue';
 import { getBloodPressures, getBloodPressureById, deleteBloodPressure } from "../services/bloodpressure_service.js";
 import router from '@/router';
@@ -174,6 +174,7 @@ onMounted(() => {
     updateButtonText(); 
     window.addEventListener('resize', updateButtonText);
 });
+
 </script>
 
 <template>
@@ -235,10 +236,7 @@ onMounted(() => {
             </div>
     
             <div class="statistics-panel">
-                <div v-if="bloodPressures.length > 0">
-                    <LineChartComponent :bloodPressureData="bloodPressures" />
-                </div>
-                
+                <StatisticsForOnePatient :patientEmail="userEmail" />
             </div>
         </div>
     </div>
@@ -362,6 +360,9 @@ onMounted(() => {
 .statistics-panel {
     background-color: rgb(240, 240, 240);
     padding: 15px;
+    overflow-y: auto;
+    scrollbar-width: thin; 
+    scrollbar-color: #c9c9c9 #ececec;
 }
 
 .pagination-component {

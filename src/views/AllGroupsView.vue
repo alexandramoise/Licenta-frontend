@@ -42,14 +42,20 @@ onMounted(() => {
 
 const clusters = ref([]);
 const isLoading = ref(false);
-onMounted(async () => {
+
+async function loadClusters() {
     if(isAuthenticated.value && localStorage.getItem("role") === "doctor") {
         isLoading.value = true;
         clusters.value = await getAllClusters();
         isLoading.value = false;
         console.log("S-a facut fetch");
     }
+}
+onMounted(async () => {
+    loadClusters();
 });
+
+setInterval(loadClusters, 30000);
 
 function redirectToGroupInfo(patientEmail) {
     console.log("Cluster pentru pacientul: ", patientEmail);

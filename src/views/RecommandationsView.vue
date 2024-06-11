@@ -176,6 +176,34 @@ const getIconPath = (tag) => {
   }
 };
 
+
+setInterval(fetchRecommendations, 30000);
+
+function translateType(type)  {
+    switch(type) {
+        case 'Hypotension':
+            return 'Hipotensiune';
+        case 'Normal':
+            return 'Normală';
+        case 'Hypertension':
+            return 'Hipertensiune';
+        default:
+            return 'General';
+    }
+};
+
+function getColor(type) {
+    switch(type) {
+      case 'Hypotension':
+            return '#4da6ff';
+        case 'Normal':
+            return '#2eb82e';
+        case 'Hypertension':
+            return '#cc0000';
+        default:
+            return '#cc0099';
+    }
+}
 </script>
 
 
@@ -189,7 +217,7 @@ const getIconPath = (tag) => {
 
     <div class="content">
       <div class="header">
-        <h2 class="title">Recomandari</h2>
+        <h2 class="title">Recomandări</h2>
         <CustomButton v-if="isDoctor" class="add-button" @click="redirectToAdd">Adaugă recomandare</CustomButton>
       </div>
 
@@ -220,7 +248,7 @@ const getIconPath = (tag) => {
             <div class="card-content">
               <h3> #{{ recommendation.hashtag }}</h3>
               <p>{{ recommendation.text }}</p>
-              <p> Pentru: {{ recommendation.recommandationType }}</p>
+              <p :style="{ color: getColor(recommendation.recommandationType) }"> {{ translateType(recommendation.recommandationType) }}</p>
             </div>
             <div class="card-icon">
               <img :src="getIconPath(recommendation.hashtag)" alt="icon">
@@ -236,7 +264,7 @@ const getIconPath = (tag) => {
         />
       </div>
       <div v-else>
-        <p class="not-found"> Nu s-au gasit recomandari. </p>
+        <p class="not-found"> Nu s-au gasit recomandări. </p>
       </div>
     </div>
   </div>
@@ -370,7 +398,7 @@ const getIconPath = (tag) => {
 }
   
 .card {
-    width: calc(30% - 100px);
+    width: calc(30% - 80px);
     height: 150px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     border-radius: 10px;
@@ -383,6 +411,8 @@ const getIconPath = (tag) => {
   
 .card-content {
     flex: 1;
+    font-size: 17px;
+    font-weight: 500;
 }
 
 .card-icon img {

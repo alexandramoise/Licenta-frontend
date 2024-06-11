@@ -17,7 +17,7 @@
           </div>
       </div>
 
-      <CustomButton v-if="userType === 'patient'" class="navbar-item" @click="navigateTo('add-treatment')"> <i class="fas fa-capsules"></i> Tratament  </CustomButton>
+      <CustomButton v-if="userType === 'patient'" class="navbar-item" @click="navigateTo('patient-treatment')"> <i class="fas fa-capsules"></i> Tratament  </CustomButton>
 
       <CustomButton class="navbar-item" @click="navigateTo('recommandations')"> <i class="fas fa-lightbulb"> </i> Recomandări</CustomButton>
       <div class="profile-dropdown">
@@ -38,6 +38,7 @@ import { routerViewLocationKey, useRouter } from 'vue-router';
 import { requestNewPasswordPatient, getPatientByEmail } from '@/services/patient_service.js';
 import { requestNewPasswordDoctor, getDoctorByEmail } from '@/services/doctor_service.js';
 import router from '@/router';
+import { useRoute } from 'vue-router';
 
 export default {
   setup() {
@@ -47,6 +48,7 @@ export default {
     const navVisible = ref(false);
     const isDesktop = ref(true);
     //const router = useRouter();
+    const route = useRoute();
 
     const userType = localStorage.getItem('role');
     const userEmail = localStorage.getItem('user');
@@ -89,6 +91,12 @@ export default {
     };
 
 const navigateTo = async (path) => {
+  const routeToGo = route.path.slice(1,route.path.length + 1);
+
+  if(path == routeToGo ||(path === "home" && (routeToGo == "main-doctor" || routeToGo == "main-patient"))) {
+    window.location.reload(); 
+  }
+
   if(path === "home") {
     if(userType === "patient") {
         if(patientAge.value === 0 || userName.value === "first_name last_name") {
@@ -108,7 +116,10 @@ const navigateTo = async (path) => {
       router.push("appointments");
   } 
   else if(path === "add-patient") {
-    router.push({ name: "new", query: { accountType: "pacient" } });
+    router.push({ 
+      name: "new", 
+      query: { accountType: "pacient" } 
+    });
   }
   else if(path === "data") {
     router.push("my-profile");
@@ -117,7 +128,7 @@ const navigateTo = async (path) => {
     router.push("recommandations");
   } else if(path === "add-recommandation") {
     router.push("add-recommandation");
-  } else if(path === "add-treatment") {
+  } else if(path === "patient-treatment") {
     router.push("patient-treatment");
   } else if(path === "logout") {
     localStorage.clear();
@@ -125,11 +136,15 @@ const navigateTo = async (path) => {
   } else if(path === "change-password") {
     try {
       if(userType === 'patient') {
+
         await requestNewPasswordPatient(userEmail);
       } else {
         await requestNewPasswordDoctor(userEmail);
       }
-      router.push("change-password");
+      router.push({ 
+        name: "change-password", 
+        query: { for: userType.substring(0,1) } 
+      });
     } catch (error) {
       console.error('Error when requesting new password:', error);
     }

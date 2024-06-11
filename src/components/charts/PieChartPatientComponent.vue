@@ -1,4 +1,3 @@
-<!-- PieChartComponent.vue -->
 <template>
   <div>
     <PieChart :chart-data="chartData" :options="chartOptions" />
@@ -28,10 +27,6 @@ ChartJS.register(
 const PieChart = defineChartComponent('pie-chart', 'pie');
 
 const props = defineProps({
-  propertyShown: {
-    type: String,
-    required: true
-  },
   dataDistribution: {
     type: Object,
     required: true
@@ -51,7 +46,7 @@ const chartData = ref({
   labels: props.labels,
   datasets: [
     {
-      label: 'Procent din numarul total de pacienti',
+      label: 'Procent din numarul total de afectiuni',
       backgroundColor: props.colors,
       borderColor: props.colors,
       borderWidth: 1,
@@ -72,35 +67,18 @@ const chartOptions = ref({
     },
     title: {
       display: true,
-      text: 'Total Pacienti: 0'
+      text: 'Total Afectiuni: 0'
     }
   }
 });
 
 watch(() => props.dataDistribution, (newData) => {
   if (newData) {
-    if (props.propertyShown === "gender") {
-      chartData.value.datasets[0].data = [
-        newData.women,
-        newData.men,
-        newData.other
-      ];
-      chartOptions.value.plugins.title.text = 'Numar pacienti: ' + newData.totalPatients;
-    } else if (props.propertyShown === "womenDistribution") {
-      chartData.value.datasets[0].data = [
-        newData.womenWithHypertension,
-        newData.womenWithNormal,
-        newData.womenWithHypotension
-      ];
-      chartOptions.value.plugins.title.text = 'Numar femei: ' + newData.totalPatients;
-    } else if (props.propertyShown === "menDistribution") {
-      chartData.value.datasets[0].data = [
-        newData.menWithHypertension,
-        newData.menWithNormal,
-        newData.menWithHypotension
-      ];
-      chartOptions.value.plugins.title.text = 'Numar barbati: ' + newData.totalPatients;
-    }
+    chartData.value.datasets[0].data = [
+      newData.conditionsFavoringHypertension,
+      newData.conditionsFavoringHypotension,
+    ];
+    chartOptions.value.plugins.title.text = 'Numar afectiuni: ' + newData.totalConditions;
   }
 }, { immediate: true });
 

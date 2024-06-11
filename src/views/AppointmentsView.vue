@@ -58,6 +58,8 @@ onMounted(() => {
   fetchPaginatedAppointments();
 });
 
+setInterval(fetchPaginatedAppointments, 30000);
+
 const selectedDate = ref(null);
 
 watch(selectedDate, (newValue, oldValue) => {
@@ -168,7 +170,7 @@ async function cancelAppointment(apId) {
     if(userType === "doctor") {
         await doctorCancelesAppointment(apId);
     } else if(userType === "patient") {
-        await patientAppointments(apId);
+        await patientCancelesAppointment(apId);
     }   
 
     console.log(userType, " a dat cancel la ", apId);

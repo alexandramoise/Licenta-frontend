@@ -12,7 +12,7 @@ import CustomButton from '@/components/CustomButton.vue';
 import CustomInput from '@/components/CustomInput.vue';
 import CustomModal from '@/components/CustomModal.vue';
 import CustomLoader from '@/components/CustomLoader.vue';
-import LineChartComponent from '@/components/charts/LineChartComponent.vue';
+import StatisticsForOnePatient from '@/components/StatisticsForOnePatient.vue';
 import DateFiltering from '@/components/DateFiltering.vue';
 import router from '@/router';
 
@@ -75,8 +75,8 @@ if (route.query.patientId) {
     } 
 }
 
-onMounted(async () => {
-        try {
+async function getPatientDetails() {
+    try {
             latestAppointment.value = await getMostRecentOfPatientAppointments(patientEmail.value);
         } catch(error) {
             if(error.message === 'No appointments') {
@@ -107,7 +107,12 @@ onMounted(async () => {
        patientAppointments.value = appointments.map(a => a);
 
        fetchBloodPressures();
+}
+onMounted(async () => {
+    getPatientDetails();
 });
+
+setInterval(getPatientDetails, 30000);
 
 const treatmentHistory = ref(false);
 const medicalHistory = ref(false);
@@ -220,49 +225,6 @@ async function fetchBloodPressures() {
     } else {
         console.error("No content returned from the API");
     }
-}
-
-function exportToCsv() {
-    const csvHeader = 'DATA;SISTOLIC;DIASTOLIC;PULS;TIP\n';
-    const csvRows = bloodPressures.value.map(bp => {
-        let date = convertDateToSuitableFormat(bp.date);
-        let tendencyTranslation = '';
-
-        switch(bp.bloodPressureType) {
-            case 'Hypotension':
-                tendencyTranslation = 'Hipotensiune';
-                break;
-            case 'Normal':
-                tendencyTranslation = 'Normala';
-                break;
-            case 'Hypertension':
-                tendencyTranslation = 'Hipertensiune';
-                break;
-        }
-
-        return `${date};${bp.systolic};${bp.diastolic};${bp.pulse};${tendencyTranslation}`;
-    });
-
-    const csvContent = csvHeader + csvRows.join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    let csvFileName = "tensiuni " + patientEmail.value;
-    if (fromDate.value !== null && fromDate.value !== '') {
-        csvFileName += " de la " + fromDate.value;
-    } 
-
-    if (toDate.value !== null && toDate.value !== '') {
-        csvFileName += " pana la " + toDate.value;
-    } 
-
-    csvFileName += '.csv';
-
-    link.setAttribute('download', csvFileName);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
 }
 
 function redirectToAddTreatment() {
@@ -445,8 +407,8 @@ function closeDialog() {
                                 </div>
                             </div>
                         </div>
-                        <div v-else>
-                            <p style="color: green; text-align: center;"> Pacientul are tendinta Normala, e sanatos. </p>
+                        <div v-else class="not-found">
+                            <p> Pacientul are tendinta Normala, e sanatos. </p>
                         </div>
                     </div>
                     
@@ -497,20 +459,7 @@ function closeDialog() {
                     </div>
                 </div>
                 <div class="statistics-panel">
-                    <DateFiltering 
-                        @filter-dates="filterBloodPressuresByDate"
-                    />
-                    <div v-if="bloodPressures.length > 0">
-                        <LineChartComponent :bloodPressureData="bloodPressures" />
-
-                        <div class="file-container">
-                            <span class="file-message"> Salvati valoriile tensiunii intr-un fisier .CSV </span>
-                            <CustomButton class="export-button" @click="exportToCsv"> Creeaza fisier </CustomButton>
-                        </div>
-                    </div>
-                    <div v-else class="not-found">
-                        <p> Nu au fost gasite inregistrari ale tensiunii. </p>
-                    </div>                    
+                    <StatisticsForOnePatient :patientEmail="patientEmail" />
                 </div>
             </div>
         </div>
@@ -582,8 +531,21 @@ function closeDialog() {
     height: calc(100% - 70px);
 }
 
+.not-found {
+    display: flex;
+    justify-content: center;
+    align-items: center; 
+    height: 20%;
+    text-align: center;
+    font-size: 18px;
+    color: green;
+    font-weight: 600;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+
 .details-section {
-    width: 40%;
+    width: 90%;
     padding: 20px;
     padding-top: 10px;
     overflow-y: auto;
@@ -592,10 +554,9 @@ function closeDialog() {
 }
 
 .statistics-panel {
-    width: 60%;
+    width: 100%;
     padding: 20px;
     background-color: #f0f0f0;
-    box-shadow: -2px 0 5px rgba(0,0,0,0.1);
     overflow-y: auto;
     scrollbar-width: thin; 
     scrollbar-color: #c9c9c9 #ececec;
@@ -662,47 +623,6 @@ p {
     color: #555;
 }
 
-.file-container {
-    margin-top: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-}
-
-.file-message {
-    font-size: 16px;
-    font-weight: bold;
-    color: #4a4a4a;
-    font-family: Verdana, Geneva, Tahoma, sans-serif;
-}
-
-.export-button {
-    background-color: #e6f9e6;
-    color: #28a745;
-    font-weight: bold;
-    border: 2px solid #28a745;
-    border-radius: 8px;
-    padding: 10px 20px;
-    cursor: pointer;
-    font-size: 16px;
-}
-
-.export-button:hover {
-    background-color: #ccf2cc;
-}
-
-.not-found {
-    display: flex;
-    justify-content: center;
-    align-items: center; 
-    height: 100%;
-    text-align: center;
-    font-size: 20px;
-    font-weight: bold;
-    font-family: Arial, Helvetica, sans-serif;
-}
-
 @media(max-width: 920px) {
     .header {
         flex-direction: column;
@@ -734,7 +654,7 @@ p {
     }
 
     .details-section, .statistics-panel {
-        width: 100%;
+        width: 90%;
         height: calc((100vh - 250px) / 2);
         overflow-y: auto;
         scrollbar-width: thin; 

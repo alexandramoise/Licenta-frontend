@@ -48,20 +48,20 @@ onMounted(async () => {
     token.value = localStorage.getItem("token");
     availableUntil.value = localStorage.getItem("availableUntil");
 
-    if(localStorage.getItem("role") === "doctor") {
+    if(role === "doctor") {
         email.value = atob(route.query.patient);
-    } else {
+        loadPatientCluster();
+    } else if (role === "patient") {
         email.value = localStorage.getItem("user");
-    }
-
-    if (localStorage.getItem("role") === "patient") {
         const data = await getPatientByEmail(email.value);
 
-        if(data.acceptedSharingData !== true) {
+        if (data.acceptedSharingData !== true) {
             showTermsAndConditionsModal.value = true;
             acceptedSharingData.value = false;
+        } else {
+            loadPatientCluster();
         }
-    } else if (localStorage.getItem("role") !== "doctor") {
+    } else {
         notAllowed.value = true;
     }
 });
@@ -70,32 +70,38 @@ const cluster = ref(null);
 const clusterLabel = ref(0);
 const clusterEmails = ref([]);
 const clusterNames = ref([]);
+const clusterTreatments = ref([]);
 
 const isLoading = ref(false);
 
-onMounted(async () => {
-    isLoading.value = true;
-    try {
-        const result = await getPatientCluster(email.value);
-        if (result) {
-            cluster.value = result;
+async function loadPatientCluster() {
+    if (!notAllowed.value) {
+        isLoading.value = true;
+        try {
+            const result = await getPatientCluster(email.value);
+            if (result) {
+                cluster.value = result;
 
-            clusterLabel.value = cluster.value.clusterLabel + 1;
-            clusterEmails.value = cluster.value.patientEmails;
-            clusterNames.value = cluster.value.patientNames;
+                clusterLabel.value = cluster.value.clusterLabel + 1;
+                clusterEmails.value = cluster.value.patientEmails;
+                clusterNames.value = cluster.value.patientNames;
+                clusterTreatments.value = cluster.value.treatmentsInTheGroup.flat();
 
-            if (cluster.value.patientEmails && cluster.value.patientNames) {
-                createPatientPairs(cluster.value.patientEmails, cluster.value.patientNames);
+                if (cluster.value.patientEmails && cluster.value.patientNames) {
+                    createPatientPairs(cluster.value.patientEmails, cluster.value.patientNames);
+                }
+            } else {
+                console.error("Failed to fetch cluster data.");
             }
-        } else {
-            console.error("Failed to fetch cluster data.");
+        } catch (error) {
+            console.error("Error fetching cluster data: ", error);
+        } finally {
+            isLoading.value = false;
         }
-    } catch (error) {
-        console.error("Error fetching cluster data: ", error);
-    } finally {
-        isLoading.value = false;
     }
-});
+}
+
+setInterval(loadPatientCluster, 60000);
 
 const patientPairs = ref({
     emails: [],
@@ -116,17 +122,17 @@ const createPatientPairs = (patientEmails, patientNamesList) => {
 
 async function acceptTermsAndConditions() {
     await patientAcceptsSharingData(email.value);
-    console.log("A ACCEPTAT: ", email.value);
     acceptedSharingData.value = true;
     showTermsAndConditionsModal.value = false;
+    loadPatientCluster();
 }
 
 function declineTermsAndConditions() {
-  showTermsAndConditionsModal.value = false;
+    showTermsAndConditionsModal.value = false;
 }
 
 function showTermsAndConditionsPopup() {
-  showTermsAndConditionsModal.value = true;
+    showTermsAndConditionsModal.value = true;
 }
 </script>
 
@@ -147,15 +153,30 @@ function showTermsAndConditionsPopup() {
         <div class="content">
             <div class="group-info">
                 <p class="cluster-label"> Grupul: {{ clusterLabel }}</p>
-                    <div v-for="(email, index) in clusterEmails" :key="email" class="patient-info">
-                        <p> 
-                            <strong class="card-label"> Pacient {{ index + 1  }} </strong> <br> <br>
-                            <span class="card-label"> <i class="fas fa-user"></i> </span> {{ clusterNames[index] }}
-                            <span class="card-label"> <i class="far fa-envelope"></i> </span> {{ email }}</p> 
+                <div v-for="(email, index) in clusterEmails" :key="email" class="patient-info">
+                    <p> 
+                        <strong class="card-label"> Pacient {{ index + 1  }} </strong> <br> <br>
+                        <span class="card-label"> <i class="fas fa-user"></i> </span> {{ clusterNames[index] }}
+                        <span class="card-label"> <i class="far fa-envelope"></i> </span> {{ email }}</p> 
+                </div>
+
+                <div v-if="clusterTreatments.length !== 0">
+                    <p class="treatment-group-label"> Tratamente la nivelul grupului </p>
+                    <div v-for="treatment in clusterTreatments" :key="treatment.id" class="treatment-info">
+                        <p>
+                            <strong class="card-label">Pacient:</strong> {{ treatment.patientFirstName }} {{ treatment.patientLastName }}
+                            <strong class="card-label">Medicament:</strong> {{ treatment.medicineName }} x {{ treatment.doses }} buc. pe zi
+                        </p>
                     </div>
+                </div>
+                
+                <div v-else>
+                    <p class="no-treatments"> Niciun membru nu are tratamente în curs. </p>
+                </div>
+                
             </div>
             <div class="graph-section">
-                <p class="graph-label"> Grafice cu tensiuni ale pacienților din grup </p>
+                <p class="graph-label"> Grafice cu înregistrările tensiunii ale pacienților din grup </p>
                 <div v-for="(pair, index) in patientPairs.emails" :key="index" class="chart-container">
                     <LineChartForClusterComponent 
                         :patients="pair.filter(p => p !== null)" 
@@ -168,9 +189,6 @@ function showTermsAndConditionsPopup() {
     </div>
     <div v-else-if="!isAuthenticated">
         <NotAuthenticatedView />
-    </div>
-    <div v-else-if="isAuthenticated && notAllowed">
-        <NotAllowedView />
     </div>
 </template>
 
@@ -216,8 +234,31 @@ function showTermsAndConditionsPopup() {
     font-size: 1.3em;
     margin-bottom: 10px;
     text-align: center;
-    width: 100%;
+    width: 90%;
+    font-weight: bold;
     color: rgb(153, 7, 7);
+}
+
+.treatment-group-label {
+    font-size: 1.2em;
+    font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+    margin-top: 50px;
+    margin-bottom: 30px;
+    text-align: center;
+    font-weight: bold;
+    color: rgb(173, 7, 7);
+    text-decoration: underline;
+    width: 90%;
+}
+
+.no-treatments {
+    font-size: 1.1em;
+    font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+    margin-top: 50px;
+    text-align: center;
+    font-weight: bold;
+    color: rgb(173, 7, 7);
+    width: 90%;
 }
 
 .card-label {

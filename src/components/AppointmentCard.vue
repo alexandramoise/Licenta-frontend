@@ -47,10 +47,9 @@ onMounted(async () => {
 
 <template>
     <div class="card">
-        <p> <span class="title"> Pacient </span> {{ patientName }} </p>
-        <p> <span class="title"> Data </span> {{ newDate }} </p>
-        <p> <span class="title"> Tip </span> {{ props.visitType }} </p>
-        <p> <span class="title"> Motiv </span> {{ props.comment }} </p>
+        <p> <span class="title"> <i class="fas fa-user"></i> Pacient </span> {{ patientName }} <span class="title"> || Tip </span> {{ props.visitType }}</p>
+        <p> <span class="title"> <i class="fas fa-calendar-alt"></i> </span> {{ newDate }} </p>
+        <p> <span class="title"> <i class="fas fa-comment-dots"></i> </span> {{ props.comment }} </p>
     </div>
 
 </template>
@@ -63,17 +62,10 @@ onMounted(async () => {
     border-radius: 10px;
     padding: 15px;
     font-size: 17px;
-    font-weight: bold;
 }
 
 .title {
   color: #b80f20;
   font-weight: bold;
-}
-
-@media(max-width: 750px) {
-    .card {
-        width: 200px;
-    }
 }
 </style>
