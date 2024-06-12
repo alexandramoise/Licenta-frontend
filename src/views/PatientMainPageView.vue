@@ -8,7 +8,9 @@ import DateFiltering from '@/components/DateFiltering.vue';
 import BloodPressureCard from "../components/BloodPressureCard.vue";
 import StatisticsForOnePatient from '@/components/StatisticsForOnePatient.vue';
 import Pagination from '@/components/Pagination.vue';
+
 import { getBloodPressures, getBloodPressureById, deleteBloodPressure } from "../services/bloodpressure_service.js";
+import { getPatientByEmail } from '@/services/patient_service.js';
 import router from '@/router';
 
 import NotAuthenticatedView from './NotAuthenticatedView.vue';
@@ -43,6 +45,19 @@ onMounted(() => {
 
 const userEmail = localStorage.getItem('user');
 const role = localStorage.getItem("role");
+const name = ref('');
+
+onMounted(async () => {
+    try {
+        const patientData = await getPatientByEmail(userEmail);
+        name.value = patientData.fullName;
+        if(patientData.fullName.toLowerCase() === "first_name last_name" || patientData.age == 0) {
+            router.push("my-profile");
+        }
+    } catch(error) {
+        console.error(error.message);
+    }
+})
 
 // 50 trackings per page to balance the load on the system and to ensure the line chart shows a significant evolution without overwhelming the system with hundreds of data points in a single request.
 const pageSize = 50; 
@@ -79,8 +94,10 @@ async function fetchBloodPressures() {
 
     try {
         if(role === "patient") {
+            isLoading.value = true;
             const data = await getBloodPressures(userEmail, fromDate.value, toDate.value, pageSize, currentPage.value - 1);
- 
+            isLoading.value = false;
+
             if(data && data.content) {
                 if(data.content.length !== 0) {
                     bloodPressures.value = data.content.map(b => b);
@@ -147,12 +164,17 @@ function openModal(bpId) {
 }
 
 async function deleteBp(bpId) {
+    isLoading.value = true;
+    modalShow.value = false;
     const data = await deleteBloodPressure(bpId);
+    isLoading.value = false;
     
     if(data === 200) {
         modalShow.value = false;
         bloodPressures.value = bloodPressures.value.filter(bp => bp.id !== bpId);
     }
+
+    fetchBloodPressures();
 }
 
 function closeDialog() {
@@ -236,7 +258,7 @@ onMounted(() => {
             </div>
     
             <div class="statistics-panel">
-                <StatisticsForOnePatient :patientEmail="userEmail" />
+                <StatisticsForOnePatient :patientEmail="userEmail" :patientName="name" />
             </div>
         </div>
     </div>

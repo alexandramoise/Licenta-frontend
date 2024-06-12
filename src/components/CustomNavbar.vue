@@ -76,7 +76,6 @@ export default {
          user = await getDoctorByEmail(userEmail);
       } else {
          user = await getPatientByEmail(userEmail); 
-         patientAge.value = user.age;
       }
 
       userName.value = user.fullName;
@@ -98,21 +97,8 @@ const navigateTo = async (path) => {
   }
 
   if(path === "home") {
-    if(userType === "patient") {
-        if(patientAge.value === 0 || userName.value === "first_name last_name") {
-          router.push("my-profile");
-        } else {
-          router.push("main-patient");
-        }
-    } else {
-        if(userName.value === "first_name last_name") {
-            router.push("my-profile");
-        } else {
-            router.push("main-doctor");
-        }
-    }
-  } 
-  else if(path === "appointments") {
+    router.push("main-" + userType)
+  } else if(path === "appointments") {
       router.push("appointments");
   } 
   else if(path === "add-patient") {

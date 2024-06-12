@@ -85,4 +85,7 @@ watch(() => props.dataDistribution, (newData) => {
 </script>
 
 <style scoped>
+div {
+  height: 35vh;
+}
 </style>

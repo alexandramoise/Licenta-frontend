@@ -39,7 +39,6 @@ onMounted(() => {
     availableUntil.value = localStorage.getItem("availableUntil");
 });
 
-
 const userType = localStorage.getItem('role');
 const isDoctor = ref(userType == "doctor");
 
@@ -239,6 +238,7 @@ function getColor(type) {
           <option value="">General</option>
           <option class="type-option" v-for="t in types" :key="t" :value="t">{{ t }}</option>
         </select>
+
         <button v-if="selectedTag || selectedType" @click="clearFilters()" class="clear-filter-button">Sterge Filtre</button>
       </div>
 

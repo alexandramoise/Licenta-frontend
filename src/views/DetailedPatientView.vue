@@ -80,7 +80,7 @@ async function getPatientDetails() {
             latestAppointment.value = await getMostRecentOfPatientAppointments(patientEmail.value);
         } catch(error) {
             if(error.message === 'No appointments') {
-                latestAppointment.value = 'Pacientul nu are programari';
+                latestAppointment.value = 'Pacientul nu a avut programări';
             } else if(error.message === 'No past appointments') {
                 latestAppointment.value = 'Doar programari viitoare';
             }
@@ -287,7 +287,10 @@ function openConfirmModal(id) {
 }
 
 async function endSelectedTreatment(id) {
+    confirmModalShow.value = false;
+    isLoading.value = true;
     const data = await endTreatment(id);
+    isLoading.value = false;
     if(data === 200) {
         confirmModalShow.value = false;
         
@@ -322,13 +325,12 @@ function closeDialog() {
                     <div v-if="!treatmentHistory && !medicalHistory && !visitsHistory"> 
                         <h2 v-if="medicalCondition !== 'Normala'" style="text-align: center;"> Pacientul {{ patientName }} sufera de <span :style="{ color: tendencyColor }"> {{ medicalCondition }} </span> </h2>
                         <h3>Ultima programare:</h3>
-                        <div v-if="latestAppointment && (latestAppointment === 'Pacientul nu are programari' || latestAppointment === 'Doar programari viitoare')">
+                        <div v-if="latestAppointment && (latestAppointment === 'Pacientul nu a avut programări' || latestAppointment === 'Doar programari viitoare')">
                             {{ latestAppointment }}
                         </div>
                         <div v-else-if="latestAppointment && (typeof latestAppointment == 'object')" class="card">
-                            <p> Data: {{ convertDateToSuitableFormat(latestAppointment.date) }}</p>
-                            <p> Tip: {{ latestAppointment.visitType }}</p>
-                            <p> Motiv: {{ latestAppointment.comment }}</p>
+                            <p> <strong> Data: </strong> {{ convertDateToSuitableFormat(latestAppointment.date) }} || <strong> Tip </strong>{{ latestAppointment.visitType }}</p>
+                            <p> <strong> Motiv </strong> {{ latestAppointment.comment }}</p>
                         </div>
                         
                         <h3>Afectiuni curente:</h3>
@@ -345,12 +347,10 @@ function closeDialog() {
                         
                         <h3>Ultimul medicament adăugat:</h3>
                         <div v-if="patientTreatments.length !== 0" class="card">
-                            <p>Afectiune: {{ patientTreatments[0].medicalConditionName }}</p>
-                            <p>Nume medicament: {{ patientTreatments[0].medicineName }}</p>
-                            <p>Doza zilnica: {{ patientTreatments[0].doses }}</p>
-                            <p>Comentariu: {{ patientTreatments[0].comment }}</p>
-                            <p>Data inceput: {{ convertDateOnly(patientTreatments[0].startingDate) }}</p>
-                            <p>Data final: {{ patientTreatments[0].endingDate != null ? convertDateOnly(patientTreatments[0].endingDate) : 'nu e incheiat' }}</p>
+                            <p> <strong> Medicament </strong> {{ patientTreatments[0].medicineName }} <strong> x </strong> {{ patientTreatments[0].doses }} buc. pe zi</p>
+                                    <p> <strong> Comentariu: </strong> {{ patientTreatments[0].comment }}</p>
+                                    <p> <strong> Din </strong> {{ convertDateOnly(patientTreatments[0].startingDate) }}
+                                     <strong v-if="patientTreatments[0].endingDate !== null"> până în </strong> {{ patientTreatments[0].endingDate != null ? convertDateOnly(patientTreatments[0].endingDate) : '' }}</p>
                         </div>
                         <div v-else>
                             <p>Pacientul {{ patientName }} nu are niciun tratament inregistrat</p>
@@ -378,12 +378,10 @@ function closeDialog() {
 
                             <div v-if="filteredTreatments.length !== 0">
                                 <div v-for="treatment in filteredTreatments" :key="treatment.id" class="card" :style="conditionStyles(treatment)" @click="selectCard(treatment.id)">
-                                    <p>Afectiune: {{ treatment.medicalConditionName }}</p>
-                                    <p>Nume tratament: {{ treatment.medicineName }}</p>
-                                    <p>Doza zilnica: {{ treatment.doses }}</p>
-                                    <p>Data inceput: {{ convertDateOnly(treatment.startingDate) }}</p>
-                                    <p>Data final: {{ treatment.endingDate != null ? convertDateOnly(treatment.endingDate) : 'nu e incheiat' }}</p>
-                                    <p> Comentariu: {{ treatment.comment }}</p>
+                                    <p> <strong> Medicament </strong> {{ treatment.medicineName }} <strong> x </strong> {{ treatment.doses }} buc. pe zi</p>
+                                    <p> <strong> Comentariu: </strong> {{ treatment.comment }}</p>
+                                    <p> <strong> Din </strong> {{ convertDateOnly(treatment.startingDate) }}
+                                     <strong v-if="treatment.endingDate !== null"> până în </strong> {{ treatment.endingDate != null ? convertDateOnly(treatment.endingDate) : '' }}</p>
                                     <div v-if="selectedCardId === treatment.id && treatment.endingDate === null" class="buttons">
                                         <CustomButton  class="button-element" @click="redirectToUpdateTreatment(treatment.id)"> <i class="fas fa-pencil-alt"></i> </CustomButton>
                                         <CustomButton  class="button-element" @click="openConfirmModal(treatment.id)"> <i class="fas fa-times-circle"></i> </CustomButton>
@@ -422,6 +420,9 @@ function closeDialog() {
                                 </li>
                             </ul>
                         </div>
+                        <div v-else>
+                            <p>Pacientul {{ patientName }} nu are afecțiuni înregistrate </p>
+                        </div>
                     </div>
                     
                     <!-- sectiune vizite -->
@@ -443,23 +444,22 @@ function closeDialog() {
                             />
                         <div v-if="filteredAppointments.length !== 0">
                             <div v-for="appointment in filteredAppointments" :key="appointment.id" class="card" :style="conditionAppointmentStyle(appointment)">
-                                <p>Tip vizită: {{ appointment.visitType }}</p>
-                                <p>Motiv: {{ appointment.comment }}</p>
-                                <p>Data: {{ convertDateToSuitableFormat(appointment.date) }}</p>
+                                <p> <strong> Data: </strong> {{ convertDateToSuitableFormat(appointment.date) }} || <strong> Tip </strong>{{ appointment.visitType }}</p>
+                            <p> <strong> Motiv </strong> {{ appointment.comment }}</p>
                             </div>
                         </div>
                         <div v-else>
-                                <div v-if="appointmentComment !== ''">
-                                    <p>Pacientul {{ patientName }} nu are nicio vizita din cauza {{ appointmentComment }} </p>
-                                </div>
-                                <div v-else>
-                                    <p>Pacientul {{ patientName }} nu are niciun tratament prescris </p>
-                                </div>
+                            <div v-if="appointmentComment !== ''">
+                                <p>Pacientul {{ patientName }} nu are nicio vizita din cauza {{ appointmentComment }} </p>
                             </div>
+                            <div v-else>
+                                <p>Pacientul {{ patientName }} nu a avut programări. </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="statistics-panel">
-                    <StatisticsForOnePatient :patientEmail="patientEmail" />
+                    <StatisticsForOnePatient :patientEmail="patientEmail" :patientName="patientName"/>
                 </div>
             </div>
         </div>
@@ -479,6 +479,19 @@ function closeDialog() {
     width: 100vw;
     background-color: #f8f9fa;
     overflow-y: hidden;
+}
+
+.loading-animation {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(255, 255, 255, 0.5);
+    z-index: 1000; /* is positioned above other components */
 }
 
 .content {
@@ -616,11 +629,13 @@ ul li {
     padding: 10px;
     border-radius: 5px;
     width: 85%;
+    font-size: 17px;
 }
 
 p {
     margin: 0;
     color: #555;
+    font-size: 18px;
 }
 
 @media(max-width: 920px) {

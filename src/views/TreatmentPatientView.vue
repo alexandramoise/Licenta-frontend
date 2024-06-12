@@ -60,7 +60,7 @@ const selectedDate = ref(null);
 const selectedTime = ref([]);
 
 const isLoading = ref(false);
-const treatmentsNotFound = ref(false);
+const treatmentsFound = ref(false);
 
 // used to convert todays date to yyyy-mm-dd format
 function formatDate(date) {
@@ -83,13 +83,12 @@ onMounted(async () => {
     patientTendency.value = patientData.tendency;
     medicalCondition.value = patientTendency.value === 'Hypertension' ? 'Hipertensiune' : patientTendency.value === 'Hypotension' ? 'Hipotensiune' : '';
 
-    
     if (medicalCondition.value) {
         isLoading.value = true;
         const treatments = await getCurrentTreatmentsForMedicalCondition(patientEmail.value, medicalCondition.value, null, null);
         patientTreatments.value = treatments;
         if (patientTreatments.value.length > 0) {
-            treatmentsNotFound.value = true;
+            treatmentsFound.value = true;
             selectCard(patientTreatments.value[0].id);
         }
 
@@ -243,7 +242,7 @@ function getDayMoment(time) {
             <CustomLoader size="100" />
         </div>
 
-        <div class="content" v-if="treatmentsNotFound">
+        <div class="content" v-if="treatmentsFound">
                 <div class="calendar-section">
                     <div class="calendar-container">
                         <CustomCalendar @selectedDate="getDateFromCalendar" />

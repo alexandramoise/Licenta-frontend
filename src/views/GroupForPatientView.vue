@@ -152,7 +152,7 @@ function showTermsAndConditionsPopup() {
 
         <div class="content">
             <div class="group-info">
-                <p class="cluster-label"> Grupul: {{ clusterLabel }}</p>
+                <p class="cluster-label"> Grupul: {{ clusterLabel }} <span v-if="clusterLabel == -1"> - pacienți fără înregistrări ale tensiunii </span></p>
                 <div v-for="(email, index) in clusterEmails" :key="email" class="patient-info">
                     <p> 
                         <strong class="card-label"> Pacient {{ index + 1  }} </strong> <br> <br>

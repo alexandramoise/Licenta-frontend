@@ -3,8 +3,8 @@ import {ref, watch} from 'vue';
 import router from "../router";
 import CustomInput from '@/components/CustomInput.vue';
 import CustomModal from '@/components/CustomModal.vue';
-import { changePasswordPatient } from '@/services/patient_service.js';
-import { changePasswordDoctor } from '@/services/doctor_service.js';
+import { changePasswordPatient, getPatientByEmail } from '@/services/patient_service.js';
+import { changePasswordDoctor, getDoctorByEmail } from '@/services/doctor_service.js';
 import { useRoute } from 'vue-router';
 
 const emailText = ref('');
@@ -78,7 +78,8 @@ async function saveChanges() {
                     response = await changePasswordPatient(changePasswordDto);
                 } else if(userType === 'doctor') {
                     response = await changePasswordDoctor(changePasswordDto);
-                }
+                } 
+
                 if(response === 200) {
                     modalTitle.value = "Succes";
                     modalMessage.value = "Veti fi redirectionat la pagina de login";

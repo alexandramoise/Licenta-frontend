@@ -89,7 +89,7 @@ function redirectToGroupInfo(patientEmail) {
                     @click="redirectToGroupInfo(cluster.patientEmails[0])"
                     :class="['cluster-card', index % 2 === 0 ? 'left' : 'right']">
                     
-                    <p class="cluster-label"> Grupul: {{ cluster.clusterLabel + 1 }}</p>
+                    <p class="cluster-label"> Grupul: {{ cluster.clusterLabel + 1 }} <span v-if="cluster.clusterLabel == -1"> - pacienți fără înregistrări ale tensiunii</span></p>
                     <div v-for="(email, index) in cluster.patientEmails" :key="email" class="patient-info">
                         <p> 
                             <strong class="card-label"> Pacient {{ index + 1  }} </strong> <br> <br>

@@ -287,7 +287,7 @@ setInterval(fetchPatients, 60000);
                     <StatisticsForListOfPatients :patients="patientsList" />
                 </div>
                 <div v-if="statisticsForOne && patientsList.length > 0">
-                    <StatisticsForOnePatient :patientEmail="patientsList[0].email" />
+                    <StatisticsForOnePatient :patientEmail="patientsList[0].email" :patientName="patientsList[0].fullName"/>
                 </div>
             </div>
         </div>

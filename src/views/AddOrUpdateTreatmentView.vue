@@ -151,11 +151,13 @@ async function createOrUpdateTreatment() {
             if(update.value) {
                 if(hasChanges) {
                     data = await updateTreatment(route.query.updateId, updateTreatmentDto);
+                    isLoading.value = false;
                 } else {
                     return;
                 }
             } else {
                 data = await addTreatment(treatmentDto);
+                isLoading.value = false;
             }
 
             isLoading.value = false;
@@ -200,7 +202,7 @@ function closeDialog() {
 
 
 <template>
-    <div class="page" v-if="isAuthenticated && !notFoundError && !notAllowed && !isLoading">
+    <div class="page" v-if="isAuthenticated && !notFoundError && !notAllowed">
         <CustomNavbar />
         <div v-if="patientMedicalCondition !== 'Normala'" class="form-container">
             <div class="form-content">
@@ -241,10 +243,6 @@ function closeDialog() {
                 </div>
                 
                 <CustomButton @click="createOrUpdateTreatment" class="submit-button">Gata</CustomButton>
-                
-                <div v-if="isLoading" class="loading-animation">
-                    <CustomLoader size="100" />
-                </div>
             </div>
         </div>
         <div v-else>
@@ -258,15 +256,19 @@ function closeDialog() {
             :message="modalMessage"
             @close="closeDialog"
         />
+
+        <div v-if="isLoading" class="loading-animation">
+            <CustomLoader size="100" />
+        </div>
         
     </div>
     <div v-else-if="!isAuthenticated && !notFoundError && !notAllowed">
         <NotAuthenticatedView />
     </div>
-    <div v-else="notFoundError && !notAllowed">
+    <div v-else-if="notFoundError && !notAllowed">
         <NotFoundView />
     </div>
-    <div v-else="notAllowed">
+    <div v-else-if="notAllowed">
         <NotAllowedView />
    </div>
 </template>

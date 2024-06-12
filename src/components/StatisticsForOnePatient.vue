@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, capitalize } from 'vue';
 import { getBloodPressures } from "../services/bloodpressure_service.js";
 
 import DateFiltering from '@/components/DateFiltering.vue';
@@ -13,6 +13,10 @@ const props = defineProps({
         type: String,
         required: true,
     },
+    patientName: {
+        type: String,
+        required: true,
+    }
 });
 
 const fromDate = ref(null);
@@ -57,7 +61,12 @@ onMounted(() => {
     fetchStatisticsForPatient(props.patientEmail);
 });
 
-const conditions = ref([]);
+const conditions = ref({
+    name: '',
+    increasesBp: false,
+    reducesBp: false
+});
+
 const favoringConditions = ref({
     totalConditions: 0,
     conditionsFavoringHypertension: 0,
@@ -80,7 +89,11 @@ async function fetchStatisticsForPatient(email) {
     averageValues.value.averageDiastolic = statisticsData.averageDiastolic;
     averageValues.value.averagePulse = statisticsData.averagePulse;
 
-    conditions.value = statisticsData.conditions;
+    conditions.value = statisticsData.conditions.map(condition => ({
+        name: condition.name,
+        increasesBp: condition.increasesBP,
+        reducesBp: condition.reducesBP
+    }));
 
     favoringConditions.value = {
         totalConditions: statisticsData.conditions.length,
@@ -152,7 +165,7 @@ function exportToCsv() {
 
 <template>
     <div class="statistics-panel">
-        <p class="statistics-header"> Statistica {{ props.patientEmail }}
+        <p class="statistics-header"> Statistica {{ props.patientName }}
             <span v-if="fromDate!== null && fromDate !== ''"> incepand cu {{ convertDate(fromDate) }}</span> 
             <span v-if="toDate!== null && toDate !== ''"> pana la {{ convertDate(toDate) }}</span> 
         </p>
@@ -170,11 +183,32 @@ function exportToCsv() {
             <p> {{ props.patientEmail }} nu are tensiuni înregistrate. </p>
         </div>
 
+        <div class="medium-values-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Sistolic - val. medie</th>
+                            <th>Diastolic - val. medie</th>
+                            <th>Puls - val. medie </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td> {{ averageValues.averageSystolic }}</td>
+                            <td> {{ averageValues.averagePulse }}</td>
+                            <td> {{ averageValues.averagePulse }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
         <div v-if="conditions.length > 0">
             <div class="conditions-list">
                 <p class="favoring-condition-message">Afecțiuni:</p>
                 <ul>
-                    <li v-for="condition in conditions" :key="condition">{{ condition }}</li>
+                    <li v-for="condition in conditions" :key="condition.name" :style="{backgroundColor: condition.increasesBp ? 'rgba(255, 112, 77, 0.6)' : 'rgba(128, 229, 255, 0.6)'}">
+                        {{ condition.name }} <span style="float: right"> <i>  {{ condition.increasesBp ? 'crește' : 'reduce' }} </i> tensiunea </span>
+                    </li>
                 </ul>
             </div>
 
@@ -258,6 +292,36 @@ function exportToCsv() {
     margin: auto;
 }
 
+.medium-values-table {
+    margin: 20px auto;
+    text-align: center;
+}
+
+table {
+    margin: 0 auto;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+}
+
+th {
+    background-color: #f6f6f6;
+    font-weight: bold;
+}
+
+tr {
+    background-color: #f2f2f2;
+}
+
+tr:hover {
+    background-color: #f1f1f1;
+}
+
 ul {
     list-style-type: none;
     padding: 0;
@@ -265,7 +329,8 @@ ul {
 
 ul li {
     background: #fcfcfcc6;
-    font-size: 17px;
+    font-size: 18px;
+    font-family: 'Times New Roman', Times, serif;
     margin: 5px 0;
     padding: 10px;
     border-radius: 5px;

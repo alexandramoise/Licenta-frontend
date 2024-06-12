@@ -3,6 +3,7 @@ import CustomNavbar from "@/components/CustomNavbar.vue";
 import CustomInput from "@/components/CustomInput.vue";
 import CustomButton from "@/components/CustomButton.vue";
 import CustomModal from "../components/CustomModal.vue";
+import CustomLoader from "@/components/CustomLoader.vue";
 import { addBloodPressure, updateBloodPressure, getBloodPressureById } from "@/services/bloodpressure_service.js";
 import { onMounted, ref, watch, computed} from 'vue';
 import { useRoute  } from "vue-router";
@@ -34,6 +35,7 @@ watch([token, availableUntil], ([newToken, newExpireDate]) => {
 });
 
 const notAllowed = ref(false);
+const isLoading = ref(false);
 onMounted(() => {
     currentDate.value = new Date();
     token.value = localStorage.getItem("token");
@@ -93,6 +95,16 @@ async function addOrUpdate() {
         const dateFromInput = new Date(dateInput.value);
         const adjustedDate = dateFromInput.toISOString();
 
+        const selectedDateToCompare = new Date(adjustedDate);
+        const currentDate = new Date();
+    
+        if(selectedDateToCompare > currentDate) {
+            modalShow.value = true;
+            modalTitle.value = "Problema";
+            modalMessage.value = "Data selectata nu poate fi in viitor";
+            return;
+        }
+
         try {
             const bloodPressureDto = {
                 systolic: systolicInput.value,
@@ -105,9 +117,13 @@ async function addOrUpdate() {
 
             let data;
             if(route.query.updateId) {
+                isLoading.value = true;
                 data = await updateBloodPressure(bloodPressureDto, route.query.updateId);
+                isLoading.value = false;
             } else {
+                isLoading.value = true;
                 data = await addBloodPressure(bloodPressureDto, userEmail);
+                isLoading.value = false;
             }
             
             modalShow.value = true;
@@ -116,14 +132,13 @@ async function addOrUpdate() {
             return data;
 
         } catch(error) {
+            isLoading.value = false;
             modalTitle.value = "Eroare";
             modalShow.value = true;
             if(error.message === "No patient account for this email address") {
                 modalMessage.value = "Nu exista un cont asociat adresei de mail " + userEmail;
             } else if(error.message === "Invalid values for diastolic and/or systolic") {
                 modalMessage.value = "Valorile introduse sunt invalide, nu apartin unui interval";
-            } else if(error.message === "Date can not be in the future") {
-                modalMessage.value = "Nu puteti alege o data in viitor";
             } else if(error.message === "Uneditable!") {
                 modalMessage.value = "Inregistrarea nu este editabila";
             } else if(error.message === "BP Not found") {
@@ -151,6 +166,10 @@ function redirectToDashboard() {
 <template>
   <div class="page" v-if="isAuthenticated && !notFoundError && !notAllowed">
     <CustomNavbar />
+
+    <div v-if="isLoading" class="loading-animation">
+        <CustomLoader size="100" />
+    </div>
 
     <div class="form-container">
       <div class="add-form">
@@ -239,6 +258,19 @@ function redirectToDashboard() {
     width: 100vw;
     background-color: #b80f20;
     overflow-y: hidden;
+}
+
+.loading-animation {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(255, 255, 255, 0.5); 
+    z-index: 1000; /* is positioned above other components */
 }
 
 .form-container {

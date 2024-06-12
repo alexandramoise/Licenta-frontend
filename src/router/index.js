@@ -1,4 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { getPatientByEmail } from '@/services/patient_service'
+import { getDoctorByEmail } from '@/services/doctor_service'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -117,5 +119,40 @@ const router = createRouter({
     },
   ]
 })
+
+router.beforeEach(async (to, from, next) => {
+  const role = localStorage.getItem("role");
+  const userEmail = localStorage.getItem("user");
+
+  if (to.name !== "login" && to.name !== "change-password" && to.name !== "home") {
+    if (role && userEmail) {
+      try {
+        let userData = null;
+
+        if (role === "doctor") {
+          userData = await getDoctorByEmail(userEmail);
+        } else if (role === "patient") {
+          userData = await getPatientByEmail(userEmail);
+        }
+
+        if (userData) {
+          const completedProfileInfo = (userData.fullName.toLowerCase() === "first_name last_name") || (userData.age === 0);
+          if (completedProfileInfo && to.name !== "my-profile") {
+            return next({ name: 'my-profile' });
+          }
+        } else {
+          return next({ name: 'not-authenticated' });
+        }
+      } catch (error) {
+        console.error(error.message);
+        return next({ name: 'not-authenticated' });
+      }
+    } else {
+      return next({ name: 'not-authenticated' });
+    }
+  } 
+  
+  next();
+});
 
 export default router

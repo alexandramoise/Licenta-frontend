@@ -78,7 +78,8 @@ const fetchBloodPressureData = async () => {
     const email = props.patients[i];
     const name = props.patientNames[i];
 
-    const data = await getBloodPressures(email, null, null, 500, 0);
+    const data = await getBloodPressures(email, null, null, 50, 0);
+    console.log("EMAIL: ", email, " VALORI: ", data.content);
 
     if (data && data.content) {
       const hue = (i * 30) % 360; 
@@ -105,7 +106,7 @@ const fetchBloodPressureData = async () => {
     }
   }
 
-  chartData.value.labels = Array.from(labels).sort((a, b) => new Date(a) - new Date(b));
+  chartData.value.labels = Array.from(labels).sort((a, b) => new Date(b) - new Date(a));
   chartData.value.datasets = datasets;
 };
 
