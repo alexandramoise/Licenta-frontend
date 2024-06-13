@@ -62,7 +62,7 @@ const chartOptions = {
   },
   scales: {
     x: {
-      display: false // Ascunde etichetele de pe axa Ox
+      display: false 
     },
     y: {
       beginAtZero: false
@@ -72,7 +72,7 @@ const chartOptions = {
 
 const fetchBloodPressureData = async () => {
   const datasets = [];
-  const labels = new Set();
+  const labels = [];
 
   for (let i = 0; i < props.patients.length; i++) {
     const email = props.patients[i];
@@ -88,7 +88,8 @@ const fetchBloodPressureData = async () => {
         borderColor: `hsl(${hue}, 70%, 50%)`,
         backgroundColor: `hsl(${hue}, 70%, 50%)`,
         data: data.content.map(dp => {
-          labels.add(new Date(dp.date).toLocaleDateString());
+          labels.push(new Date(dp.date).toLocaleDateString());
+          console.log("ADAUG IN SET: ", new Date(dp.date).toLocaleDateString());
           return dp.systolic;
         }),
         fill: false,
@@ -96,7 +97,7 @@ const fetchBloodPressureData = async () => {
 
       const diastolicData = {
         label: `Diastolic - ${name}`,
-        borderColor: `hsl(${hue + 180}, 70%, 50%)`, // Folosirea unei culori complementare
+        borderColor: `hsl(${hue + 180}, 70%, 50%)`,
         backgroundColor: `hsl(${hue + 180}, 70%, 50%)`,
         data: data.content.map(dp => dp.diastolic),
         fill: false,
@@ -106,7 +107,7 @@ const fetchBloodPressureData = async () => {
     }
   }
 
-  chartData.value.labels = Array.from(labels).sort((a, b) => new Date(b) - new Date(a));
+  chartData.value.labels = labels;
   chartData.value.datasets = datasets;
 };
 

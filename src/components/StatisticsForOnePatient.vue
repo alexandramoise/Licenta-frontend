@@ -144,7 +144,7 @@ function exportToCsv() {
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    let csvFileName = "tensiuni " + props.patientEmail;
+    let csvFileName = "tensiuni " + props.patientName;
     if (fromDate.value !== null && fromDate.value !== '') {
         csvFileName += " de la " + fromDate.value;
     } 
@@ -180,7 +180,7 @@ function exportToCsv() {
             </div>
         </div>
         <div v-else class="not-found">
-            <p> {{ props.patientEmail }} nu are tensiuni înregistrate. </p>
+            <p> {{ props.patientName }} nu are tensiuni înregistrate. </p>
         </div>
 
         <div class="medium-values-table">
@@ -220,7 +220,7 @@ function exportToCsv() {
                 />
         </div>
         <div v-else class="not-found">
-            <p> {{ props.patientEmail }} nu are afecțiuni adăugate. </p>
+            <p> {{ props.patientName }} nu are afecțiuni adăugate. </p>
         </div> 
 
         <div class="favoring-condition-message">

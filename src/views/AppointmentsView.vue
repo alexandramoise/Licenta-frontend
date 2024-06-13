@@ -357,7 +357,7 @@ async function cancelAppointment(apId) {
 @media (max-width: 600px){
     .content {
         grid-template-columns: 1fr; 
-        grid-template-rows: 40% 60%; 
+        grid-template-rows: 50% 50%; 
         overflow-x: hidden;
     }
 
@@ -367,7 +367,7 @@ async function cancelAppointment(apId) {
     }
 
     .calendar-container {
-        width: 90%; 
+        width: 80%; 
         max-width: none; 
         margin: 0;
         height: auto; 

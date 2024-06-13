@@ -562,6 +562,7 @@ function closeDialog() {
     padding: 20px;
     padding-top: 10px;
     overflow-y: auto;
+    margin-bottom: 40px;
     scrollbar-width: thin; 
     scrollbar-color: #c9c9c9 #ececec;
 }
@@ -579,6 +580,7 @@ function closeDialog() {
     position: relative;
     background-color: white;
     padding: 20px;
+    margin-top: 20px;
     margin-bottom: 20px;
     border-radius: 8px;
     width: 80%;
