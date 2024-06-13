@@ -1,6 +1,6 @@
 <template>
   <div>
-    <PieChart :chart-data="chartData" :options="chartOptions" />
+    <DonutChart :chart-data="chartData" :options="chartOptions" />
   </div>
 </template>
 
@@ -24,7 +24,7 @@ ChartJS.register(
   PieController
 );
 
-const PieChart = defineChartComponent('pie-chart', 'pie');
+const DonutChart = defineChartComponent('donut-chart', 'pie');
 
 const props = defineProps({
   dataDistribution: {
@@ -57,6 +57,7 @@ const chartData = ref({
 
 const chartOptions = ref({
   responsive: true,
+  cutout: '50%', // Set the cutout to create the donut effect
   plugins: {
     legend: {
       display: true
@@ -86,6 +87,6 @@ watch(() => props.dataDistribution, (newData) => {
 
 <style scoped>
 div {
-  height: 35vh;
+  height: 32vh;
 }
 </style>

@@ -248,37 +248,38 @@ function getDayMoment(time) {
                         <CustomCalendar @selectedDate="getDateFromCalendar" />
                     </div>
                 </div>
-                <div class="treatment-administration">
-                    <div class="treatment-administration-content">
-                        <p class="title"> Administrări medicament <span> {{ medicineName.toUpperCase() }} </span> în data de: <span> {{ convertDateOnly(selectedDate) }} </span> </p>
-                        <p class="text">Doza zilnica <span style="color: rgb(3, 60, 130);"> prescrisa: </span> <span> {{ treatmentDoses }} </span> buc. pe zi </p>
-                        <p class="text"> Doze <span style="color: rgb(1, 110, 45);"> administrate: </span> <span> {{ treatmentAdministrations.length }} </span> </p>
-                        <ul>
-                            <li v-for="admin in treatmentAdministrations" :key="admin.id" class="admin-item"> {{ getDayMoment(convertTime(admin.administrationDate).substring(0,2)) }} la ora {{ convertTime(admin.administrationDate) }}</li>
-                        </ul>
-                        <div class="dose-buttons-container">
-                        <ul class="dose-buttons" v-if="treatmentAdministrations.length < treatmentDoses">
-                            <li v-for="i in range(treatmentAdministrations.length + 1, treatmentDoses)" :key="'add-dose-' + i" class="dose-item">
-                                <label for="time-input">Alegeti o ora</label>
-                                <CustomInput id="time-input" :type="'time'" @input="event => handleTimeChange(event, i)" />
-                                <CustomButton @click="addTreatmentAdmin(i)" class="add-dose-button">Adauga doza {{ i }} </CustomButton>
-                            </li>
-                        </ul>
+                <div class="treatment-details">
+                    <div class="treatment-administration">
+                        <div class="treatment-administration-content">
+                            <p class="title"> Administrări medicament <span> {{ medicineName.toUpperCase() }} </span> în data de: <span> {{ convertDateOnly(selectedDate) }} </span> </p>
+                            <p class="text">Doza zilnica <span style="color: rgb(3, 60, 130);"> prescrisa: </span> <span> {{ treatmentDoses }} </span> buc. pe zi </p>
+                            <p class="text"> Doze <span style="color: rgb(1, 110, 45);"> administrate: </span> <span> {{ treatmentAdministrations.length }} </span> </p>
+                            <ul>
+                                <li v-for="admin in treatmentAdministrations" :key="admin.id" class="admin-item"> {{ getDayMoment(convertTime(admin.administrationDate).substring(0,2)) }} la ora {{ convertTime(admin.administrationDate) }}</li>
+                            </ul>
+                            <div class="dose-buttons-container">
+                            <ul class="dose-buttons" v-if="treatmentAdministrations.length < treatmentDoses">
+                                <li v-for="i in range(treatmentAdministrations.length + 1, treatmentDoses)" :key="'add-dose-' + i" class="dose-item">
+                                    <label for="time-input">Alegeti o ora</label>
+                                    <CustomInput id="time-input" :type="'time'" @input="event => handleTimeChange(event, i)" />
+                                    <CustomButton @click="addTreatmentAdmin(i)" class="add-dose-button">Adauga doza {{ i }} </CustomButton>
+                                </li>
+                            </ul>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="treatments-container">
-                    
-                    <div class="treatments-container-content">
-                        <p class="medical-condition-title"> Tratament curent {{ medicalCondition }}</p>
-                        <div v-for="treatment in patientTreatments" :key="treatment.id" class="card" @click="selectCard(treatment.id)">
-                            <div class="card-header">
-                                <h3>{{ treatment.medicineName }}</h3>
-                            </div>
-                            <div class="card-body">
-                                <p><strong>Doza zilnică:</strong> {{ treatment.doses }} buc.</p>
-                                <p><strong>Data început:</strong> {{ convertDateOnly(treatment.startingDate) }}</p>
-                                <p><strong>Comentariu:</strong> {{ treatment.comment }}</p>
+                    <div class="treatments-container">
+                        <div class="treatments-container-content">
+                            <p class="medical-condition-title"> Tratament curent {{ medicalCondition }}</p>
+                            <div v-for="treatment in patientTreatments" :key="treatment.id" class="card" @click="selectCard(treatment.id)">
+                                <div class="card-header">
+                                    <h3>{{ treatment.medicineName }}</h3>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>Doza zilnică:</strong> {{ treatment.doses }} buc.</p>
+                                    <p><strong>Data început:</strong> {{ convertDateOnly(treatment.startingDate) }}</p>
+                                    <p><strong>Comentariu:</strong> {{ treatment.comment }}</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -315,7 +316,13 @@ function getDayMoment(time) {
 
 .content {
     display: grid;
-    grid-template-columns: 35% 35% 30%;
+    grid-template-columns: 40% 60%;
+    height: 100%;
+}
+
+.treatment-details {
+    display: grid;
+    grid-template-columns: 50% 50%;
     height: 100%;
 }
 
@@ -510,17 +517,85 @@ function getDayMoment(time) {
     font-weight: bold;
 }
 
-@media (max-width: 768px) {
+@media (min-height: 450px) and (max-width: 700px) {
+    .content {
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-template-rows: 50% 50%;
+    }
     .dose-item {
         flex: 1 0 100%;
         margin-right: 0;
     }
 
     .calendar-container {
-        width: 100%; 
+        width: 80%; 
         max-width: none; 
         margin: 0; 
         height: auto;
+    }
+
+    .treatment-administration-content,
+    .treatments-container-content {
+        margin: 120px auto;
+    }
+
+    .treatment-details {
+        display: grid;
+        grid-template-columns: 50% 50%;
+        overflow-y: auto;
+    }
+
+    .treatment-administration-content,
+    .treatments-container-content {
+        margin: 1vh;
+        font-size: 14px;
+        margin-bottom: 40px;
+    }
+
+    .card {
+        width: 25vw;
+        margin: 10px auto;
+        font-size: 15px;
+    }
+
+    .add-dose-button {
+        height: 6vh;
+    }
+
+    .dose-item { 
+        margin: auto;
+    }
+}
+
+@media(max-height: 450px) {
+    .calendar-container {
+        margin-top: 5vh;
+    }
+
+    .treatment-details {
+        overflow-y: auto;
+    }
+
+    .treatment-administration-content,
+    .treatments-container-content {
+        margin: 1vh;
+        font-size: 14px;
+        margin-bottom: 40px;
+    }
+
+    .card {
+        width: 18vw;
+        margin: 10px auto;
+        font-size: 15px;
+    }
+
+    .add-dose-button {
+        height: 10vh;
+    }
+
+    .dose-item { 
+        margin: auto;
     }
 }
 

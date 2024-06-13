@@ -4,9 +4,9 @@ import { getBloodPressures } from "../services/bloodpressure_service.js";
 
 import DateFiltering from '@/components/DateFiltering.vue';
 import LineChartComponent from '@/components/charts/LineChartComponent.vue';
-import PieChartPatientComponent from './charts/PieChartPatientComponent.vue';
 
 import { getStatisticsForOnePatient } from '@/services/statistics_service.js'
+import DonutChartComponent from './charts/DonutChartComponent.vue';
 
 const props = defineProps({
     patientEmail: {
@@ -212,7 +212,7 @@ function exportToCsv() {
                 </ul>
             </div>
 
-                <PieChartPatientComponent
+                <DonutChartComponent
                     class="chart"
                     :dataDistribution="favoringConditions"
                     :labels="['favorizeaza hipertensiunea', 'favorizeaza hipertensiunea']"
