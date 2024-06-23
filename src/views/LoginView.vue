@@ -107,7 +107,7 @@ function closeDialog() {
         router.push({
             name: "change-password",
             query: {
-                for: userType.substring(0,1).toLowerCase(),
+                for: userType.value.substring(0,1).toLowerCase(),
             },
         });
     }

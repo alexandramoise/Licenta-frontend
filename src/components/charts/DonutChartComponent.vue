@@ -89,4 +89,10 @@ watch(() => props.dataDistribution, (newData) => {
 div {
   height: 32vh;
 }
+
+@media(max-height: 450px) {
+  div {
+    height: 25vw;
+  }
+}
 </style>

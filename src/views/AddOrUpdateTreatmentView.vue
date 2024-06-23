@@ -93,6 +93,7 @@ const initialValues = ref({
     commentText: ''
 });
 
+
 if(route.query.updateId) {
     update.value = true;
     try {
@@ -106,16 +107,17 @@ if(route.query.updateId) {
             dosesInput: treatment.doses,
             commentText: treatment.comment
         };
+
     } catch(error) {
         notFoundError.value = true;
     }
 }
 
-function hasChanges() {
-    return selectedMedicine.value !== initialValues.value.selectedMedicine ||
+const hasChanges = computed(() => {
+    return (selectedMedicine.value !== initialValues.value.selectedMedicine ||
            dosesInput.value !== initialValues.value.dosesInput ||
-           commentText.value !== initialValues.value.commentText;
-}
+           commentText.value !== initialValues.value.commentText);
+});
 
 const modalShow = ref(false);
 const modalTitle = ref('');
@@ -146,25 +148,30 @@ async function createOrUpdateTreatment() {
                 comment: commentText.value,
             };
 
-            isLoading.value = true;
             let data = ''
             if(update.value) {
-                if(hasChanges) {
+                if(hasChanges.value) {
+                    isLoading.value = true;
                     data = await updateTreatment(route.query.updateId, updateTreatmentDto);
                     isLoading.value = false;
+                    modalShow.value = true;
+                    modalTitle.value = "Succes";
+                    modalMessage.value = "S-a salvat!";
                 } else {
-                    return;
+                    modalShow.value = true;
+                    modalTitle.value = "Nu sunt modificari";
+                    modalMessage.value = "Nu ati modificat nimic.";
                 }
             } else {
+                isLoading.value = true;
                 data = await addTreatment(treatmentDto);
                 isLoading.value = false;
+                modalShow.value = true;
+                modalTitle.value = "Succes";
+                modalMessage.value = "S-a salvat!";
             }
 
-            isLoading.value = false;
-
-            modalShow.value = true;
-            modalTitle.value = "Succes";
-            modalMessage.value = "S-a salvat!";
+            
 
             return data;
         } catch(error) {

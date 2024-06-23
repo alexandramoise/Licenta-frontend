@@ -1,6 +1,8 @@
 <script setup>
 import CustomNavbar from '@/components/CustomNavbar.vue';
 import CustomLoader from '@/components/CustomLoader.vue';
+import CustomInput from '@/components/CustomInput.vue';
+
 import { ref, watch, computed, onMounted } from 'vue';
 import router from "@/router";
 
@@ -43,16 +45,35 @@ onMounted(() => {
 const clusters = ref([]);
 const isLoading = ref(false);
 
+const searchedPatient = ref('');
+const filteredClusters = ref([]);
+const noResults = ref(false);
+
 async function loadClusters() {
     if(isAuthenticated.value && localStorage.getItem("role") === "doctor") {
         isLoading.value = true;
         clusters.value = await getAllClusters();
+        filteredClusters.value = clusters.value;
+        noResults.value = filteredClusters.value.length == 0;
         isLoading.value = false;
         console.log("S-a facut fetch");
     }
 }
 onMounted(async () => {
     loadClusters();
+});
+
+watch(searchedPatient, (newValue) => {
+    console.log("PACIENT CAUTAT: ", searchedPatient.value);
+    if (newValue.trim().length > 0) {
+        filteredClusters.value = clusters.value.filter(cluster => 
+            cluster.patientNames.some(name => name.toLowerCase().includes(newValue.trim().toLowerCase()))
+        );
+        noResults.value = filteredClusters.value.length === 0;
+    } else {
+        filteredClusters.value = clusters.value;
+        noResults.value = false;
+    }
 });
 
 setInterval(loadClusters, 30000);
@@ -80,11 +101,25 @@ function redirectToGroupInfo(patientEmail) {
 
         <p class="title"> Grupuri de pacienți cu evoluție similară </p>
         <p class="text"> Apăsați un card pentru detaliile grupului. </p>
-        <div class="content">
+
+        <div class="patient-container">
+            <div class="search-container">
+                <p class="search-text"> Căutați după numele unui pacient</p>
+                <CustomInput 
+                    v-model="searchedPatient"
+                    :type="'text'"
+                    name="searchedPatient"
+                    placeholder="nume pacient"
+                    class="search-input"
+                />
+            </div>
+        </div>
+
+        <div class="content" v-if="!noResults">
             <div class="central-line"></div>
             <div class="clusters-container">
                 <div 
-                    v-for="(cluster, index) in clusters" 
+                    v-for="(cluster, index) in filteredClusters" 
                     :key="cluster.clusterLabel" 
                     @click="redirectToGroupInfo(cluster.patientEmails[0])"
                     :class="['cluster-card', index % 2 === 0 ? 'left' : 'right']">
@@ -98,6 +133,9 @@ function redirectToGroupInfo(patientEmail) {
                     </div>
                 </div>
             </div>
+        </div>
+        <div v-else class="not-found">
+            <p> Nu s-au găsit grupuri <span v-if="searchedPatient"> pentru pacientul "{{ searchedPatient }}"</span> </p>
         </div>
     </div>
     <div v-else-if="!isAuthenticated">
@@ -146,12 +184,44 @@ function redirectToGroupInfo(patientEmail) {
     text-align: center;
 }
 
+.search-text {
+    font-family: 'Roboto', sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.search-container {
+    margin: auto;
+    padding: 20px;
+    width: 20vw;
+    min-width: 200px;
+    text-align: center;
+}
+
+.search-input {
+    padding: 8px;
+}
+
 .content {
     display: flex;
     flex-direction: column;
     align-items: center;
     position: relative;
     padding: 20px;
+}
+
+.not-found {
+    display: flex;
+    justify-content: center;
+    align-items: center; 
+    height: 20%;
+    text-align: center;
+    font-size: 18px;
+    color: darkred;
+    font-weight: 600;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 .central-line {

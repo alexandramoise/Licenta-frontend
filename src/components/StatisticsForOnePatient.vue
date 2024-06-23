@@ -183,7 +183,7 @@ function exportToCsv() {
             <p> {{ props.patientName }} nu are tensiuni înregistrate. </p>
         </div>
 
-        <div class="medium-values-table">
+        <div class="medium-values-table" v-if="bloodPressures.length > 0">
                 <table>
                     <thead>
                         <tr>

@@ -41,6 +41,7 @@ onMounted(() => {
     availableUntil.value = localStorage.getItem("availableUntil");
 });
 
+
 const userEmail = localStorage.getItem("user");
 const role = localStorage.getItem("role");
 

@@ -50,7 +50,7 @@ const userType = localStorage.getItem('role');
 const appointments = ref([]);
 const appointmentsNotFound = ref(false);
 
-const pageSize = 3;
+const pageSize = 5;
 const totalPages = ref(0);
 const currentPage = ref(1);
 
@@ -159,14 +159,20 @@ function redirectToForm() {
     }
 }
 
+
+const inThePast = ref([]);
+function checkIsPast(appointmentId, value) {
+  inThePast.value[appointmentId] = value;
+}
+
 const selectedApId = ref(null);
 function toggleButtons(apId) {
-    console.log("Programarea cu: ", apId);
+    // console.log("Programarea cu: ", apId, ! inThePast.value[apId] ? " poate fi modificata" : " nu poate fi modificata");
     selectedApId.value = selectedApId.value === apId ? null : apId;
 }
 
 async function cancelAppointment(apId) {
-    console.log("voi da cancel la: ", apId);
+    // console.log("voi da cancel la: ", apId);
     if(userType === "doctor") {
         await doctorCancelesAppointment(apId);
     } else if(userType === "patient") {
@@ -212,8 +218,9 @@ async function cancelAppointment(apId) {
                             :date="appointment.date"
                             :nobodyCanceled="appointment.nobodyCanceled"
                             @click="toggleButtons(appointment.id)"
+                            @isPast="checkIsPast(appointment.id, $event)"
                         />
-                        <div v-if="selectedApId === appointment.id">
+                        <div v-if="selectedApId === appointment.id && !inThePast[appointment.id]">
                             <CustomButton class="button-element" @click="cancelAppointment(appointment.id)"> <i class="fas fa-calendar-alt"> </i> Data noua </CustomButton>
                         </div>
                     </div>

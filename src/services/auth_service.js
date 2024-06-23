@@ -13,6 +13,7 @@ async function login(loginRequestDto) {
             },
         });
 
+        console.log("RASPUNS: ", response, " si status: ", response.status);
         if (!response.ok) {
             let message = "Eroare necunoscută";
             
@@ -22,6 +23,9 @@ async function login(loginRequestDto) {
                     break;
                 case 401:
                     message = "Credentiale incorecte";
+                    break;
+                case 400:
+                    message = "Cont inactiv";
                     break;
             }
             return { error: true, message: message };

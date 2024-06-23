@@ -94,6 +94,41 @@ async function requestNewPasswordDoctor(email) {
             method: "POST",
         });
 
+        console.log("RASPUNS: ", response, " si status: ", response.status);
+        return response.status;
+
+    } catch (error) {
+        console.error("Request denied ", error);
+    }
+}
+
+async function doctorToggleNotifications(email) {
+    try {
+        const response = await fetch(`${API_URL}/toggle-notifications?email=${email}`, {
+            method: "PATCH",
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+        });
+
+        return response.status;
+
+    } catch (error) {
+        console.error("Request denied ", error);
+    }
+}
+
+async function doctorDeactivatesAccount(email) {
+    try {
+        const response = await fetch(`${API_URL}/deactivate?email=${email}`, {
+            method: "PATCH",
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+        });
+
         return response.status;
 
     } catch (error) {
@@ -137,6 +172,8 @@ export {
     updateDoctorByEmail,
     changePasswordDoctor,
     requestNewPasswordDoctor, 
+    doctorToggleNotifications,
+    doctorDeactivatesAccount,
     doctorAcceptsTerms,
     getFirstLogin
 };

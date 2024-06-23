@@ -67,21 +67,45 @@ function handleInput(event) {
 
 const route = useRoute();
 const notFoundError = ref(false);
-    if (route.query.updateId) {
-        update.value = true;
-        let id = route.query.updateId;
-        try {
-            const data = await getBloodPressureById(id, userEmail);
-            systolicInput.value = data.systolic;
-            diastolicInput.value = data.diastolic;
-            pulseInput.value = data.pulse;
-            const newDate = new Date(data.date);
-            newDate.setHours(newDate.getHours() + 3);
-            dateInput.value = newDate.toISOString().slice(0,16);
-        } catch(error) {
-            notFoundError.value = true;
-        }
+
+const initialValues = ref({
+    systolic: 0,
+    diastolic: 0,
+    pulse: '',
+    date: 0,
+});
+
+if (route.query.updateId) {
+    update.value = true;
+    let id = route.query.updateId;
+    try {
+        const data = await getBloodPressureById(id, userEmail);
+        systolicInput.value = data.systolic;
+        diastolicInput.value = data.diastolic;
+        pulseInput.value = data.pulse;
+        const newDate = new Date(data.date);
+        newDate.setHours(newDate.getHours() + 3);
+        dateInput.value = newDate.toISOString().slice(0,16);
+
+        initialValues.value = {
+            systolic: systolicInput.value,
+            diastolic: diastolicInput.value,
+            pulse: pulseInput.value,
+            date: dateInput.value
+        };
+    } catch(error) {
+        notFoundError.value = true;
     }
+}
+
+const hasChanges = computed(() => {
+    return (
+        systolicInput.value !== initialValues.value.systolic ||
+        diastolicInput.value !== initialValues.value.diastolic ||
+        pulseInput.value !== initialValues.value.pulse ||
+        dateInput.value !== initialValues.value.date
+    );
+});
 
 async function addOrUpdate() {
     console.log(systolicInput.value, diastolicInput.value, pulseInput.value, dateInput.value);
@@ -117,19 +141,31 @@ async function addOrUpdate() {
 
             let data;
             if(route.query.updateId) {
-                isLoading.value = true;
-                data = await updateBloodPressure(bloodPressureDto, route.query.updateId);
-                isLoading.value = false;
+                if(hasChanges.value) {
+                    isLoading.value = true;
+                    data = await updateBloodPressure(bloodPressureDto, route.query.updateId);
+                    isLoading.value = false;
+                    modalShow.value = true;
+                    modalTitle.value = "Succes";
+                    modalMessage.value = "S-a salvat!";
+                    return data;
+                } else {
+                    modalShow.value = true;
+                    modalTitle.value = "Nu sunt modificari";
+                    modalMessage.value = "Nu ati modificat nimic.";
+                }
+                
             } else {
                 isLoading.value = true;
                 data = await addBloodPressure(bloodPressureDto, userEmail);
                 isLoading.value = false;
+                modalShow.value = true;
+                modalTitle.value = "Succes";
+                modalMessage.value = "S-a salvat!";
+                return data;
             }
             
-            modalShow.value = true;
-            modalTitle.value = "Succes";
-            modalMessage.value = "S-a salvat!";
-            return data;
+            
 
         } catch(error) {
             isLoading.value = false;

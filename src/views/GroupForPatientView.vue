@@ -177,11 +177,14 @@ function showTermsAndConditionsPopup() {
             </div>
             <div class="graph-section">
                 <p class="graph-label"> Grafice cu înregistrările tensiunii ale pacienților din grup </p>
-                <div v-for="(pair, index) in patientPairs.emails" :key="index" class="chart-container">
+                <div v-if="clusterLabel != 0" v-for="(pair, index) in patientPairs.emails" :key="index" class="chart-container">
                     <LineChartForClusterComponent 
                         :patients="pair.filter(p => p !== null)" 
                         :patientNames="patientPairs.names[index].filter(n => n !== '')"
                     />
+                </div>
+                <div v-else class="not-found">
+                    <p> Nu există înregistrări ale tensiunii. </p>
                 </div>
             </div>
         </div>
@@ -281,6 +284,18 @@ function showTermsAndConditionsPopup() {
 .chart-container {
     margin: 20px auto;
     width: 90%;
+}
+
+.not-found {
+    display: flex;
+    justify-content: center;
+    align-items: center; 
+    height: 60%;
+    text-align: center;
+    color: darkred;
+    font-size: 17px;
+    font-weight: bold;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 @media (max-width: 768px) {

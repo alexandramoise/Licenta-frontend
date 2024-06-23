@@ -1,9 +1,26 @@
 <script setup>
 import router from "../router";
 
+const role = localStorage.getItem("role");
+const userEmail = localStorage.getItem("user");
+const availableUntil = localStorage.getItem("availableUntil");
+const currentDate = new Date();
+const expirationDate = availableUntil ? new Date(availableUntil) : null;
+
 function setUser(userType) {
-  localStorage.setItem("role", userType)
-  router.push({ name: "login" });
+  if(! role) {
+    localStorage.setItem("role", userType)
+    router.push("login");
+  } else {
+      if(userEmail && expirationDate && currentDate < expirationDate && userType == role) {
+        router.push("main-" + role);
+      } else {
+        localStorage.clear();
+        localStorage.setItem("role", userType);
+        router.push("login");
+      }
+  }
+  
 }
 
 </script>

@@ -273,6 +273,40 @@ async function patientAcceptsTerms(email) {
     }
 }
 
+async function patientToggleNotifications(email) {
+    try {
+        const response = await fetch(`${API_URL}/toggle-notifications?email=${email}`, {
+            method: "PATCH",
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+        });
+
+        return response.status;
+
+    } catch (error) {
+        console.error("Request denied ", error);
+    }
+}
+
+async function patientDeactivatesAccount(email) {
+    try {
+        const response = await fetch(`${API_URL}/deactivate?email=${email}`, {
+            method: "PATCH",
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+        });
+
+        return response.status;
+
+    } catch (error) {
+        console.error("Request denied ", error);
+    }
+}
+
 async function patientAcceptsSharingData(email) {
     try {
         const response = await fetch(`${API_URL}/sharing-data?email=${email}`, {
@@ -317,6 +351,8 @@ export {
     getMedicalConditions, 
     createPatientAccount,
     requestNewPasswordPatient,
+    patientToggleNotifications,
+    patientDeactivatesAccount,
     patientAcceptsTerms,
     patientAcceptsSharingData,
     changePasswordPatient, 

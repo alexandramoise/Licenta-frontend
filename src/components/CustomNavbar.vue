@@ -24,6 +24,7 @@
         <CustomButton class="navbar-item" @click.stop="dropdownAccountVisible = !dropdownAccountVisible"> <i class="fas fa-user"> </i> {{ userName }} <i class='fas fa-caret-down'> </i></CustomButton>
         <div v-if="dropdownAccountVisible" class="dropdown-content">
           <CustomButton class="dropdown-item" @click="navigateTo('data')"> Datele mele <i class="fas fa-address-book"></i></CustomButton>
+          <CustomButton class="dropdown-item" @click="navigateTo('account-options')"> Opțiuni cont <i class="fas fa-bell"></i> </CustomButton>
           <CustomButton class="dropdown-item" @click="navigateTo('change-password')"> Schimb parola <i class="fas fa-lock"></i> </CustomButton>
           <CustomButton class="dropdown-item" @click="navigateTo('logout')">Deconectare <i class="fas fa-arrow-right"></i> </CustomButton>
         </div>
@@ -134,7 +135,7 @@ const navigateTo = async (path) => {
     } catch (error) {
       console.error('Error when requesting new password:', error);
     }
-  } else if(path === "patient-cluster" || path === "all-patient-clusters" || path === "journals") {
+  } else if(path === "patient-cluster" || path === "all-patient-clusters" || path === "journals" || path === "account-options") {
     router.push(path);
   } 
 };

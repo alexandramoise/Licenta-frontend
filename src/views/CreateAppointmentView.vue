@@ -114,6 +114,9 @@ onMounted(() => {
     getPatients();
 });
 
+
+const initialData = ref({ date: '', visitType: '', comment: '' });
+
 onMounted(async () => {
     if (route.query.updateId) {
         update.value = true;
@@ -124,9 +127,24 @@ onMounted(async () => {
         const newDate = new Date(data.date);
         newDate.setHours(newDate.getHours() + 3);
         dateInput.value = newDate.toISOString().slice(0,16);
+
+        initialData.value = {
+            date: dateInput.value,
+            visitType: selectedVisitType.value,
+            comment: commentText.value
+        };
+
+        console.log(initialData.value);
     }
 });
 
+const hasChanges = computed(() => {
+    return (
+        dateInput.value !== initialData.value.date ||
+        selectedVisitType.value !== initialData.value.visitType ||
+        commentText.value !== initialData.value.comment
+    );
+});
 
 const modalShow = ref(false);
 const modalTitle = ref('');
@@ -149,21 +167,32 @@ async function createOrUpdateAppointment() {
 
             console.log("appointmentDto: ", appointmentDto);
 
+            console.log("are schimbari? ", hasChanges.value, "INITIAL: ", initialData.value, " COIMPLETT=A: ", appointmentDto);
             let data;
             if(update.value) {
-                isLoading.value = true;
-                data = await updateAppointment(appointmentDto, route.query.updateId);
-                isLoading.value = false;
+                if(hasChanges.value) {
+                    isLoading.value = true;
+                    data = await updateAppointment(appointmentDto, route.query.updateId);
+                    isLoading.value = false;
+                    modalShow.value = true;
+                    modalTitle.value = "Succes";
+                    modalMessage.value = "S-a salvat!";
+                    return data;
+                } else {
+                    modalShow.value = true;
+                    modalTitle.value = "Nu sunt modificari";
+                    modalMessage.value = "Nu ati modificat nimic.";
+                }
             } else {
                 isLoading.value = true;
                 data = await createNewAppointment(appointmentDto);
                 isLoading.value = false;
+                modalShow.value = true;
+                modalTitle.value = "Succes";
+                modalMessage.value = "S-a salvat!";
+                return data;
             }
 
-            modalShow.value = true;
-            modalTitle.value = "Succes";
-            modalMessage.value = "S-a salvat!";
-            return data;
         } catch(error) {
             isLoading.value = false;
             modalShow.value = true;

@@ -14,23 +14,24 @@ const props = defineProps({
     "comment": ""
 });
 
-const visitTypeColor = computed(() => {
-    switch(props.visitType) {
-        case 'Consultatie':
-            return 'green';
-        case 'Vizia':
-            return 'blue';
-        default:
-            return 'pink';
-    }
-});
-
 const newDate = computed(() => {
       const date = new Date(props.date);
       const optionsDate = { day: '2-digit', month: '2-digit', year: 'numeric' };
       const optionsTime = { hour: '2-digit', minute: '2-digit' };
       return `${date.toLocaleDateString('ro-RO', optionsDate)} ${date.toLocaleTimeString('ro-RO', optionsTime)}`;
 });
+
+const inThePast = computed(() => {
+    const appointmentDate = new Date(props.date);
+    const currentDate = new Date();
+
+    return appointmentDate < currentDate;
+})
+
+const emits = defineEmits(['isPast']);
+function clickCard() {
+    emits('isPast', inThePast.value);
+}
 
 const patientName = ref('');
 onMounted(async () => {
@@ -39,14 +40,16 @@ onMounted(async () => {
         patientName.value = patient.fullName;
     } catch (error) {
         console.error("Failed to fetch patient data:", error);
-        patientName.value = "Failed to load"; // Handle error scenario
+        patientName.value = "";
     }
+
+    emits('isPast', inThePast.value);
 });
 
 </script>
 
 <template>
-    <div class="card">
+    <div class="card" :style="{backgroundColor: !inThePast ? 'rgb(252, 252, 252)' : 'rgb(245, 245, 245)'}" @click="clickCard">
         <p> <span class="title"> <i class="fas fa-user"></i> Pacient </span> {{ patientName }} </p>
         <p> <span class="title"> <i class="fas fa-calendar-alt"></i> </span> {{ newDate }} <span class="title"> || Tip </span> {{ props.visitType }}</p>
         <p> <span class="title"> <i class="fas fa-comment-dots"></i> </span> {{ props.comment }} </p>
@@ -57,7 +60,6 @@ onMounted(async () => {
 <style scoped>
 
 .card {
-    background-color: rgb(250, 250, 250);
     width: 300px;
     border-radius: 10px;
     padding: 15px;

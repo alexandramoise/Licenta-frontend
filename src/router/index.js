@@ -102,6 +102,11 @@ const router = createRouter({
       component: () => import('../views/PersonalDataView.vue')
     },
     {
+      path: '/account-options',
+      name: 'account-options',
+      component: () => import('../views/AccountOptionsView.vue')
+    },
+    {
       path: '/not-authenticated',
       name: 'not-authenticated',
       component: () => import('../views/NotAuthenticatedView.vue')
@@ -123,9 +128,12 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const role = localStorage.getItem("role");
   const userEmail = localStorage.getItem("user");
+  const availableUntil = localStorage.getItem("availableUntil");
+  const currentDate = new Date();
+  const expirationDate = availableUntil ? new Date(availableUntil) : null;
 
-  if (to.name !== "login" && to.name !== "change-password" && to.name !== "home") {
-    if (role && userEmail) {
+  if (to.name !== "login" && to.name !== "change-password" && to.name !== "home" && to.name !== 'not-authenticated') {
+    if (role && userEmail && expirationDate && currentDate < expirationDate) {
       try {
         let userData = null;
 
@@ -150,8 +158,7 @@ router.beforeEach(async (to, from, next) => {
     } else {
       return next({ name: 'not-authenticated' });
     }
-  } 
-  
+  }
   next();
 });
 

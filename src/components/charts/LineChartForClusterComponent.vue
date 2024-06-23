@@ -79,7 +79,6 @@ const fetchBloodPressureData = async () => {
     const name = props.patientNames[i];
 
     const data = await getBloodPressures(email, null, null, 50, 0);
-    console.log("EMAIL: ", email, " VALORI: ", data.content);
 
     if (data && data.content) {
       const hue = (i * 30) % 360; 
@@ -89,7 +88,6 @@ const fetchBloodPressureData = async () => {
         backgroundColor: `hsl(${hue}, 70%, 50%)`,
         data: data.content.map(dp => {
           labels.push(new Date(dp.date).toLocaleDateString());
-          console.log("ADAUG IN SET: ", new Date(dp.date).toLocaleDateString());
           return dp.systolic;
         }),
         fill: false,

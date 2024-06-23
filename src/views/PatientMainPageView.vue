@@ -104,7 +104,6 @@ async function fetchBloodPressures() {
                     
                     totalPages.value = Math.ceil(data.totalElements / pageSize);
                     noTrackings.value = false;
-
                 } else {
                     bloodPressures.value = [];
                     totalPages.value = 0;
@@ -174,7 +173,8 @@ async function deleteBp(bpId) {
         bloodPressures.value = bloodPressures.value.filter(bp => bp.id !== bpId);
     }
 
-    fetchBloodPressures();
+    //fetchBloodPressures();
+    window.location.reload();
 }
 
 function closeDialog() {

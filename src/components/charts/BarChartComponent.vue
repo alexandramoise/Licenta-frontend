@@ -65,7 +65,7 @@ const chartOptions = ref({
     },
     title: {
       display: true,
-      text: 'Numar pacienti: 0'  // Set initial title text
+      text: 'Numar pacienti: 0'  
     }
   },
   scales: {
