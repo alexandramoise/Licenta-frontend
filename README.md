@@ -6,13 +6,12 @@ The interface of my bloodpressure monitoring app built using Vue3.
 - custom calendar component (for picking a day)
 - modern design for all the pages
 - functionalities related to:
-      1. treatments
-      2. appointments
-      3. recommendations
-      4. medical conditions
-      5. bloodpressure readings
-
-See [Vite Configuration Reference](https://vitejs.dev/config/).
+1. treatments
+2. appointments
+3. recommendations
+4. medical conditions
+5. bloodpressure readings
+6. clusters of patients
 
 ### Running the app
 - clone this repository - copy this command in a terminal: git clone https://github.com/alexandramoise/Licenta-frontend
