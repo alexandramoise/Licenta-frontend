@@ -16,5 +16,5 @@ The interface of my bloodpressure monitoring app built using Vue3.
 ### Running the app
 - clone this repository - copy this command in a terminal: git clone https://github.com/alexandramoise/Licenta-frontend
 - open a terminal and run the following commands:
-      1. npm install - installing all the necessary dependencies
-      2. npm run dev - run the app in development mode
+1. npm install - installing all the necessary dependencies
+2. npm run dev - run the app in development mode
