@@ -150,7 +150,7 @@ function showTermsAndConditionsPopup() {
             @declined-sharing-terms-and-conditions="declineTermsAndConditions"
         />
 
-        <div class="content" v-if="acceptedSharingData">
+        <div class="content" v-if="acceptedSharingData && !isLoading">
             <div class="group-info">
                 <p class="cluster-label"> Grupul: {{ clusterLabel }} <span v-if="clusterLabel == -1"> - pacienți fără înregistrări ale tensiunii </span></p>
                 <div v-for="(email, index) in clusterEmails" :key="email" class="patient-info">

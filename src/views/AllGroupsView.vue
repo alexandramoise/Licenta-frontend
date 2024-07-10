@@ -76,7 +76,7 @@ watch(searchedPatient, (newValue) => {
     }
 });
 
-setInterval(loadClusters, 30000);
+setInterval(loadClusters, 45000);
 
 function redirectToGroupInfo(patientEmail) {
     console.log("Cluster pentru pacientul: ", patientEmail);

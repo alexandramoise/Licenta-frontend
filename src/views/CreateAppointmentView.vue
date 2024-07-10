@@ -162,12 +162,13 @@ async function createOrUpdateAppointment() {
                 patientEmail: selectedPatientEmail.value,
                 date: adjustedDate,
                 visitType: selectedVisitType.value,
-                comment: commentText.value,
+                comment: isDoctor.value ? "Doctor: " + commentText.value : "Pacient: " + commentText.value,
+                //comment: commentText.value,
             };
 
-            console.log("appointmentDto: ", appointmentDto);
+            //console.log("appointmentDto: ", appointmentDto);
 
-            console.log("are schimbari? ", hasChanges.value, "INITIAL: ", initialData.value, " COIMPLETT=A: ", appointmentDto);
+            //console.log("are schimbari? ", hasChanges.value, "INITIAL: ", initialData.value, " COIMPLETT=A: ", appointmentDto);
             let data;
             if(update.value) {
                 if(hasChanges.value) {
